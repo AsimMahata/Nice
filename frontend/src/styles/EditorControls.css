@@ -1,0 +1,15 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.EditorControlsContainer {
+  margin: 20px auto;
+  background: red;
+  display: flex;
+}
+
+.EditorControlsContainer button {
+  padding: 8px 12px;
+  margin: auto;
+}

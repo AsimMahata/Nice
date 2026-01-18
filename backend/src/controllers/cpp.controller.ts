@@ -29,7 +29,6 @@ export const test = () => {
 };
 
 
-test()
 
 
 const compile = (code: string): Promise<boolean> => {
