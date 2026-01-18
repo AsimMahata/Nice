@@ -10,6 +10,6 @@ frontend/dist/
 # backend
 backend/node_modules/
 backend/dist/
-
+backend/temp/
 # misc
 .DS_Store
