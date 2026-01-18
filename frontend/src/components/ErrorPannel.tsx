@@ -6,7 +6,7 @@ type Props = {
 }
 const ErrorPannel = (props: Props) => {
   return (
-    <div>
+    <div style={{ whiteSpace: "pre-wrap" }}>
       {!props.running && props.error}
       {props.running && "Running Wait..."}
     </div>

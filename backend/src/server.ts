@@ -1,7 +1,7 @@
 import express, { Express } from 'express'
 import cors from 'cors'
 import cppRoutes from "./routes/cpp.routes.js"
-
+import aiRoutes from "./routes/ai.routes.js"
 const app: Express = express()
 
 app.use(express.json())
@@ -13,5 +13,6 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/cpp", cppRoutes);
+app.use("/api/ai", aiRoutes)
 export default app
 

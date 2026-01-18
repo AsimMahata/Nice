@@ -15,6 +15,21 @@ type code = {
 
 const EditorControls = (props: Props) => {
 
+
+  const aiSuggest = async (error: string) => {
+    const errObj = {
+      error: error,
+      type: "comile time error"
+    }
+    const url: string = 'http://localhost:3000/api/ai/help';
+    await axios.post(url, errObj).then((res: AxiosResponse) => {
+      props.setError(res.data)
+    }).catch((err) => {
+      console.error('sometehing error occured with gemini so cant help sad 🥲 \n', err)
+    })
+  }
+
+
   const runCode = async () => {
     const code: code = {
       code: props.code
@@ -23,13 +38,16 @@ const EditorControls = (props: Props) => {
     const url: string = 'http://localhost:3000/api/cpp/run';
     props.setRunning(true)
     await axios.post(url, code).then((res: AxiosResponse) => {
-      props.setError('')
-      props.setOutput(res.data);
+      props.setError(res.data.error)
+      props.setOutput(res.data.output);
       console.log(res);
     }).catch((err: AxiosError) => {
       const error = String(err.response?.data);
       props.setOutput('Something Went Wrong ...')
       props.setError(error);
+
+      aiSuggest(error)
+
       console.error(err);
     }).finally(() => {
       props.setRunning(false)

@@ -17,56 +17,66 @@ const resDir = path.join(__dirname, "../../temp/cpp/res");
 fs.mkdirSync(codeDir, { recursive: true });
 fs.mkdirSync(resDir, { recursive: true });
 
+type compilationStatus = {
+  success: boolean,
+  error: string
+}
 
-export const test = () => {
-  exec(`${dest}`, (err, stdout, stderr) => {
-    if (err) {
-      console.error("runCode error:", stderr);
-      return;
-    }
-    console.log(stdout);
-  });
-};
+type runStatus = {
+  success: boolean,
+  output: string
+  runtimeError: string
+  error: string
+}
 
-
-
-
-const compile = (code: string): Promise<boolean> => {
+const compile = (code: string): Promise<compilationStatus> => {
   fs.writeFileSync(source, code);
-
+  const status: compilationStatus = {
+    success: false,
+    error: ""
+  }
   return new Promise((resolve) => {
     exec(`g++ "${source}" -o "${dest}"`, (err, _, stderr) => {
       if (err) {
         console.error(stderr);
-        return resolve(false);
+        status.error = stderr
+        return resolve(status);
       }
-      resolve(true);
+      status.success = true;
+      resolve(status);
     });
   });
 };
 
 
 export const runCode = async (req: Request, res: Response) => {
-  if (!(await compile(req.body.code))) {
-    return res.status(400).send("Compilation failed");
+  // compiling - compile time errors possible here 
+  const compileStatus = await compile(req.body.code)
+  if (!compileStatus.success) {
+    return res.status(400).send(compileStatus.error);
   }
-
+  //running code - run time error possible 
+  const runningStatus: runStatus = {
+    success: false,
+    output: "",
+    runtimeError: "",
+    error: ""
+  }
   exec(dest, (err, stdout, stderr) => {
-    if (err) return res.status(500).send(stderr);
-    res.send(stdout);
+    runningStatus.runtimeError = stderr
+    runningStatus.error = String(err || "")
+    runningStatus.output = stdout
+    if (err) {
+      return res.status(500).send(runningStatus);
+    }
+    runningStatus.success = true;
+    res.send(runningStatus);
   });
 };
 
 export const compileCode = async (req: Request, res: Response) => {
-  const { code } = req.body;
-  fs.writeFileSync(source, code);
-  exec(`g++ ${source} -o ${dest}`, (err, stdout, stderr) => {
-    if (err) {
-      console.error("Compile error:", stderr);
-      return;
-    }
-    console.log("Compiled successfully");
-  });
-
-  res.status(200).send('Compiling Code');
+  if (!(await compile(req.body.code))) {
+    return res.status(400).send("Compilation failed");
+  }
+  return res.status(200).send("compiled Successfully")
 }
