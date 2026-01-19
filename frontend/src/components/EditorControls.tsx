@@ -15,17 +15,17 @@ type code = {
 
 const EditorControls = (props: Props) => {
 
-
-  const aiSuggest = async (error: string) => {
+  const getAiHelp = async () => {
+    if (!props.error) return;
     const errObj = {
-      error: error,
+      error: props.error,
       type: "comile time error"
     }
     const url: string = 'http://localhost:3000/api/ai/help';
     await axios.post(url, errObj).then((res: AxiosResponse) => {
       props.setError(res.data)
     }).catch((err) => {
-      console.error('sometehing error occured with gemini so cant help sad 🥲 \n', err)
+      console.error('sometehing error occured with gemini/AI so cant help sad 🥲 \n', err)
     })
   }
 
@@ -45,9 +45,6 @@ const EditorControls = (props: Props) => {
       const error = String(err.response?.data);
       props.setOutput('Something Went Wrong ...')
       props.setError(error);
-
-      aiSuggest(error)
-
       console.error(err);
     }).finally(() => {
       props.setRunning(false)
@@ -63,7 +60,7 @@ const EditorControls = (props: Props) => {
     <div className="EditorControlsContainer">
       <button onClick={runCode}>Run</button>
       <button onClick={compileCode}>Compile</button>
-      <button>Placeholder</button>
+      <button onClick={getAiHelp}>Get AI Help</button>
     </div>
   )
 }
