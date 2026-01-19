@@ -4,12 +4,42 @@
 }
 
 .EditorControlsContainer {
-  margin: 20px auto;
-  background: red;
+  margin: 10px auto;
+  background: beige;
   display: flex;
 }
 
 .EditorControlsContainer button {
   padding: 8px 12px;
   margin: auto;
+}
+
+.ai-btn {
+  padding: 10px 16px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #1f2937;
+  color: white;
+  transition: all 0.25s ease;
+}
+
+.ai-btn-error {
+  border-color: #ef4444;
+  background: #2a0f12;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.35);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.04);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }

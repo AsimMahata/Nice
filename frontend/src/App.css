@@ -1,19 +1,57 @@
 * {
   margin: 0;
   padding: 0;
-  font-family: sans-serif, Tahoma, Geneva, Verdana;
+  box-sizing: border-box;
+  font-family: system-ui, Tahoma, Geneva, Verdana, sans-serif;
 }
 
-
-.output-error {
-  display: flex;
-  min-height: 20vh;
-  background-color: gray;
-  margin: auto;
+/* main app grid */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  grid-template-rows: 1fr 1fr 1.4fr;
+  /* ⬅ bottom row taller */
+  gap: 12px;
+  height: calc(100vh - 40px);
+  margin-bottom: 40px;
 }
 
-.output-error>* {
-  flex: 1;
+.main-layout>* {
+  overflow-y: auto;
+}
+
+/* Code editor spans two rows */
+.main-layout> :nth-child(1) {
+  grid-row: 1 / span 2;
+}
+
+/* Output */
+.main-layout> :nth-child(4) {
+  grid-column: 1;
+}
+
+/* Error */
+.main-layout> :nth-child(5) {
+  grid-column: 2;
+}
+
+/* shared panel style */
+.main-layout>* {
   border: 1px solid #1f1f1f;
-  padding: 8px;
+  border-radius: 8px;
+  padding: 10px;
+  overflow: auto;
+}
+
+/* mobile */
+@media (max-width: 768px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    height: auto;
+  }
+
+  .main-layout> :nth-child(1) {
+    grid-row: auto;
+  }
 }

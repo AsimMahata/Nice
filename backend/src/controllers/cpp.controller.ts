@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { exec } from "node:child_process";
+import { exec, spawn } from "node:child_process";
 import fs from "fs"
 import { fileURLToPath } from "url";
 import path from "path"
@@ -17,23 +17,22 @@ const resDir = path.join(__dirname, "../../temp/cpp/res");
 fs.mkdirSync(codeDir, { recursive: true });
 fs.mkdirSync(resDir, { recursive: true });
 
-type compilationStatus = {
-  success: boolean,
-  error: string
-}
-
-type runStatus = {
+type status = {
   success: boolean,
   output: string
-  runtimeError: string
   error: string
+  runtimeError: string
+  compilationError: string
 }
 
-const compile = (code: string): Promise<compilationStatus> => {
+const compile = (code: string): Promise<status> => {
   fs.writeFileSync(source, code);
-  const status: compilationStatus = {
+  const status: status = {
     success: false,
-    error: ""
+    output: "",
+    error: "",
+    runtimeError: "",
+    compilationError: ""
   }
   return new Promise((resolve) => {
     exec(`g++ "${source}" -o "${dest}"`, (err, _, stderr) => {
@@ -48,30 +47,42 @@ const compile = (code: string): Promise<compilationStatus> => {
   });
 };
 
-
 export const runCode = async (req: Request, res: Response) => {
   // compiling - compile time errors possible here 
-  const compileStatus = await compile(req.body.code)
-  if (!compileStatus.success) {
-    return res.status(400).send(compileStatus.error);
+  const codeStatus = await compile(req.body.code)
+  if (!codeStatus.success) {
+    return res.status(400).send(codeStatus);
   }
   //running code - run time error possible 
-  const runningStatus: runStatus = {
-    success: false,
-    output: "",
-    runtimeError: "",
-    error: ""
+
+  const child = spawn(dest, [], { stdio: "pipe" })
+  child.stdout.on("data", (data) => {
+    codeStatus.output += data.toString()
+  })
+
+  child.stderr.on("data", (data) => {
+    codeStatus.runtimeError += data.toString()
+  })
+  const input = req.body.input
+  if (input) {
+    child.stdin.write(input + "\n");
   }
-  exec(dest, (err, stdout, stderr) => {
-    runningStatus.runtimeError = stderr
-    runningStatus.error = String(err || "")
-    runningStatus.output = stdout
-    if (err) {
-      return res.status(500).send(runningStatus);
+  child.stdin.end()
+  const timer = setTimeout(() => {
+    child.kill("SIGKILL")
+    codeStatus.error = "Time Limit Exceeded (4s)"
+    return res.status(500).send(codeStatus)
+  }, 4000)
+  child.on("close", (code) => {
+    clearTimeout(timer)
+    if (code !== 0 && !codeStatus.error) {
+      codeStatus.error = "Runtime Error"
+      return res.status(500).send(codeStatus)
     }
-    runningStatus.success = true;
-    res.send(runningStatus);
-  });
+
+    codeStatus.success = true
+    res.send(codeStatus)
+  })
 };
 
 export const compileCode = async (req: Request, res: Response) => {
