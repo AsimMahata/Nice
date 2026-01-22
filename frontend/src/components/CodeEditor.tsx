@@ -12,6 +12,7 @@ export default function CodeEditor({ code, setCode }: CodeEditorProps) {
 
   const handleMount: OnMount = (editor) => {
     editorRef.current = editor;
+    editor.focus();
   };
 
   return (

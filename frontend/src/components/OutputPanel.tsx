@@ -1,7 +1,7 @@
 type Props = {
   output: string,
   setOutput: (value: string) => void
-  running: Boolean
+  running: boolean
 }
 
 const OutputPannel = (props: Props) => {

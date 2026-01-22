@@ -2,7 +2,7 @@
 type Props = {
   error: string,
   setError: (value: string) => void
-  running: Boolean
+  running: boolean
 }
 const ErrorPannel = (props: Props) => {
   return (
