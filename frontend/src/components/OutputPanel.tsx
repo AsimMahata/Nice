@@ -6,7 +6,7 @@ type Props = {
 
 const OutputPannel = (props: Props) => {
   return (
-    <div>
+    <div className="output-panel">
       {!props.running && props.output}
       {props.running && "Running Wait..."}
     </div>

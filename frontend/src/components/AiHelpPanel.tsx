@@ -4,7 +4,7 @@ type Props = {
 
 const AiHelpPanel = (props: Props) => {
   return (
-    <div style={{ whiteSpace: "pre-wrap" }}>
+    <div className="ai-help-panel" style={{ whiteSpace: "pre-wrap" }}>
       {props.aiResponse}
     </div>
   )

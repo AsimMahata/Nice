@@ -17,10 +17,10 @@ export default function CodeEditor({ code, setCode }: CodeEditorProps) {
 
   return (
     <Editor
-      height="70vh"
+      height="100%"
       language="cpp"
       theme="vs-dark"
-      defaultValue="//writesomething"
+      defaultValue=""
       value={code}
       onChange={(value,) => setCode(value || "")}
       onMount={handleMount}
