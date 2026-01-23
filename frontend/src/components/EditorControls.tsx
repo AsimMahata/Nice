@@ -96,7 +96,9 @@ const EditorControls = (props: Props) => {
 
     });
   }
+
   // TODO: still havent implemented
+
   const compileCode = () => {
     const code = props.code
     console.log(code)

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { resolve, dirname, BaseDirectory } from "@tauri-apps/api/path";
-import { create, exists, mkdir, readDir, readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { create, exists, mkdir, readDir, readTextFile, size, writeTextFile } from "@tauri-apps/plugin-fs";
 
 //NOTE: FileEntry
 export interface FileEntry {
@@ -16,7 +16,7 @@ type props = {
 
 export function useFileActions({ showToast, setCode }: props) {
   const [files, setFiles] = useState<FileEntry[]>([]);
-  const [currentPath, setCurrentPath] = useState("");
+  const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(false);
   const [newFolder, setNewFolder] = useState("")
   const [newFile, setNewFile] = useState("")
@@ -46,8 +46,8 @@ export function useFileActions({ showToast, setCode }: props) {
         const content = await readRawFiles(file)
         setCode(content || "")
         setCodeFile(file)
-        console.log(content)
-        console.log('file', file)
+        console.log('FileActions', 'handleClick', 'readRawFiles', content)
+        console.log('FileActions', 'handleClick', file)
       } catch (err) {
         showToast("something went wrong")
       }
@@ -57,7 +57,7 @@ export function useFileActions({ showToast, setCode }: props) {
   // go to parent Directory
   async function goParentDir() {
     try {
-      const parent = await dirname(currentPath);
+      const parent = await dirname(currentPath || "ERROR");
       if (await exists(parent)) setCurrentPath(parent);
       else showToast("Directory does not exist");
     } catch {
@@ -74,7 +74,8 @@ export function useFileActions({ showToast, setCode }: props) {
 
     try {
       await mkdir(location, { baseDir: BaseDirectory.Home });
-    } catch {
+    } catch (err) {
+      console.log(err)
       showToast("Can't create folder");
     } finally {
       setRefresh(v => !v);
@@ -90,7 +91,8 @@ export function useFileActions({ showToast, setCode }: props) {
     try {
       const file = await create(location, { baseDir: BaseDirectory.Home });
       await file.close();
-    } catch {
+    } catch (err) {
+      console.log(err)
       showToast("Can't create file");
     } finally {
       setRefresh(v => !v);
@@ -102,13 +104,27 @@ export function useFileActions({ showToast, setCode }: props) {
   async function readRawFiles(file: FileEntry) {
     if (!file.name) return;
     const fileLocation = file.dir + "/" + file.name;
-    const fileContent = await readTextFile(fileLocation,
-      {
-        baseDir: BaseDirectory.Home
+    try {
+      const limit = 100000;
+      const fileSize = await size(fileLocation);
+      console.log(`File Size : ${fileSize} bytes`)
+      if (fileSize > limit) {
+        showToast('File is Too Large')
+        return;
       }
-    );
-
-    return fileContent;
+    } catch (err) {
+      console.log('FileActions', 'readRawFiles', 'size', err);
+    }
+    try {
+      const fileContent = await readTextFile(fileLocation,
+        {
+          baseDir: BaseDirectory.Home
+        }
+      );
+      return fileContent;
+    } catch (err) {
+      console.log('FileActions', 'readRawFiles', 'readTextFile', err);
+    }
   }
 
   // save Files
@@ -118,6 +134,7 @@ export function useFileActions({ showToast, setCode }: props) {
     console.log(contents)
     const fileLocation = file.dir + "/" + file.name;
     console.log(fileLocation);
+    console.log(BaseDirectory.Home)
     try {
       await writeTextFile(fileLocation, contents, {
         baseDir: BaseDirectory.Home,

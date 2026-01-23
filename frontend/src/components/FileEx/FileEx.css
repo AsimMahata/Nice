@@ -30,6 +30,7 @@
   border-radius: 4px;
   background: #1e1e1e;
   color: #fff;
+  min-width: 50px;
 }
 
 .file-ex-actions button:hover {
@@ -83,4 +84,23 @@
   padding: 8px 10px;
   border-radius: 6px;
   font-size: 12px;
+}
+
+
+.dir-picker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.dir-picker .open-dir-button {
+  height: 30px;
+  width: 150px;
+  font-size: 17px;
+  font-weight: bold;
+}
+
+.dir-picker .change-dir-button {
+  height: 30px;
 }
