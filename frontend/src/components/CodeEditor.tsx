@@ -4,10 +4,11 @@ import * as monaco from "monaco-editor";
 
 type CodeEditorProps = {
   code: string,
-  setCode: (value: string) => void
+  setCode: (value: string) => void,
+  lang: string
 };
 
-export default function CodeEditor({ code, setCode }: CodeEditorProps) {
+export default function CodeEditor({ code, setCode, lang }: CodeEditorProps) {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const handleMount: OnMount = (editor) => {
@@ -18,7 +19,7 @@ export default function CodeEditor({ code, setCode }: CodeEditorProps) {
   return (
     <Editor
       height="100%"
-      language="cpp"
+      language={lang}
       theme="vs-dark"
       defaultValue=""
       value={code}

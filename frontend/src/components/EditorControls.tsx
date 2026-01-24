@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from "axios"
 import '../styles/EditorControls.css'
 import React, { useState } from "react"
+import LangDropDown from "./LangDropDown"
 
 type Props = {
   code: string
@@ -11,7 +12,9 @@ type Props = {
   setRunning: React.Dispatch<React.SetStateAction<boolean>>
   setAiResponse: React.Dispatch<React.SetStateAction<string>>
   input: string
-  setSavingCode: React.Dispatch<React.SetStateAction<boolean>>
+  setSavingCode: React.Dispatch<React.SetStateAction<boolean>>,
+  lang: string,
+  _setLang: React.Dispatch<React.SetStateAction<string>>
 }
 type code = {
   code: string
@@ -112,6 +115,7 @@ const EditorControls = (props: Props) => {
       <button onClick={getAiHelp}
         className={`ai-btn ${hasError ? "ai-btn-error" : ""}`}
       >Get AI Help</button>
+      <LangDropDown lang={props.lang} _setLang={props._setLang} />
     </div>
   )
 }
