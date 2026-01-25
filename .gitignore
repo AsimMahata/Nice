@@ -13,3 +13,5 @@ backend/dist/
 backend/temp/
 # misc
 .DS_Store
+
+.vscode
