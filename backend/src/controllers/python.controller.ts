@@ -41,7 +41,7 @@ export const runCode = async (req: Request, res: Response) => {
     //running code - run time error possible 
 
 
-    const child = spawn("python", [source], { stdio: "pipe" });
+    const child = spawn("python3", [source], { stdio: "pipe" });
     child.stdout.on("data", (data) => {
         codeStatus.output += data.toString()
     })

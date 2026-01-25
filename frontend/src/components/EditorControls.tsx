@@ -51,7 +51,7 @@ const EditorControls = (props: Props) => {
             type: "comile time error"
         }
 
-        const url: string = 'http://localhost:3000/api/ai/help'; //WARN: hard coded backend url
+        const url: string = `${import.meta.env.VITE_API_URL}/ai/help`; //WARN: hard coded backend url
 
         await axios.post(url, errObj).then((res: AxiosResponse) => {
 
@@ -59,7 +59,7 @@ const EditorControls = (props: Props) => {
 
         }).catch((err) => {
 
-            console.error('sometehing error occured with gemini/AI so cant help sad 🥲 \n', err)
+            console.error('sometehing error occured with GROQ/AI so cant help sad 🥲 \n', err)
 
         }).finally(() => setHasError(false))
     }
@@ -76,7 +76,7 @@ const EditorControls = (props: Props) => {
         props.setOutput('No Output')                                                  //  before running set output to default
         props.setAiResponse('')                                                       //  ai response to empty
 
-        const url: string = `http://localhost:3000/api/${payload.lang}/run`;                      // WARN: hard coded need to be in .env
+        const url: string = `${import.meta.env.VITE_API_URL}/${payload.lang}/run`;                      // WARN: hard coded need to be in .env
         console.log('EditorControls', 'runCode', url)
         props.setRunning(true)                        // WARN: every props is getting used in the format props.VAR needs to be { separated }
 

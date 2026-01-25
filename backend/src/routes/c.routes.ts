@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { compileCode, runCode } from "../controllers/cpp.controller.js";
+import { compileCode, runCode } from "../controllers/c.controller.js";
 
 const router = Router();
 

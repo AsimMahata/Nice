@@ -1,4 +1,3 @@
-
 type Props={
   lang:string,
   _setLang:React.Dispatch<React.SetStateAction<string>>

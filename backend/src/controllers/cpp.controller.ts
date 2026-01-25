@@ -9,6 +9,8 @@ import path from "path"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+console.log(__filename);
+console.log(__dirname)
 const source = path.join(`${__dirname}/../../temp/cpp/code/`, "code.cpp");
 const dest = path.join(`${__dirname}/../../temp/cpp/res/`, "code");
 console.log(__dirname)

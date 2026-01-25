@@ -5,6 +5,8 @@ import cors from 'cors'
 import cppRoutes from "./routes/cpp.routes.js"
 import pythonRoutes from "./routes/python.routes.js"
 import aiRoutes from "./routes/ai.routes.js"
+import javaRoutes from "./routes/java.routes.js"
+import cRoutes from "./routes/c.routes.js"
 
 const app: Express = express()
 const httpServer = createServer(app);
@@ -20,6 +22,8 @@ app.get("/", (_req, res) => {
 app.use("/api/python", pythonRoutes)
 app.use("/api/cpp", cppRoutes);
 app.use("/api/ai", aiRoutes)
+app.use("/api/java",javaRoutes)
+app.use("/api/c",cRoutes)
 
 const io = new Server(httpServer, {
     cors: { origin: "*" }
