@@ -16,7 +16,6 @@ competitive programming
 
 * Powered by **Node.js**
 * Uses **Express** for the application server
-* Uses **WebSocket** to communicate with LSP
 
 ## How to Use
 
