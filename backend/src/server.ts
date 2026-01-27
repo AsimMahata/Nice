@@ -1,12 +1,12 @@
 import express, { Express } from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import cors from 'cors'
-import cppRoutes from "./routes/cpp.routes.js"
-import pythonRoutes from "./routes/python.routes.js"
-import aiRoutes from "./routes/ai.routes.js"
-import javaRoutes from "./routes/java.routes.js"
-import cRoutes from "./routes/c.routes.js"
+import cors from 'cors';
+import cppRoutes from "./routes/cpp.routes.js";
+import pythonRoutes from "./routes/python.routes.js";
+import aiRoutes from "./routes/ai.routes.js";
+import javaRoutes from "./routes/java.routes.js";
+import cRoutes from "./routes/c.routes.js";
 
 const app: Express = express()
 const httpServer = createServer(app);
