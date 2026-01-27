@@ -15,6 +15,8 @@ type Props = {
     setSavingCode: React.Dispatch<React.SetStateAction<boolean>>,
     lang: string,
     _setLang: React.Dispatch<React.SetStateAction<string>>
+    showFileEx: boolean,
+    setShowFileEx: React.Dispatch<React.SetStateAction<boolean>>
 }
 type code = {
     code: string,
@@ -32,7 +34,7 @@ type status = {
 // the main controler of all the actions which happens to code name is bad 
 // NOTE: there are so much stuff here have to move them to a utils section
 
-const EditorControls = (props: Props) => {
+const ControlPanel = (props: Props) => {
 
     const [hasError, setHasError] = useState(false)        // whether running or compililation has generated any error it is used to trigger getAIHELP button
 
@@ -112,6 +114,7 @@ const EditorControls = (props: Props) => {
 
     return (
         <div className="EditorControlsContainer">
+            <button onClick={() => props.setShowFileEx(prev => !prev)}>{!props.showFileEx ? "Open" : "Close"}Files</button>
             <button onClick={runCode}>Run</button>
             <button onClick={compileCode}>Compile</button>
             <button onClick={saveCode}>SaveCode</button>
@@ -123,4 +126,4 @@ const EditorControls = (props: Props) => {
     )
 }
 
-export default EditorControls
+export default ControlPanel
