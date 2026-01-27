@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { homeDir } from "@tauri-apps/api/path";
 import "./FileEx.css";
 import { FileEntry, useFileActions } from "./FileAcations";
 import { useToast } from "../../utils/Toast";
 import FileItem from "./FileItem";
+import PickDir from "./PickDir";
 
 type props = {
   codeFile: FileEntry | null,
@@ -22,26 +22,43 @@ const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode }: props) => 
   }
   const FileActions = useFileActions(props);
 
+  const [mainDir, setMainDir] = useState<string | null>(null)        // main project folder by user
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [creatingFile, setCreatingFile] = useState(false);
+  const [insideMainDir, setInsideMainDir] = useState<boolean>(false);
 
   useEffect(() => {
     FileActions.saveFiles(code, codeFile)
+    console.log('triggered')
   }, [savingCode])
   // init path
   useEffect(() => {
     async function init() {
-      const home = await homeDir();
-      FileActions.setCurrentPath(`${home}/dev/testing`);
+      const dir = mainDir;
+      //setMainDir(dir)
+      FileActions.setCurrentPath(dir);
+      setInsideMainDir(true)
     }
     init();
-  }, []);
+  }, [mainDir]);
 
   // reload on path / refresh
   useEffect(() => {
     FileActions.loadFiles();
+    if (FileActions.currentPath?.startsWith(mainDir ?? "NotAllowed")) {
+      console.log('insideScope')
+      if (FileActions.currentPath === mainDir) {
+        setInsideMainDir(true)
+      } else {
+        setInsideMainDir(false)
+      }
+    } else {
+      console.log('permission not allowed || null')
+    }
+    console.log(insideMainDir)
   }, [FileActions.currentPath, FileActions.refresh]);
 
+  if (!mainDir) return <PickDir mainDir={mainDir} setMainDir={setMainDir} />
   return (
     <div className="file-ex-root">
       {/* toast */}
@@ -49,63 +66,69 @@ const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode }: props) => 
 
       {/* header */}
       <div className="file-ex-header">
-        <span className="path" title={FileActions.currentPath}>
+        <span className="path" title={FileActions.currentPath || "NotAllowed"}>
           {FileActions.currentPath}
         </span>
       </div>
 
       {/* actions */}
       <div className="file-ex-actions">
-        <button onClick={FileActions.goParentDir}>↩</button>
+        {insideMainDir && <button>Main</button>}
+        {!insideMainDir && <button onClick={FileActions.goParentDir}>↩</button>}
         <button onClick={() => setCreatingFolder(true)}>+📁</button>
         <button onClick={() => setCreatingFile(true)}>+📄</button>
+        <PickDir mainDir={mainDir} setMainDir={setMainDir} />
       </div>
 
       {/* create folder */}
-      {creatingFolder && (
-        <input
-          autoFocus
-          className="folder-input"
-          value={FileActions.newFolder}
-          placeholder="New folder"
-          onChange={(e) => FileActions.setNewFolder(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              FileActions.createNewFolder(FileActions.newFolder);
-              FileActions.setNewFolder("");
-              setCreatingFolder(false);
-            }
-            if (e.key === "Escape") {
-              FileActions.setNewFolder("");
-              setCreatingFolder(false);
-            }
-          }}
-          onBlur={() => setCreatingFolder(false)}
-        />
-      )}
+      {
+        creatingFolder && (
+          <input
+            autoFocus
+            className="folder-input"
+            value={FileActions.newFolder}
+            placeholder="New folder"
+            onChange={(e) => FileActions.setNewFolder(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                FileActions.createNewFolder(FileActions.newFolder);
+                FileActions.setNewFolder("");
+                setCreatingFolder(false);
+              }
+              if (e.key === "Escape") {
+                FileActions.setNewFolder("");
+                setCreatingFolder(false);
+              }
+            }}
+            onBlur={() => setCreatingFolder(false)}
+          />
+        )
+      }
 
       {/* create file */}
-      {creatingFile && (
-        <input
-          autoFocus
-          className="file-input"
-          value={FileActions.newFile}
-          placeholder="New file"
-          onChange={(e) => FileActions.setNewFile(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              FileActions.createNewFiles(FileActions.newFile);
-              FileActions.setNewFile("");
-              setCreatingFile(false);
-            }
-            if (e.key === "Escape") {
-              FileActions.setNewFile("");
-              setCreatingFile(false);
-            }
-          }}
-          onBlur={() => setCreatingFile(false)}
-        />
-      )}
+      {
+        creatingFile && (
+          <input
+            autoFocus
+            className="file-input"
+            value={FileActions.newFile}
+            placeholder="New file"
+            onChange={(e) => FileActions.setNewFile(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                FileActions.createNewFiles(FileActions.newFile);
+                FileActions.setNewFile("");
+                setCreatingFile(false);
+              }
+              if (e.key === "Escape") {
+                FileActions.setNewFile("");
+                setCreatingFile(false);
+              }
+            }}
+            onBlur={() => setCreatingFile(false)}
+          />
+        )
+      }
 
       {/* file list */}
       <div className="filelist">
@@ -117,7 +140,7 @@ const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode }: props) => 
           />
         ))}
       </div>
-    </div>
+    </div >
   );
 };
 

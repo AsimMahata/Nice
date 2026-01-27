@@ -1,35 +1,266 @@
+import Editor from "@monaco-editor/react";
 import { useRef } from "react";
-import Editor, { OnMount } from "@monaco-editor/react";
-import * as monaco from "monaco-editor";
 
-type CodeEditorProps = {
-  code: string,
-  setCode: (value: string) => void
+import {
+    WebSocketMessageReader,
+    WebSocketMessageWriter,
+    toSocket,
+} from "vscode-ws-jsonrpc";
+
+import { createMessageConnection } from "vscode-jsonrpc/browser";
+
+// -----------------------------
+// DEBUG TOGGLE
+// -----------------------------
+const DEBUG = true;
+const log = (...args: any[]) => {
+    if (DEBUG) console.log(...args);
 };
 
-export default function CodeEditor({ code, setCode }: CodeEditorProps) {
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+export default function CodeEditor({ code, setCode, lang }: any) {
+    // LSP document version (must monotonically increase)
+    const version = useRef(1);
 
-  const handleMount: OnMount = (editor) => {
-    editorRef.current = editor;
-    editor.focus();
-  };
+    // True after didOpen
+    const opened = useRef(false);
 
-  return (
-    <Editor
-      height="100%"
-      language="cpp"
-      theme="vs-dark"
-      defaultValue=""
-      value={code}
-      onChange={(value,) => setCode(value || "")}
-      onMount={handleMount}
-      options={{
-        fontSize: 14,
-        minimap: { enabled: false },
-        automaticLayout: true,
-        scrollBeyondLastLine: false,
-      }}
-    />
-  );
+    // True after initialize + didOpen (used for completion)
+    const initialized = useRef(false);
+
+    const handleMount = (editor: any, monaco: any) => {
+        log("codeeditor/handleMount/init", { lang });
+
+        // Connect to backend LSP bridge
+        const ws = new WebSocket(`ws://localhost:3001?lang=${lang}`);
+        ws.binaryType = "arraybuffer";
+
+        ws.onopen = () => {
+            log("codeeditor/ws/onopen", "connected");
+
+            // Wrap WebSocket → JSON-RPC
+            const socket = toSocket(ws);
+            const reader = new WebSocketMessageReader(socket);
+            const writer = new WebSocketMessageWriter(socket);
+
+            log("codeeditor/lsp/socket", "reader/writer ready");
+
+            // Create LSP connection
+            const conn = createMessageConnection(reader, writer);
+            conn.listen();
+
+            log("codeeditor/lsp/connection", "listening");
+
+            // Decide extension (clangd relies on this)
+            const ext =
+                lang === "python" ? "py" : lang === "c" ? "c" : "cpp";
+
+            // SINGLE SOURCE OF TRUTH FOR URI (clangd requires file://)
+            const fileUri = `file:///workspace/main.${ext}`;
+
+            log("codeeditor/lsp/document", fileUri);
+
+            // -----------------------------
+            // 1️⃣ INITIALIZE
+            // -----------------------------
+            conn.sendRequest("initialize", {
+                processId: null,
+                rootUri: "file:///workspace",
+                capabilities: {},
+            }).then(() => {
+                log("codeeditor/lsp/initialize", "ok");
+
+                // -----------------------------
+                // 2️⃣ INITIALIZED
+                // -----------------------------
+                conn.sendNotification("initialized");
+                log("codeeditor/lsp/initialized", "sent");
+
+                // -----------------------------
+                // 3️⃣ DID OPEN
+                // -----------------------------
+                conn.sendNotification("textDocument/didOpen", {
+                    textDocument: {
+                        uri: fileUri,
+                        languageId: lang,
+                        version: version.current,
+                        text: editor.getValue(),
+                    },
+                });
+
+                opened.current = true;
+                initialized.current = true;
+
+                log("codeeditor/lsp/ready", {
+                    uri: fileUri,
+                    version: version.current,
+                });
+            });
+
+            // -----------------------------
+            // DOCUMENT CHANGES
+            // -----------------------------
+            editor.onDidChangeModelContent(() => {
+                if (!opened.current) return;
+
+                version.current++;
+                const text = editor.getValue();
+
+                log("codeeditor/editor/didChange", {
+                    version: version.current,
+                });
+
+                conn.sendNotification("textDocument/didChange", {
+                    textDocument: {
+                        uri: fileUri,
+                        version: version.current,
+                    },
+                    contentChanges: [
+                        {
+                            range: null, // full document replace
+                            text,
+                        },
+                    ],
+                });
+            });
+
+            // -----------------------------
+            // COMPLETION PROVIDER
+            // -----------------------------
+            log(
+                "codeeditor/completion/provider/register",
+                "registering"
+            );
+
+            monaco.languages.registerCompletionItemProvider(lang, {
+                triggerCharacters: [".", ">", ":", "("],
+
+                provideCompletionItems: async (
+                    model: any,
+                    position: any
+                ) => {
+                    log(
+                        "codeeditor/completion/provide/start",
+                        position
+                    );
+
+                    if (!initialized.current) {
+                        log(
+                            "codeeditor/completion/blocked",
+                            "lsp not ready"
+                        );
+                        return { suggestions: [] };
+                    }
+
+                    const lspPosition = {
+                        line: position.lineNumber - 1,
+                        character: position.column - 1,
+                    };
+
+                    log(
+                        "codeeditor/completion/request/send",
+                        {
+                            uri: fileUri,
+                            lspPosition,
+                        }
+                    );
+
+                    const result: any = await conn.sendRequest(
+                        "textDocument/completion",
+                        {
+                            textDocument: { uri: fileUri },
+                            position: lspPosition,
+                            context: { triggerKind: 1 },
+                        }
+                    );
+
+                    log(
+                        "codeeditor/completion/response/raw",
+                        result
+                    );
+
+                    const items = Array.isArray(result)
+                        ? result
+                        : result?.items ?? [];
+
+                    log(
+                        "codeeditor/completion/items/count",
+                        items.length
+                    );
+
+                    const word = model.getWordUntilPosition(position);
+                    const range = {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: word.startColumn,
+                        endColumn: word.endColumn,
+                    };
+
+                    const suggestions = items.map((item: any) => ({
+                        label: item.label,
+                        kind: monaco.languages.CompletionItemKind.Function,
+                        insertText: item.insertText || item.label,
+                        detail: item.detail,
+                        documentation: item.documentation,
+                        range,
+                    }));
+
+                    log(
+                        "codeeditor/completion/monaco/suggestions",
+                        suggestions
+                    );
+
+                    return { suggestions };
+                },
+            });
+
+            // -----------------------------
+            // DIAGNOSTICS
+            // -----------------------------
+            conn.onNotification(
+                "textDocument/publishDiagnostics",
+                (p: any) => {
+                    log(
+                        "codeeditor/lsp/publishDiagnostics/raw",
+                        p
+                    );
+
+                    const markers = p.diagnostics.map((d: any) => ({
+                        startLineNumber: d.range.start.line + 1,
+                        startColumn: d.range.start.character + 1,
+                        endLineNumber: d.range.end.line + 1,
+                        endColumn: d.range.end.character + 1,
+                        message: d.message,
+                        severity:
+                            d.severity === 1
+                                ? monaco.MarkerSeverity.Error
+                                : d.severity === 2
+                                    ? monaco.MarkerSeverity.Warning
+                                    : monaco.MarkerSeverity.Info,
+                    }));
+
+                    log(
+                        "codeeditor/monaco/setMarkers",
+                        markers
+                    );
+
+                    monaco.editor.setModelMarkers(
+                        editor.getModel(),
+                        lang,
+                        markers
+                    );
+                }
+            );
+        };
+    };
+
+    return (
+        <Editor
+            height="100%"
+            language={lang}
+            theme="vs-dark"
+            value={code}
+            onChange={(v) => setCode(v)}
+            onMount={handleMount}
+        />
+    );
 }

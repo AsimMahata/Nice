@@ -7,59 +7,33 @@
   "permissions": [
     "core:default",
     {
-      "identifier": "fs:allow-read-dir",
+      "identifier": "fs:scope",
       "allow": [
         {
-          "path": "$HOME/dev/testing"
-        },
-        {
-          "path": "$HOME/dev/testing/**"
+          "path": "**/*"
         }
       ]
     },
     {
-      "identifier": "fs:allow-exists",
-      "allow": [
-        {
-          "path": "$HOME/dev/testing"
-        },
-        {
-          "path": "$HOME/dev/testing/**"
-        }
-      ]
+      "identifier": "fs:allow-create"
     },
     {
-      "identifier": "fs:allow-mkdir",
-      "allow": [
-        {
-          "path": "$HOME/dev/testing"
-        },
-        {
-          "path": "$HOME/dev/testing/**"
-        }
-      ]
+      "identifier": "fs:allow-read-dir"
     },
     {
-      "identifier": "fs:allow-write-text-file",
-      "allow": [
-        {
-          "path": "$HOME/dev/testing"
-        },
-        {
-          "path": "$HOME/dev/testing/**"
-        }
-      ]
+      "identifier": "fs:allow-exists"
     },
     {
-      "identifier": "fs:read-files",
-      "allow": [
-        {
-          "path": "$HOME/dev/testing"
-        },
-        {
-          "path": "$HOME/dev/testing/**"
-        }
-      ]
+      "identifier": "fs:allow-mkdir"
+    },
+    {
+      "identifier": "fs:allow-write-text-file"
+    },
+    {
+      "identifier": "fs:read-files"
+    },
+    {
+      "identifier": "fs:allow-size"
     }
   ]
 }
