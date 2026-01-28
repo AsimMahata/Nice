@@ -8,7 +8,7 @@ import aiRoutes from "./routes/ai.routes.js";
 import javaRoutes from "./routes/java.routes.js";
 import cRoutes from "./routes/c.routes.js";
 
-const app: Express = express()
+const app: Express = express();
 const httpServer = createServer(app);
 
 app.use(express.json())
@@ -19,9 +19,9 @@ app.use(cors())
 //   res.send("Backend OK");
 // });
 
-app.use("/api/python", pythonRoutes)
+app.use("/api/python", pythonRoutes);
 app.use("/api/cpp", cppRoutes);
-app.use("/api/ai", aiRoutes)
+app.use("/api/ai", aiRoutes);
 app.use("/api/java",javaRoutes)
 app.use("/api/c",cRoutes)
 
