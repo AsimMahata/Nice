@@ -8,7 +8,7 @@ import aiRoutes from "./routes/ai.routes.js";
 import javaRoutes from "./routes/java.routes.js";
 import cRoutes from "./routes/c.routes.js";
 
-const app: Express = express()
+const app: Express = express();
 const httpServer = createServer(app);
 
 app.use(express.json())
