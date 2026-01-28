@@ -15,9 +15,9 @@ app.use(express.json())
 app.use(cors())
 
 
-app.get("/", (_req, res) => {
-    res.send("Backend OK");
-});
+// app.get("/", (_req, res) => {
+//   res.send("Backend OK");
+// });
 
 app.use("/api/python", pythonRoutes)
 app.use("/api/cpp", cppRoutes);
