@@ -19,9 +19,9 @@ app.get("/", (_req, res) => {
     res.send("Backend OK");
 });
 
-app.use("/api/python", pythonRoutes)
+app.use("/api/python", pythonRoutes);
 app.use("/api/cpp", cppRoutes);
-app.use("/api/ai", aiRoutes)
+app.use("/api/ai", aiRoutes);
 app.use("/api/java",javaRoutes)
 app.use("/api/c",cRoutes)
 
