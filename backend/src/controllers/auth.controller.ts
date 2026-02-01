@@ -38,28 +38,74 @@ const registerLocal = asyncHandler(async (req: Request, res: Response) => {
         .json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
 
-const registerGoogle = asyncHandler(async (req: Request, res: Response) => {
-    if (!req.user) {
-        throw new ApiError(401, "Google Authentication failed");
-    }
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, req.user, "Logged in with Google successfully"));
+const registerGoogle = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) {
+    return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
+  }
+
+
+  return res.redirect(`${process.env.CLIENT_URL}/`);
 });
 
-const registerGithub = asyncHandler(async (req: Request, res: Response) => {
-    if (!req.user) {
-        throw new ApiError(401, "GitHub Authentication failed");
+
+const registerGithub = asyncHandler(async (req: Request, res: Response)=>{
+  if (!req.user) {
+    return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
+  }
+
+  
+  return res.redirect(`${process.env.CLIENT_URL}/`);
+})
+
+
+const loginLocal = asyncHandler(async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        throw new ApiError(400, "Email and password are required");
     }
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, req.user, "Logged in with GitHub successfully"));
+    const user = await User.findOne({ email, provider: "Local" });
+    if (!user) {
+        throw new ApiError(404, "User does not exist");
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(password);
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Invalid user credentials");
+    }
+
+    req.login(user, (err) => {
+        if (err) {
+            throw new ApiError(500, "Session serialization failed");
+        }
+
+        const loggedInUser = user.toObject();
+        delete loggedInUser.password;
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, loggedInUser, "User logged in successfully"));
+    });
+});
+
+const logoutUser = asyncHandler(async (req: Request, res: Response) => {
+    req.logout((err) => {
+        if (err) throw new ApiError(500, "Error during logout");
+        
+        res.clearCookie("connect.sid"); 
+        
+        return res
+            .status(200)
+            .json(new ApiResponse(200, {}, "User logged out successfully"));
+    });
 });
 
 export { 
     registerLocal, 
     registerGoogle, 
     registerGithub,
+    loginLocal,
+    logoutUser
 };

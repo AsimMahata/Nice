@@ -1,9 +1,7 @@
 import { Request, Response } from "express"
 import { GoogleGenAI } from "@google/genai";
-import dotenv from 'dotenv'
-import Groq from "groq-sdk";
-dotenv.config()
 
+import Groq from "groq-sdk";
 
 
 // GROQ

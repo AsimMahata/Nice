@@ -1,15 +1,14 @@
-import { useState, useMemo, useEffect } from 'react'
-import CodeEditor from '../components/CodeEditor'
-import ControlPanel from '../components/ControlPanel'
-import OutputPannel from '../components/OutputPanel'
-import ErrorPannel from '../components/ErrorPanel'
-import InputPanel from '../components/InputPanel'
-import AiHelpPanel from '../components/AiHelpPanel'
-import FileEx from '../components/FileEx/FileEx'
-import { FileEntry } from '../components/FileEx/FileAcations'
-import { getPlaceholder } from '../utils/getPlaceholder'
-import Greeter from '../components/Greeter/Greeter'
-
+import { useState, useMemo, useEffect } from "react";
+import CodeEditor from "../components/CodeEditor";
+import ControlPanel from "../components/ControlPanel";
+import OutputPannel from "../components/OutputPanel";
+import ErrorPannel from "../components/ErrorPanel";
+import InputPanel from "../components/InputPanel";
+import AiHelpPanel from "../components/AiHelpPanel";
+import FileEx from "../components/FileEx/FileEx";
+import { FileEntry } from "../components/FileEx/FileAcations";
+import { getPlaceholder } from "../utils/getPlaceholder";
+import Greeter from "../components/Greeter/Greeter";
 
 
 function Home() {
@@ -32,8 +31,6 @@ function Home() {
             setCode(placeholder);
         }
     }, [lang]);
-
-
 
     return (
         <div className="app-root">

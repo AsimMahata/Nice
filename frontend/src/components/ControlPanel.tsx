@@ -2,6 +2,8 @@ import axios, { AxiosError, AxiosResponse } from "axios"
 import '../styles/EditorControls.css'
 import React, { useState } from "react"
 import LangDropDown from "./LangDropDown"
+import { useAuth } from "../utils/useAuth"
+import NavButton from "./NavigateButton"
 
 type Props = {
     code: string
@@ -112,6 +114,8 @@ const ControlPanel = (props: Props) => {
         console.log(code)
     }
 
+    const {user} = useAuth();
+
     return (
         <div className="EditorControlsContainer">
             <button onClick={() => props.setShowFileEx(prev => !prev)}>{!props.showFileEx ? "Open" : "Close"}Files</button>
@@ -122,6 +126,9 @@ const ControlPanel = (props: Props) => {
                 className={`ai-btn ${hasError ? "ai-btn-error" : ""}`}
             >Get AI Help</button>
             <LangDropDown lang={props.lang} _setLang={props._setLang} />
+            <NavButton to={`/user/${user?._id}`} label="Profile"/>{/*Later update it*/}
+            <NavButton to="/login" label="Login"/>
+            <NavButton to="/register" label="Register"/>
         </div>
     )
 }
