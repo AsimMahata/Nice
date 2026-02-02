@@ -9,6 +9,7 @@ import FileEx from "../components/FileEx/FileEx";
 import { FileEntry } from "../components/FileEx/FileAcations";
 import { getPlaceholder } from "../utils/getPlaceholder";
 import Greeter from "../components/Greeter/Greeter";
+import Terminal from "../components/Terminal/Terminal";
 
 
 function Home() {
@@ -32,6 +33,12 @@ function Home() {
         }
     }, [lang]);
 
+    const [asim, _setAsim] = useState(true)
+    useEffect(() => {
+        if (asim) {
+            setMainDir("/home/asim/dev/testing")
+        }
+    }, [])
     return (
         <div className="app-root">
             {/* This is the Top Pannel with all the buttons such as Run, Compile , Ai and mainly control all the things for now */}
@@ -80,7 +87,8 @@ function Home() {
 
                     <main className="editor-area">
                         <CodeEditor key={lang} code={code} setCode={setCode} lang={lang} />
-                        <div className="panels">
+                        <Terminal />
+                        <div className="panels" style={{ display: 'none' }}>
                             <InputPanel input={input} setInput={setInput} />
 
                             <OutputPannel

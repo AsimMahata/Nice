@@ -9,9 +9,7 @@ import {
 
 import { createMessageConnection } from "vscode-jsonrpc/browser";
 
-// -----------------------------
 // DEBUG TOGGLE
-// -----------------------------
 const DEBUG = true;
 const log = (...args: any[]) => {
     if (DEBUG) console.log(...args);
@@ -59,9 +57,7 @@ export default function CodeEditor({ code, setCode, lang }: any) {
 
             log("codeeditor/lsp/document", fileUri);
 
-            // -----------------------------
-            // 1️⃣ INITIALIZE
-            // -----------------------------
+            // INITIALIZE
             conn.sendRequest("initialize", {
                 processId: null,
                 rootUri: "file:///workspace",
@@ -69,15 +65,11 @@ export default function CodeEditor({ code, setCode, lang }: any) {
             }).then(() => {
                 log("codeeditor/lsp/initialize", "ok");
 
-                // -----------------------------
-                // 2️⃣ INITIALIZED
-                // -----------------------------
+                // INITIALIZED
                 conn.sendNotification("initialized");
                 log("codeeditor/lsp/initialized", "sent");
 
-                // -----------------------------
-                // 3️⃣ DID OPEN
-                // -----------------------------
+                // DID OPEN
                 conn.sendNotification("textDocument/didOpen", {
                     textDocument: {
                         uri: fileUri,
@@ -96,9 +88,7 @@ export default function CodeEditor({ code, setCode, lang }: any) {
                 });
             });
 
-            // -----------------------------
             // DOCUMENT CHANGES
-            // -----------------------------
             editor.onDidChangeModelContent(() => {
                 if (!opened.current) return;
 
@@ -123,9 +113,7 @@ export default function CodeEditor({ code, setCode, lang }: any) {
                 });
             });
 
-            // -----------------------------
             // COMPLETION PROVIDER
-            // -----------------------------
             log(
                 "codeeditor/completion/provider/register",
                 "registering"
@@ -213,9 +201,7 @@ export default function CodeEditor({ code, setCode, lang }: any) {
                 },
             });
 
-            // -----------------------------
             // DIAGNOSTICS
-            // -----------------------------
             conn.onNotification(
                 "textDocument/publishDiagnostics",
                 (p: any) => {

@@ -1,0 +1,23 @@
+{
+    "identifier": "shell",
+    "description": "Shell access",
+    "windows": [
+        "main"
+    ],
+    "permissions": [
+        {
+            "identifier": "shell:allow-execute",
+            "allow": [
+                {
+                    "name": "fuck",
+                    "cmd": "git",
+                    "args": true
+                },
+                {
+                    "name": "curdir",
+                    "cmd": "pwd"
+                }
+            ]
+        }
+    ]
+}
