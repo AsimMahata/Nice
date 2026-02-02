@@ -9,11 +9,10 @@ import FileEx from "../components/FileEx/FileEx";
 import { FileEntry } from "../components/FileEx/FileAcations";
 import { getPlaceholder } from "../utils/getPlaceholder";
 import Greeter from "../components/Greeter/Greeter";
-import Terminal from "../components/Terminal/Terminal";
 
 
 function Home() {
-    const [lang, _setLang] = useState<string>('java')                   // selected Compiler
+    const [lang, setLang] = useState<string>('java')                   // selected Compiler
     const [codeFile, setCodeFile] = useState<FileEntry | null>(null)   // the file that is opned
     const [output, setOutput] = useState('No Output')                  // the output panel
     const [error, setError] = useState('')                             // the error panel
@@ -53,7 +52,7 @@ function Home() {
                 input={input}
                 setSavingCode={setSavingCode}
                 lang={lang}
-                _setLang={_setLang}
+                setLang={setLang}
                 showFileEx={showFileEX}
                 setShowFileEx={setShowFileEx}
             />

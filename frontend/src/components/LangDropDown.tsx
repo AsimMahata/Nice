@@ -1,15 +1,15 @@
-type Props={
-  lang:string,
-  _setLang:React.Dispatch<React.SetStateAction<string>>
+type Props = {
+    lang: string,
+    setLang: React.Dispatch<React.SetStateAction<string>>
 }
 
-function LangDropDown({lang,_setLang}:Props) {
+function LangDropDown({ lang, setLang }: Props) {
     const languages = ["cpp", "python", "java", "c"];
 
     return (
         <select
             value={lang}
-            onChange={(e) => _setLang(e.target.value)}
+            onChange={(e) => setLang(e.target.value)}
         >
             <option value="">Select Languages</option>
             {languages.map((lang) => (

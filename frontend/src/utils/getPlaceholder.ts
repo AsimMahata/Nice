@@ -1,4 +1,5 @@
 export function getPlaceholder(lang: string): string {
+    if (!lang) return ""
     switch (lang) {
         case "cpp":
             return `#include<bits/stdc++.h>

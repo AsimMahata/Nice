@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 
 type Props = {
+<<<<<<< HEAD
     code: string;
     output: string;
     setOutput: React.Dispatch<React.SetStateAction<string>>;
@@ -22,6 +23,22 @@ type Props = {
     showFileEx: boolean;
     setShowFileEx: React.Dispatch<React.SetStateAction<boolean>>;
 };
+=======
+    code: string
+    output: string
+    setOutput: React.Dispatch<React.SetStateAction<string>>
+    error: string
+    setError: React.Dispatch<React.SetStateAction<string>>
+    setRunning: React.Dispatch<React.SetStateAction<boolean>>
+    setAiResponse: React.Dispatch<React.SetStateAction<string>>
+    input: string
+    setSavingCode: React.Dispatch<React.SetStateAction<boolean>>,
+    lang: string,
+    setLang: React.Dispatch<React.SetStateAction<string>>
+    showFileEx: boolean,
+    setShowFileEx: React.Dispatch<React.SetStateAction<boolean>>
+}
+>>>>>>> 489da82 (add language change)
 type code = {
     code: string;
     lang: string;
@@ -116,6 +133,7 @@ const ControlPanel = (props: Props) => {
         console.log(code);
     };
 
+<<<<<<< HEAD
     const { user, refreshAuth } = useAuth();
     console.log(user);
 
@@ -145,6 +163,9 @@ const ControlPanel = (props: Props) => {
             console.error("Logout failed:", err.message);
         }
     };
+=======
+    const { user } = useAuth();
+>>>>>>> 489da82 (add language change)
 
     return (
         <div className="EditorControlsContainer">
@@ -154,6 +175,7 @@ const ControlPanel = (props: Props) => {
             <button onClick={runCode}>Run</button>
             <button onClick={compileCode}>Compile</button>
             <button onClick={saveCode}>SaveCode</button>
+<<<<<<< HEAD
             <button
                 onClick={getAiHelp}
                 className={`ai-btn ${hasError ? "ai-btn-error" : ""}`}>
@@ -164,6 +186,13 @@ const ControlPanel = (props: Props) => {
             {!user && <NavButton to="/login" label="Login" />}
             {!user && <NavButton to="/register" label="Register" />}
             {user && <button onClick={handleLogOut}>Log out</button>}
+=======
+            <button onClick={getAiHelp}
+                className={`ai-btn ${hasError ? "ai-btn-error" : ""}`}
+            >Get AI Help</button>
+            <NavButton to="/login" label="Login" />
+            <NavButton to="/register" label="Register" />
+>>>>>>> 489da82 (add language change)
         </div>
     );
 };
