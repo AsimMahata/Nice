@@ -87,7 +87,6 @@ function Home() {
 
                     <main className="editor-area">
                         <CodeEditor key={lang} code={code} setCode={setCode} lang={lang} />
-                        <Terminal />
                         <div className="panels" style={{ display: 'none' }}>
                             <InputPanel input={input} setInput={setInput} />
 
