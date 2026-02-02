@@ -4,8 +4,8 @@ import ApiResponse from "../utils/ApiResponse.js";
 
 export const getCurrentUser = asynHandler(
   async (req: Request, res: Response) => {
-    console.log(req.isAuthenticated);
-    if (!req.user) {
+    console.log(req.isAuthenticated());
+    if (!req.isAuthenticated()) {
       return res
         .status(200)
         .json(new ApiResponse(200, null, "User not logged in"));

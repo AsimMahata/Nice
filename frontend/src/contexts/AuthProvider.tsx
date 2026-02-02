@@ -21,38 +21,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const url = `${import.meta.env.VITE_API_URL}/user/current-user`;
-        const response = await fetch(url, {
-          credentials: "include", 
-        });
+  const checkAuth = async () => {
+    try {
+      const url = `${import.meta.env.VITE_API_URL}/user/current-user`;
+      const response = await fetch(url, {
+        credentials: "include", 
+      });
 
-        const result = await response.json();
+      const result = await response.json();
+      console.log(result);
 
-        if (response.ok && result.success && result.data) {
-          setUser(result.data); 
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("Auth check failed", error);
+      if (response.ok && result.success && result.data) {
+        setUser(result.data); 
+      } else {
         setUser(null);
-
-        // if (window.location.pathname.startsWith('/dashboard')) {
-        //   navigate('/login');
-        // }
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Auth check failed", error);
+      setUser(null);
 
+      // if (window.location.pathname.startsWith('/dashboard')) {
+      //   navigate('/login');
+      // }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     checkAuth();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading ,refreshAuth: checkAuth}}>
       {children}
     </AuthContext.Provider>
   );

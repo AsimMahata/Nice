@@ -2,6 +2,7 @@ import React from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../utils/useAuth';
 
 interface SignUpInputs {
   email: string;
@@ -19,12 +20,17 @@ const Login: React.FC = () => {
   } = useForm<SignUpInputs>();
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const {refreshAuth} = useAuth();
 
   const onSubmit: SubmitHandler<SignUpInputs> = async (data) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, data);
-      console.log("Success:", response.data);
+      const response = await axios.post(`${API_BASE_URL}/auth/login`, data, {
+        withCredentials: true, // <--- ADD THIS LINE
+      });
+      console.log("Success:", response);
       
+      await refreshAuth();
+
       if(response.status===201 || response.status===200){
         navigate("/");
       }
@@ -40,7 +46,7 @@ const Login: React.FC = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
-        <h2 className="mb-6 text-center text-2xl font-bold text-gray-800">Create Account</h2>
+        <h2 className="mb-6 text-center text-2xl font-bold text-gray-800">Login</h2>
 
         {/* Local Sign Up Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -125,7 +131,7 @@ const Login: React.FC = () => {
         </div>
 
         <p className="mt-6 text-center text-sm text-gray-600">
-          Already have an account? <a href="/login" className="font-medium text-green-600 hover:underline">Log In</a>
+          Don't have an account? <a href="/register" className="font-medium text-green-600 hover:underline">Log In</a>
         </p>
       </div>
     </div>
