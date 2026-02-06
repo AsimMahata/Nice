@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
-import CodeEditor from "../components/CodeEditor";
-import ControlPanel from "../components/ControlPanel";
-import OutputPannel from "../components/OutputPanel";
-import ErrorPannel from "../components/ErrorPanel";
-import InputPanel from "../components/InputPanel";
-import AiHelpPanel from "../components/AiHelpPanel";
+import CodeEditor from "../components/CodeEditor/CodeEditor";
+import ControlPanel from "../components/CodeActions/ControlPanel";
+import OutputPannel from "../components/CodeActions/OutputPanel";
+import ErrorPannel from "../components/CodeActions/ErrorPanel";
+import InputPanel from "../components/CodeActions/InputPanel";
+import AiHelpPanel from "../components/CodeActions/AiHelpPanel";
 import FileEx from "../components/FileEx/FileEx";
 import { FileEntry } from "../components/FileEx/FileAcations";
 import { getPlaceholder } from "../utils/getPlaceholder";

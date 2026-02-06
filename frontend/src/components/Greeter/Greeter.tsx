@@ -1,4 +1,3 @@
-import Terminal from "../Terminal/Terminal"
 import "./Greeter.css"
 type Props = {}
 

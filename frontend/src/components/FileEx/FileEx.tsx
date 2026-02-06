@@ -59,7 +59,7 @@ const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode, mainDir, set
         console.log(insideMainDir)
     }, [FileActions.currentPath, FileActions.refresh]);
 
-    if (!mainDir) return <PickDir mainDir={mainDir} setMainDir={setMainDir} />
+    if (!mainDir) return <PickDir text={"Change"} mainDir={mainDir} setMainDir={setMainDir} />
     return (
         <div className="file-ex-root">
             {/* toast */}
@@ -78,7 +78,7 @@ const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode, mainDir, set
                 {!insideMainDir && <button onClick={FileActions.goParentDir}>↩</button>}
                 <button onClick={() => setCreatingFolder(true)}>+📁</button>
                 <button onClick={() => setCreatingFile(true)}>+📄</button>
-                <PickDir mainDir={mainDir} setMainDir={setMainDir} />
+                <PickDir text="change" mainDir={mainDir} setMainDir={setMainDir} />
             </div>
 
             {/* create folder */}

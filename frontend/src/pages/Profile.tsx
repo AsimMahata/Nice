@@ -1,5 +1,5 @@
 // import { useParams} from "react-router";
-import NavButton from "../components/NavigateButton";
+import NavButton from "../components/CodeActions/NavigateButton";
 import { useAuth } from "../utils/useAuth";
 
 // type RouteParams = {
@@ -7,15 +7,15 @@ import { useAuth } from "../utils/useAuth";
 // };
 
 export default function Profile() {
-  // const { id } = useParams<RouteParams>();
-  const {user} = useAuth();
-  console.log(user);
+    // const { id } = useParams<RouteParams>();
+    const { user } = useAuth();
+    console.log(user);
 
-  return (
-    <div>
-      <h1>Profile page {user?.name}</h1>
-      <h2>{user?.email}</h2>
-      <NavButton to="/" label="Go back to editor (home)"/>
-    </div>
-  );
+    return (
+        <div>
+            <h1>Profile page {user?.name}</h1>
+            <h2>{user?.email}</h2>
+            <NavButton to="/" label="Go back to editor (home)" />
+        </div>
+    );
 }

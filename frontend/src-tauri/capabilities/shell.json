@@ -9,7 +9,7 @@
             "identifier": "shell:allow-execute",
             "allow": [
                 {
-                    "name": "fuck",
+                    "name": "git",
                     "cmd": "git",
                     "args": true
                 },

@@ -1,0 +1,159 @@
+/* page */
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f4f6;
+    padding: 16px;
+}
+
+/* card */
+.auth-card {
+    width: 100%;
+    max-width: 460px;
+    background: #ffffff;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* title */
+.auth-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: #1f2937;
+}
+
+/* form */
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* fields */
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+/* inputs */
+.input {
+    width: 100%;
+    box-sizing: border-box;
+    /* 🔑 prevents overflow */
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #16a34a;
+}
+
+.input.error {
+    border-color: #ef4444;
+}
+
+/* error text */
+.error-text {
+    font-size: 12px;
+    color: #ef4444;
+    margin-top: 4px;
+}
+
+/* password + confirm grid */
+.two-col {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+}
+
+/* submit button */
+.primary-btn {
+    margin-top: 8px;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background: #16a34a;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.primary-btn:disabled {
+    background: #86efac;
+    cursor: not-allowed;
+}
+
+/* divider */
+.divider {
+    margin: 24px 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* social buttons */
+.social-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.google-btn {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.google-btn:hover {
+    border-color: #4285f4;
+    color: #4285f4;
+}
+
+.github-btn {
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #111827;
+    background: #111827;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* footer */
+.footer-text {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #374151;
+}
+
+.footer-text a {
+    color: #16a34a;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* mobile safety */
+@media (max-width: 520px) {
+    .two-col {
+        grid-template-columns: 1fr;
+    }
+}

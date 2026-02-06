@@ -1,16 +1,16 @@
 import './App.css'
 
 import { Routes, Route } from "react-router-dom";
-import Home from './pages/Home';
+import _Home from './pages/Home';
 import Profile from './pages/Profile'
-import Login from './pages/Login';
-import Register from './pages/Register';
-import MainLayout from './pages/MainLayout';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
+import _MainLayout from './pages/Home/HomeTest';
 
 function App() {
     return (
         <Routes>
-            <Route path='/' element={<MainLayout />} />
+            <Route path='/' element={< _MainLayout />} />
             <Route path='/user/:id' element={<Profile />} />
             <Route path='/login' element={<Login />} />
             <Route path='/register' element={<Register />} />

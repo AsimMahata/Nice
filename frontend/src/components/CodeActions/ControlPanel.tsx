@@ -1,29 +1,12 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
-import "../styles/EditorControls.css";
+import "./ControlPanel.css";
 import React, { useState } from "react";
-import LangDropDown from "./LangDropDown";
-import { useAuth } from "../utils/useAuth";
+//import { useAuth } from "../../utils/useAuth";
 import NavButton from "./NavigateButton";
-import { useNavigate } from "react-router-dom";
+//import { useNavigate } from "react-router-dom";
 
 
 type Props = {
-<<<<<<< HEAD
-    code: string;
-    output: string;
-    setOutput: React.Dispatch<React.SetStateAction<string>>;
-    error: string;
-    setError: React.Dispatch<React.SetStateAction<string>>;
-    setRunning: React.Dispatch<React.SetStateAction<boolean>>;
-    setAiResponse: React.Dispatch<React.SetStateAction<string>>;
-    input: string;
-    setSavingCode: React.Dispatch<React.SetStateAction<boolean>>;
-    lang: string;
-    _setLang: React.Dispatch<React.SetStateAction<string>>;
-    showFileEx: boolean;
-    setShowFileEx: React.Dispatch<React.SetStateAction<boolean>>;
-};
-=======
     code: string
     output: string
     setOutput: React.Dispatch<React.SetStateAction<string>>
@@ -38,7 +21,6 @@ type Props = {
     showFileEx: boolean,
     setShowFileEx: React.Dispatch<React.SetStateAction<boolean>>
 }
->>>>>>> 489da82 (add language change)
 type code = {
     code: string;
     lang: string;
@@ -133,40 +115,36 @@ const ControlPanel = (props: Props) => {
         console.log(code);
     };
 
-<<<<<<< HEAD
-    const { user, refreshAuth } = useAuth();
-    console.log(user);
+    // const { user, refreshAuth } = useAuth();
+    // console.log(user);
+    //
+    // const navigate = useNavigate();
 
-    const navigate = useNavigate();
-
-    const handleLogOut = async () => {
-        try {
-            const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/auth/logout`,
-                {},
-                {
-                    withCredentials: true,
-                },
-            );
-
-            if (response.status === 200) {
-                localStorage.removeItem("user");
-
-                refreshAuth();
-
-                navigate("/");
-
-                console.log("Logged out successfully");
-            }
-        } catch (error) {
-            const err = error as Error;
-            console.error("Logout failed:", err.message);
-        }
-    };
-=======
-    const { user } = useAuth();
->>>>>>> 489da82 (add language change)
-
+    // const handleLogOut = async () => {
+    //     try {
+    //         const response = await axios.post(
+    //             `${import.meta.env.VITE_API_URL}/auth/logout`,
+    //             {},
+    //             {
+    //                 withCredentials: true,
+    //             },
+    //         );
+    //
+    //         if (response.status === 200) {
+    //             localStorage.removeItem("user");
+    //
+    //             refreshAuth();
+    //
+    //             navigate("/");
+    //
+    //             console.log("Logged out successfully");
+    //         }
+    //     } catch (error) {
+    //         const err = error as Error;
+    //         console.error("Logout failed:", err.message);
+    //     }
+    // };
+    //
     return (
         <div className="EditorControlsContainer">
             <button onClick={() => props.setShowFileEx((prev) => !prev)}>
@@ -175,25 +153,12 @@ const ControlPanel = (props: Props) => {
             <button onClick={runCode}>Run</button>
             <button onClick={compileCode}>Compile</button>
             <button onClick={saveCode}>SaveCode</button>
-<<<<<<< HEAD
-            <button
-                onClick={getAiHelp}
-                className={`ai-btn ${hasError ? "ai-btn-error" : ""}`}>
-                Get AI Help
-            </button>
-            <LangDropDown lang={props.lang} _setLang={props._setLang} />
-            {user && <NavButton to={`/user/${user?._id}`} label="Profile" />}{/*Later update it*/}
-            {!user && <NavButton to="/login" label="Login" />}
-            {!user && <NavButton to="/register" label="Register" />}
-            {user && <button onClick={handleLogOut}>Log out</button>}
-=======
             <button onClick={getAiHelp}
                 className={`ai-btn ${hasError ? "ai-btn-error" : ""}`}
             >Get AI Help</button>
             <NavButton to="/login" label="Login" />
             <NavButton to="/register" label="Register" />
->>>>>>> 489da82 (add language change)
-        </div>
+        </div >
     );
 };
 
