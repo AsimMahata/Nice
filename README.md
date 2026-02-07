@@ -5,12 +5,13 @@ competitive programming
 
 ## Status
 
-**Currently under active development**
+**Currently under HOLD**
 
 ## Frontend
 
 * Built with **React** and **TypeScript**
 * Runs on **Tauri** for a lightweight desktop experience
+* Currently under hold
 
 ## Backend
 
