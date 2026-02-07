@@ -11,7 +11,7 @@ import { getPlaceholder } from "../utils/getPlaceholder";
 import Greeter from "../components/Greeter/Greeter";
 
 
-function Home() {
+function HomeOld() {
     const [lang, setLang] = useState<string>('java')                   // selected Compiler
     const [codeFile, setCodeFile] = useState<FileInfo | null>(null)   // the file that is opned
     const [output, setOutput] = useState('No Output')                  // the output panel
@@ -110,4 +110,4 @@ function Home() {
     )
 }
 
-export default Home;
+export default HomeOld;

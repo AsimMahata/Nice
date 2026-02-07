@@ -1,6 +1,6 @@
 import {
     FolderIcon, Search, Github, Terminal,
-    Settings, User, X, Command, VenetianMask
+    Settings, User, X, Command, VenetianMask,
 } from 'lucide-react';
 import CodeEditor from '../../components/CodeEditor/CodeEditor';
 import FileEx from '../../components/FileEx/FileEx';
@@ -8,10 +8,13 @@ import { getPlaceholder } from '../../utils/getPlaceholder';
 import { useMemo, useEffect, useState } from "react";
 import { FileInfo } from "../../components/FileEx/FileAcations";
 
-import './HomeTest.css'; // Import the new CSS file
+import './Home.css'; // Import the new CSS file
 import PickDir from '../../components/FileEx/PickDir';
 import UserDetails from '../../components/User/UserDetails';
-function HomeTest() {
+import { Group, Panel } from 'react-resizable-panels'
+import Shell from '../../components/Terminal/Shell';
+function Home() {
+    const [terminal, setTerminal] = useState<boolean>(false)  // this tells if terminal is available or active
     const [sidePanel, setSidePanle] = useState<boolean>(false);  // is side panel visible or not 
     const [currentActivity, setCurrentActivity] = useState<string | null>('file-ex') // what is the current active button on side panel
     const [lang, setLang] = useState<string | null>('cpp');
@@ -91,6 +94,23 @@ function HomeTest() {
         setFileType();
     }, [codeFile]);
 
+    // terminal cleanup from backend 
+    useEffect(() => {
+        if (terminal) {
+            console.log('entered but returned from use useEffect in shell')
+            return;
+        }
+        ; (async () => {
+            try {
+                await window.pty?.destroy()
+                console.log('destroyed terminal from backend succesfully')
+            } catch (err) {
+                console.error('something error occured to destroy pty from backend')
+            }
+        })()
+
+    }, [terminal]);
+
     return (
         <div className="ide-container">
             <header className="ide-header">
@@ -105,9 +125,11 @@ function HomeTest() {
                             mainDir={mainDir}
                             setMainDir={setMainDir}
                         />
-                        {["Edit", "View", "Tools"].map(m => (
+                        {["Edit", "View"].map(m => (
                             <span key={m} className="nav-link">{m}</span>
                         ))}
+                        <span className="nav-link OpenTerminal" onClick={() => setTerminal(true)}>Terminal</span>
+                        <span className="nav-link OpenTerminal" onClick={() => setTerminal(false)}>Close</span>
                         <span className="currentProgrammingLang">{lang}</span>
                     </nav>
                 </div>
@@ -140,11 +162,19 @@ function HomeTest() {
                     <div className="tab-bar">
                         <Tab name="Current" active />
                     </div>
-                    <CodeEditor key={lang} code={code} setCode={setCode} lang={lang} />
+                    <Group orientation='vertical'>
+                        <Panel>
+                            <CodeEditor key={lang} code={code} setCode={setCode} lang={lang} />
+                        </Panel>
+                        {
+                            terminal &&
+                            <Shell setTerminal={setTerminal} />
+                        }
+                    </Group>
                 </main>
             </div>
         </div>
     );
 }
 
-export default HomeTest;
+export default Home;

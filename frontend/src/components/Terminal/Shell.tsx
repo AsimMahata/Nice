@@ -1,77 +1,156 @@
 import React, { useEffect, useRef } from "react";
 import { Terminal } from "@xterm/xterm";
-import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
-import { invoke } from "@tauri-apps/api/core";
+import { FitAddon } from "@xterm/addon-fit";
 import { Panel } from "react-resizable-panels";
-
 type Props = {
-    showTerm: boolean;
-    setShowTerm: React.Dispatch<React.SetStateAction<boolean>>;
+    setTerminal: React.Dispatch<React.SetStateAction<boolean>>;
 };
-
-const Shell = ({ showTerm, setShowTerm }: Props) => {
+type termOpts = {
+    cwd: string,
+    cols: number,
+    rows: number,
+    name: string
+}
+declare global {
+    interface Window {
+        pty?: {
+            create: (options: termOpts) => Promise<void>
+            write: (data: string) => Promise<void>
+            destroy: () => Promise<void>
+            onData: (cb: (data: string) => void) => () => void
+            resize: (cols: number, rows: number) => void
+        };
+    }
+}
+const Shell = ({ setTerminal }: Props) => {
     const terminalRef = useRef<HTMLDivElement>(null);
-    const startedRef = useRef(false);
 
     useEffect(() => {
         if (!terminalRef.current) return;
 
         const term = new Terminal({
+            // --- Rendering ---
+            rendererType: 'canvas',        // fastest & stable
+            allowProposedApi: false,
+
+            // --- Font ---
+            fontFamily: 'Cascadia Code, JetBrains Mono, monospace',
+            fontSize: 14,
+            lineHeight: 1.25,
+            letterSpacing: 0,
+            fontWeight: 'normal',
+            fontWeightBold: 'bold',
+
+            // --- Cursor ---
+            cursorStyle: 'bar',          // 'block' | 'underline' | 'bar'
+            cursorBlink: true,
+
+            // --- Behavior ---
             convertEol: true,
-            fontFamily: "JetBrains Mono, monospace",
-            theme: { background: "rgb(47,47,47)" },
-        });
+            scrollback: 5000,
+            disableStdin: false,
+            screenReaderMode: false,
+
+            // --- Selection ---
+            selectionClipboard: true,
+            copyOnSelect: false,
+
+            // --- Bell ---
+            bellStyle: 'none',              // 'none' | 'sound' | 'visual'
+
+            // --- Mouse ---
+            macOptionIsMeta: true,
+            rightClickSelectsWord: false,
+
+            // --- Performance ---
+            fastScrollModifier: 'alt',
+            fastScrollSensitivity: 5,
+
+            // --- Unicode ---
+            allowTransparency: false,
+            minimumContrastRatio: 1,
+
+            // --- Theme (Catppuccin Mocha example) ---
+            theme: {
+                background: '#1e1e2e',
+                foreground: '#cdd6f4',
+                cursor: '#f5e0dc',
+                selection: '#585b70',
+
+                black: '#45475a',
+                red: '#f38ba8',
+                green: '#a6e3a1',
+                yellow: '#f9e2af',
+                blue: '#89b4fa',
+                magenta: '#f5c2e7',
+                cyan: '#94e2d5',
+                white: '#bac2de',
+
+                brightBlack: '#585b70',
+                brightRed: '#f38ba8',
+                brightGreen: '#a6e3a1',
+                brightYellow: '#f9e2af',
+                brightBlue: '#89b4fa',
+                brightMagenta: '#f5c2e7',
+                brightCyan: '#94e2d5',
+                brightWhite: '#a6adc8',
+            },
+        })
 
         const fitAddon = new FitAddon();
         term.loadAddon(fitAddon);
         term.open(terminalRef.current);
-        fitAddon.fit();
-
-        if (!startedRef.current) {
-            startedRef.current = true;
-            invoke("create_shell").catch(() => { });
+        fitAddon.fit()
+        async function createPtyBackend(termOpts: termOpts) {
+            try {
+                await window.pty?.create(termOpts)
+                console.log('sucessfully created backend pty')
+            } catch (err) {
+                console.log('error creating pty in backend ', err)
+            }
+        }
+        const termOpts: termOpts = {
+            cwd: '/home/asim/dev/testing/',
+            rows: term.rows,
+            cols: term.cols,
+            name: "xterm-256color",
+        }
+        createPtyBackend(termOpts)
+        term.onData((data) => {
+            if (!window.pty) {
+                console.log('window.pty does not exists')
+                return
+            }
+            console.log('data-in-frontend-pty', data)
+            window.pty?.write(data)
+        });
+        window.pty?.onData((data: string) => {
+            console.log('from backend pty:', data)
+            term.write(data)
+        })
+        const resize = () => {
+            fitAddon.fit()
+            requestAnimationFrame(() => {
+                fitAddon.fit()
+                window.pty?.resize(term.cols, term.rows)
+            })
         }
 
-        term.onData((data) => {
-            invoke("write_to_pty", { data }).catch(() => { });
-        });
-
-        const resize = () => {
-            fitAddon.fit();
-            invoke("resize_pty", {
-                rows: term.rows,
-                cols: term.cols,
-            }).catch(() => { });
-        };
-
         window.addEventListener("resize", resize);
-
-        let alive = true;
-        const readLoop = async () => {
-            if (!alive) return;
-            try {
-                const data = await invoke<string | null>("read_from_pty");
-                if (data) term.write(data);
-            } catch { }
-            requestAnimationFrame(readLoop);
-        };
-        requestAnimationFrame(readLoop);
 
         resize();
 
         return () => {
-            alive = false;
             window.removeEventListener("resize", resize);
             term.dispose();
         };
     }, []);
-
     return (
         <Panel
             defaultSize="35%"
             onResize={(size) => {
-                if (size.asPercentage < 10) setShowTerm(false);
+                if (size.asPercentage < 10) setTerminal(false);
             }}
         >
             <div ref={terminalRef} className="main-container" />

@@ -1,10 +1,13 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path, { join } from 'path';
-import fs from "fs/promises";
 import { createNewFile, createNewFolder, getParentDirectory, openDirectory, readDirectory, readFileContent } from './Modules/FileSystem/FileActions';
 import { showNotification } from './Modules/Notificaiton/Notification'
-import { bo } from 'react-router/dist/development/instrumentation-DvHY1sgY';
+import { ptyRef } from './Modules/Terminal/terminal'
+import { triggerAsyncId } from 'async_hooks';
+import { exitCode } from 'process';
 
+
+// main window
 function createWindow() {
     const win = new BrowserWindow({
         width: 1200,
@@ -28,9 +31,33 @@ function createWindow() {
 
 app.whenReady().then(() => {
 
+    // terminal
+    ipcMain.handle("pty:create", (_e, options: termOpts) => {
+        ptyRef.create(options);
+        const pty = ptyRef.getPty()
+        if (!pty) {
+            console.error('PTY not created')
+            return
+        }
+
+    });
+
+    ipcMain.on("pty:write", (_e, data: string) => {
+        console.log('pty:write data', data)
+        ptyRef.write(data);
+    });
+    //resize
+    ipcMain.on('pty:resize', (_e, cols, rows) => {
+        ptyRef.resize(cols, rows)
+    })
+    ipcMain.on("pty:destroy", () => {
+        ptyRef.destroy();
+    });
+
     // notification service 
     ipcMain.handle('notify', (_event, title: string, body: string) => {
         showNotification(title, body)
+
     });
 
     // join paths 

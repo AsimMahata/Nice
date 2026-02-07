@@ -22,3 +22,22 @@ contextBridge.exposeInMainWorld('fileSystem', {
     createFolder: (path: string) => ipcRenderer.invoke('create-folder', path),
     createFile: (path: string) => ipcRenderer.invoke('create-file', path)
 });
+
+
+
+// Terminal
+
+contextBridge.exposeInMainWorld("pty", {
+    create: (cwd?: string) => ipcRenderer.invoke("pty:create", cwd),
+    write: (data: string) => {
+        ipcRenderer.send("pty:write", data)
+    },
+    destroy: () => ipcRenderer.send("pty:destroy"),
+    onData: (cb: (data: string) => void) => {
+        ipcRenderer.on("pty:data", (_e, data) => {
+            cb(data)
+        });
+    },
+    resize: (cols: number, rows: number) =>
+        ipcRenderer.send('pty:resize', cols, rows),
+});
