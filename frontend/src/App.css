@@ -2,12 +2,12 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: system-ui, Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
     background: #121212;
     color: #e6e6e6;
+    font-family: system-ui, Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* root */

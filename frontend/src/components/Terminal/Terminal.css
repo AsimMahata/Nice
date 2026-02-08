@@ -1,0 +1,40 @@
+/* Terminal Container */
+.terminal-container {
+    height: 100%;
+    width: 100%;
+    background-color: var(--vscode-terminal-bg, #1e1e1e);
+    overflow: hidden;
+    padding: 0 !important;
+}
+
+/* Xterm.js Overrides */
+.xterm {
+    height: 100%;
+}
+
+.xterm-screen {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.xterm-viewport {
+    background-color: var(--vscode-terminal-bg, #1e1e1e) !important;
+    overflow-y: auto !important;
+}
+
+.xterm-viewport::-webkit-scrollbar {
+    width: 10px;
+}
+
+.xterm-viewport::-webkit-scrollbar-track {
+    background: var(--vscode-terminal-bg, #1e1e1e);
+}
+
+.xterm-viewport::-webkit-scrollbar-thumb {
+    background: var(--vscode-border, #3c3c3c);
+    border-radius: 5px;
+}
+
+.xterm-viewport::-webkit-scrollbar-thumb:hover {
+    background: #5a5a5a;
+}

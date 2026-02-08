@@ -1,5 +1,6 @@
 import {
-    FolderIcon, Search, Github, Terminal,
+    Terminal as TERMLOGO,
+    FolderIcon, Search, Github,
     Settings, User, X, Command, VenetianMask,
 } from 'lucide-react';
 import CodeEditor from '../../components/CodeEditor/CodeEditor';
@@ -11,8 +12,8 @@ import { FileInfo } from "../../components/FileEx/FileAcations";
 import './Home.css'; // Import the new CSS file
 import PickDir from '../../components/FileEx/PickDir';
 import UserDetails from '../../components/User/UserDetails';
-import { Group, Panel } from 'react-resizable-panels'
-import Shell from '../../components/Terminal/Shell';
+import { Group, Panel, Separator } from 'react-resizable-panels'
+import { TerminalPanel } from '../../components/Terminal/TerminalPanel';
 function Home() {
     const [terminal, setTerminal] = useState<boolean>(false)  // this tells if terminal is available or active
     const [sidePanel, setSidePanle] = useState<boolean>(false);  // is side panel visible or not 
@@ -143,7 +144,7 @@ function Home() {
                         <ActivityIcon name={"FileEx"} icon={<FolderIcon size={22} />} />
                         <ActivityIcon name={"Search"} icon={<Search size={22} />} />
                         <ActivityIcon name={"Github"} icon={<Github size={22} />} />
-                        <ActivityIcon name={"CodeAction"} icon={<Terminal size={22} />} />
+                        <ActivityIcon name={"CodeAction"} icon={<TERMLOGO size={22} />} />
                     </div>
                     <div className="icon-stack">
                         <ActivityIcon name={"User"} icon={<User size={22} />} />
@@ -162,9 +163,13 @@ function Home() {
                         <Panel>
                             <CodeEditor key={lang} code={code} setCode={setCode} lang={lang} />
                         </Panel>
+                        <Separator className="resize-handle" />
                         {
-                            terminal &&
-                            <Shell setTerminal={setTerminal} mainDir={mainDir} />
+                            <Panel id="terminal" defaultSize={40} minSize={10}>
+                                {terminal &&
+                                    <TerminalPanel mainDir={mainDir} setTerminal={setTerminal} />
+                                }
+                            </Panel>
                         }
                     </Group>
                 </main>

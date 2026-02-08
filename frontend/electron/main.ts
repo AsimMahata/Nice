@@ -2,14 +2,24 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path, { join } from 'path';
 import { createNewFile, createNewFolder, getParentDirectory, isChildOf, openDirectory, readDirectory, readFileContent } from './Modules/FileSystem/FileActions';
 import { showNotification } from './Modules/Notificaiton/Notification'
-import { ptyRef } from './Modules/Terminal/terminal'
-import { triggerAsyncId } from 'async_hooks';
-import { exitCode } from 'process';
+import * as pty from 'node-pty'
 
+declare global {
+    type termOpts = {
+        cwd: string,
+        cols: number,
+        rows: number,
+        name: string
+    }
+}
+let mainWindow: BrowserWindow | null = null;
+
+let ptyProcess: pty.IPty | null = null;
+const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 // main window
 function createWindow() {
-    const win = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         webPreferences: {
@@ -20,36 +30,96 @@ function createWindow() {
     });
 
     // In development, load from Vite dev server
-    if (process.env.NODE_ENV === 'development') {
-        win.loadURL('http://localhost:5173');
-        win.webContents.openDevTools();
+    if (isDev) {
+        mainWindow.loadURL('http://localhost:5173');
+        mainWindow.webContents.openDevTools();
     } else {
         // In production, load from built files
-        win.loadFile(path.join(__dirname, '../dist/index.html'));
+        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
     }
+
+
+    // dispose all ptys
+    mainWindow.on('closed', () => {
+        mainWindow = null
+        if (ptyProcess) {
+            ptyProcess.kill();
+            ptyProcess = null;
+        }
+    })
+}
+
+// PTY handling
+function createPty(options: termOpts) {
+    console.log('kkkkkkkkk=-----------------------j')
+    if (!mainWindow) {
+        console.error('mainWindow not found error 404', mainWindow)
+        return;
+    }
+    const shell = process.platform === 'win32' ? 'powershell.exe' : process.env.SHELL || '/bin/bash';
+
+    ptyProcess = pty.spawn(shell, [], options);
+    ptyProcess.onData((data: string) => {
+        if (mainWindow) {
+            mainWindow.webContents.send('terminal:data', data);
+        }
+    });
+
+    ptyProcess.onExit(() => {
+        if (mainWindow) {
+            mainWindow.webContents.send('terminal:exit');
+        }
+    });
 }
 
 app.whenReady().then(() => {
+    createWindow();
 
-    // terminal
-    ipcMain.handle("pty:create", (_e, options: termOpts) => {
-        ptyRef.create(options);
-        const pty = ptyRef.getPty()
-        if (!pty) {
-            console.error('PTY not created')
-            return
+    // // terminal create
+    // ipcMain.handle("pty:create", (_e, options: termOpts) => {
+    //     ptyRef.create(options);
+    //     const pty = ptyRef.getPty()
+    //     if (!pty) {
+    //         console.error('PTY not created')
+    //         return
+    //     }
+    // });
+    //
+    // ipcMain.on("pty:write", (_event, data: string) => {
+    //     ptyRef.write(data);
+    // });
+    // //resize
+    // ipcMain.on('pty:resize', (_e, cols, rows) => {
+    //     ptyRef.resize(cols, rows)
+    // })
+    // ipcMain.on("pty:destroy", () => {
+    //     ptyRef.destroy();
+    // });
+
+    ipcMain.on('terminal:write', (_event, data: string) => {
+        if (ptyProcess) {
+            ptyProcess.write(data);
         }
     });
-    ipcMain.on("pty:write", (_event, data: string) => {
-        ptyRef.write(data);
+
+    ipcMain.on('terminal:resize', (_event, cols: number, rows: number) => {
+        if (ptyProcess) {
+            ptyProcess.resize(cols, rows);
+        }
     });
-    //resize
-    ipcMain.on('pty:resize', (_e, cols, rows) => {
-        ptyRef.resize(cols, rows)
+
+    ipcMain.on('terminal:create', (_event, options: termOpts) => {
+        console.log('terminal create main-------------------------')
+        if (ptyProcess) {
+            ptyProcess.kill();
+        }
+        createPty(options);
+    });
+    ipcMain.on('terminal:destroy', () => {
+        if (ptyProcess) {
+            ptyProcess.kill()
+        }
     })
-    ipcMain.on("pty:destroy", () => {
-        ptyRef.destroy();
-    });
 
     // notification service 
     ipcMain.handle('notify', (_event, title: string, body: string) => {
@@ -103,7 +173,6 @@ app.whenReady().then(() => {
     });
 
 
-    createWindow()
 });
 
 app.on('window-all-closed', () => {

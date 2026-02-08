@@ -31,16 +31,23 @@ contextBridge.exposeInMainWorld('fileSystem', {
 // Terminal
 
 contextBridge.exposeInMainWorld("pty", {
-    create: (cwd?: string) => ipcRenderer.invoke("pty:create", cwd),
-    write: (data: string) => {
-        ipcRenderer.send("pty:write", data)
+    create: (options: termOpts) => {
+        console.log('----------------------------------')
+        ipcRenderer.send('terminal:create', options)
     },
-    destroy: () => ipcRenderer.send("pty:destroy"),
-    onData: (cb: (data: string) => void) => {
-        ipcRenderer.on("pty:data", (_e, data) => {
-            cb(data)
+
+    write: (data: string) => {
+        ipcRenderer.send("terminal:write", data)
+    },
+    destroy: () => ipcRenderer.send("terminal:destroy"),
+    onData: (callback: (data: string) => void) => {
+        ipcRenderer.on("terminal:data", (_e, data) => {
+            callback(data)
         });
     },
     resize: (cols: number, rows: number) =>
-        ipcRenderer.send('pty:resize', cols, rows),
+        ipcRenderer.send('terminal:resize', cols, rows),
+    onExit: (callback: () => void) => {
+        ipcRenderer.on('terminal:exit', () => callback());
+    },
 });
