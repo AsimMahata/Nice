@@ -5,9 +5,10 @@ import { FitAddon } from "@xterm/addon-fit";
 import { Panel } from "react-resizable-panels";
 type Props = {
     setTerminal: React.Dispatch<React.SetStateAction<boolean>>;
+    mainDir: string | null
 };
 type termOpts = {
-    cwd: string,
+    cwd?: string,
     cols: number,
     rows: number,
     name: string
@@ -23,85 +24,64 @@ declare global {
         };
     }
 }
-const Shell = ({ setTerminal }: Props) => {
+const Shell = ({ setTerminal, mainDir }: Props) => {
     const terminalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!terminalRef.current) return;
 
         const term = new Terminal({
-            // --- Rendering ---
-            rendererType: 'canvas',        // fastest & stable
-            allowProposedApi: false,
+            // --- Windows Specific Performance ---
+            allowProposedApi: true, // Needed for many modern xterm features
 
-            // --- Font ---
-            fontFamily: 'Cascadia Code, JetBrains Mono, monospace',
+            // --- Sizing ---
+            rows: 30,
+            cols: 100,
+
+            // --- Font (Windows Optimized) ---
+            // 'Consolas' is the standard Windows terminal font if Cascadia isn't installed
+            fontFamily: "'Cascadia Code', Consolas, 'Courier New', monospace",
             fontSize: 14,
-            lineHeight: 1.25,
-            letterSpacing: 0,
-            fontWeight: 'normal',
-            fontWeightBold: 'bold',
+            lineHeight: 1.1,
 
-            // --- Cursor ---
-            cursorStyle: 'bar',          // 'block' | 'underline' | 'bar'
+            // --- Windows Behavior ---
+            convertEol: true,     // CRUCIAL for Windows: Converts \n to \r\n automatically
+            cursorStyle: 'block', // 'block' is more standard for Windows consoles
             cursorBlink: true,
+            scrollback: 10000,
 
-            // --- Behavior ---
-            convertEol: true,
-            scrollback: 5000,
-            disableStdin: false,
-            screenReaderMode: false,
-
-            // --- Selection ---
-            selectionClipboard: true,
-            copyOnSelect: false,
-
-            // --- Bell ---
-            bellStyle: 'none',              // 'none' | 'sound' | 'visual'
-
-            // --- Mouse ---
-            macOptionIsMeta: true,
-            rightClickSelectsWord: false,
-
-            // --- Performance ---
-            fastScrollModifier: 'alt',
-            fastScrollSensitivity: 5,
-
-            // --- Unicode ---
-            allowTransparency: false,
-            minimumContrastRatio: 1,
-
-            // --- Theme (Catppuccin Mocha example) ---
+            // --- Theme (Vibrant Windows Dark) ---
             theme: {
-                background: '#1e1e2e',
-                foreground: '#cdd6f4',
-                cursor: '#f5e0dc',
-                selection: '#585b70',
+                background: '#0c0c0c', // Pure Windows Terminal black
+                foreground: '#cccccc',
+                cursor: '#ffffff',
+                selectionBackground: '#ffffff47',
 
-                black: '#45475a',
-                red: '#f38ba8',
-                green: '#a6e3a1',
-                yellow: '#f9e2af',
-                blue: '#89b4fa',
-                magenta: '#f5c2e7',
-                cyan: '#94e2d5',
-                white: '#bac2de',
+                black: '#0c0c0c',
+                red: '#c50f1f',
+                green: '#13a10e',
+                yellow: '#c19c00',
+                blue: '#0037da',
+                magenta: '#881798',
+                cyan: '#3a96dd',
+                white: '#cccccc',
 
-                brightBlack: '#585b70',
-                brightRed: '#f38ba8',
-                brightGreen: '#a6e3a1',
-                brightYellow: '#f9e2af',
-                brightBlue: '#89b4fa',
-                brightMagenta: '#f5c2e7',
-                brightCyan: '#94e2d5',
-                brightWhite: '#a6adc8',
+                brightBlack: '#767676',
+                brightRed: '#e74856',
+                brightGreen: '#16c60c',
+                brightYellow: '#f9f1a5',
+                brightBlue: '#3b78ff',
+                brightMagenta: '#b4009e',
+                brightCyan: '#61d6d6',
+                brightWhite: '#f2f2f2',
             },
-        })
+        });
 
         const fitAddon = new FitAddon();
         term.loadAddon(fitAddon);
         term.open(terminalRef.current);
         fitAddon.fit()
+        console.log('we have a term', term)
         async function createPtyBackend(termOpts: termOpts) {
             try {
                 await window.pty?.create(termOpts)
@@ -110,8 +90,12 @@ const Shell = ({ setTerminal }: Props) => {
                 console.log('error creating pty in backend ', err)
             }
         }
+        if (!mainDir) {
+            console.error('select a main directory first to open terminal', mainDir)
+            return;
+        }
         const termOpts: termOpts = {
-            cwd: '/home/asim/dev/testing/',
+            cwd: mainDir,
             rows: term.rows,
             cols: term.cols,
             name: "xterm-256color",

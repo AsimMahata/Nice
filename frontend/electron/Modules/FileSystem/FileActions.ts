@@ -26,6 +26,17 @@ export async function createNewFile(filePath: string) {
     }
 }
 
+// - If it starts with '..', its outside.
+// - If it is empty, it's the SAME directory.
+export function isChildOf(parent: string, child: string) {
+    const relative = path.relative(parent, child);
+    const isInside = relative === "" || (!relative.startsWith('..') && !path.isAbsolute(relative));
+    return {
+        isInside,
+        isExactMatch: relative === ""
+    };
+}
+
 // create a new folder
 //  1 -> success
 //  0 -> already exists
@@ -68,9 +79,9 @@ export async function openDirectory() {
 export async function readDirectory(directoryPath: string): Promise<FileInfo[]> {
     const results: FileInfo[] = [];
 
+    console.log('in backend path readDirectory function got this path ', directoryPath)
     try {
         const items = await fs.readdir(directoryPath);
-
         for (const item of items) {
             const fullPath = path.join(directoryPath, item);
 

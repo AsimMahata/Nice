@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import { isChildOf } from './Modules/FileSystem/FileActions';
 
 // Expose APIs to renderer process if needed
 contextBridge.exposeInMainWorld('electron', {
@@ -20,7 +21,9 @@ contextBridge.exposeInMainWorld('fileSystem', {
     getParDir: (path: string) => ipcRenderer.invoke('get-par-dir', path),
     join: (...args: string[]) => ipcRenderer.invoke('join', ...args),
     createFolder: (path: string) => ipcRenderer.invoke('create-folder', path),
-    createFile: (path: string) => ipcRenderer.invoke('create-file', path)
+    createFile: (path: string) => ipcRenderer.invoke('create-file', path),
+    isChildOf: (parent: string, child: string) =>
+        ipcRenderer.invoke('is-child-of', parent, child),
 });
 
 

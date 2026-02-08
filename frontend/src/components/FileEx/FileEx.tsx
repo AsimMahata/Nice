@@ -37,6 +37,7 @@ const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode, mainDir, set
         async function init() {
             const dir = mainDir;
             //setMainDir(dir)
+            console.log('mainDir is selcted so change the currentpath to main dir', mainDir)
             FileActions.setCurrentPath(dir);
             setInsideMainDir(true)
         }
@@ -45,18 +46,37 @@ const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode, mainDir, set
 
     // reload on path / refresh
     useEffect(() => {
-        FileActions.loadFiles();
-        if (FileActions.currentPath?.startsWith(mainDir ?? "NotAllowed")) {
-            console.log('insideScope')
-            if (FileActions.currentPath === mainDir) {
-                setInsideMainDir(true)
-            } else {
-                setInsideMainDir(false)
+
+
+        async function checkIfInsideMainDir() {
+            if (!FileActions.currentPath) {
+                console.log('please have a valid path first')
+                return;
             }
-        } else {
-            console.log('Frontend/FileEx/Refesh/permission not allowed || null')
+            if (!mainDir) {
+                console.error('first define a project directory first 404', mainDir)
+                return;
+            }
+            if (!window.fileSystem) {
+                console.error('file system is not defined or laoded')
+                return;
+            }
+            try {
+                const result = await window.fileSystem.isChildOf(mainDir, FileActions.currentPath);
+                if (result.isExactMatch) {
+                    setInsideMainDir(true)
+                } else setInsideMainDir(false)
+            } catch (err) {
+                console.error('while calling isChildOf inside fileex component some error occured ', err)
+            }
         }
-        console.log(insideMainDir)
+
+
+
+        // when path changes or refresh is triggered load all files again and checkIfInsideMainDir
+        FileActions.loadFiles();
+        checkIfInsideMainDir()
+
     }, [FileActions.currentPath, FileActions.refresh]);
 
     if (!mainDir) return <PickDir text={"Change"} mainDir={mainDir} setMainDir={setMainDir} />
@@ -134,7 +154,7 @@ const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode, mainDir, set
             {/* file list */}
             <div className="filelist">
                 {FileActions.files.map((file) => (
-                    <FileItem
+                    file && <FileItem
                         key={file.name}
                         file={file}
                         handleClick={() => FileActions.handleClick(file, setCodeFile)}

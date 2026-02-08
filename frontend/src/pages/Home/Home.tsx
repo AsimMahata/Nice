@@ -21,7 +21,6 @@ function Home() {
     const [codeFile, setCodeFile] = useState<FileInfo | null>(null);
     const [savingCode, setSavingCode] = useState<boolean>(false);
     const [mainDir, setMainDir] = useState<string | null>(null);
-    const [asim, _setAsim] = useState(true);
 
     const placeholder = useMemo(() => getPlaceholder(lang || ""), [lang]);
     const [code, setCode] = useState<string>(placeholder);
@@ -78,9 +77,6 @@ function Home() {
         if (code !== placeholder) setCode(placeholder);
     }, [lang]);
 
-    useEffect(() => {
-        if (asim) setMainDir("/home/asim/dev/testing");
-    }, []);
 
     useEffect(() => {
         async function setFileType() {
@@ -168,7 +164,7 @@ function Home() {
                         </Panel>
                         {
                             terminal &&
-                            <Shell setTerminal={setTerminal} />
+                            <Shell setTerminal={setTerminal} mainDir={mainDir} />
                         }
                     </Group>
                 </main>

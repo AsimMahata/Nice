@@ -16,12 +16,13 @@ declare global {
     interface Window {
         fileSystem?: {
             readDirectory: (path: string) => Promise<FileInfo[]>;
-            openFolderDialog: () => Promise<{ folderPath: string; files: FileInfo[] } | null>;
+            openFolderDialog: () => Promise<{ canceled: boolean, filePaths: string, folderPath: string; files: FileInfo[] } | null>;
             readFile: (path: string) => Promise<string>;
             getParDir: (path: string) => Promise<string>;
             join: (...args: string[]) => Promise<string>;
             createFolder: (path: string) => Promise<number>;
             createFile: (path: string) => Promise<number>;
+            isChildOf: (parent: string, child: string) => Promise<{ isInside: boolean, isExactMatch: boolean }>;
         };
     }
 }
@@ -51,7 +52,8 @@ export function useFileActions({ setCode }: props) {
                 throw console.error('you must assign a path first');
             }
             // fetch from Electron backend 
-            const result = await window.fileSystem.readDirectory(currentPath);
+            const result = await window?.fileSystem.readDirectory(currentPath);
+            console.log('got file list form backend laodfiles', result)
             setFiles(result)
             console.log('got this ', result)
         } catch (err) {
@@ -68,8 +70,9 @@ export function useFileActions({ setCode }: props) {
         }
         setLoading(true)
         try {
-            const result = await window.fileSystem.openFolderDialog();
+            const result = await window?.fileSystem.openFolderDialog();
             console.log('frontend resutl', result)
+
         } catch (err) {
             console.log('some error occured when try to open directory', err)
         } finally {

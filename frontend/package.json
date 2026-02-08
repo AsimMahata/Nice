@@ -8,7 +8,7 @@
         "dev": "vite",
         "build": "tsc -b && vite build",
         "electron:build": "esbuild electron/main.ts --bundle --platform=node --outfile=electron/dist/main.cjs --external:electron --external:node-pty && esbuild electron/preload.ts --bundle --platform=node --outfile=electron/dist/preload.cjs --external:electron --external:node-pty",
-        "electron:dev": "npm run electron:build && NODE_ENV=development electron .",
+        "electron:dev": "npm run electron:build && cross-env NODE_ENV=development electron .",
         "electron:prod": "npm run build && npm run electron:build && electron .",
         "lint": "eslint .",
         "preview": "vite preview"
@@ -40,6 +40,7 @@
         "@types/react": "^19.2.5",
         "@types/react-dom": "^19.2.3",
         "@vitejs/plugin-react": "^5.1.1",
+        "cross-env": "^10.1.0",
         "electron": "^40.2.1",
         "esbuild": "^0.27.3",
         "eslint": "^9.39.1",

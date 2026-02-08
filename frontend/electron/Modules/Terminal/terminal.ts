@@ -15,18 +15,24 @@ class PtyManager {
     create(options: termOpts) {
         if (this.pty) return;
 
-        this.pty = pty.spawn(
-            process.platform === "win32" ? "powershell.exe" : "bash",
-            [],
-            options
-        );
-
-        this.pty.onData((data) => {
+        try {
+            this.pty = pty.spawn(
+                process.platform === "win32" ? "powershell.exe" : "bash",
+                [],
+                options
+            );
+            return;
+        } catch (err) {
+            console.error('error while creating terminal ??', err)
+            this.destroy()
+        }
+        this.pty?.onData((data) => {
+            console.log('are we inside pty.onData please speed i need this ')
             const win = BrowserWindow.getAllWindows()[0]
             if (!win || win.isDestroyed()) return
             win.webContents.send('pty:data', data)
         })
-        this.pty.onExit(() => {
+        this.pty?.onExit(() => {
             this.destroy();
         });
     }
@@ -34,7 +40,7 @@ class PtyManager {
     write(data: string) {
         if (!this.pty) return;
         console.log('data-in-backend-pty:', data)
-        this.pty.write(data);
+        this.pty?.write(data);
     }
 
     resize(cols: number, rows: number) {

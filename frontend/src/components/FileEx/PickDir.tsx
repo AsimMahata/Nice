@@ -18,9 +18,12 @@ const PickDir = ({ text: name, mainDir, setMainDir }: Props) => {
         setLoading(true)
         try {
             const result = await window.fileSystem.openFolderDialog();
-            const gotDirectory = result?.folderPath || ""
+            const gotDirectory = result?.filePaths[0] || result?.folderPath || ""
+            if (!gotDirectory) {
+                throw new Error('could not find a main directory')
+            }
             setMainDir(gotDirectory)
-            console.log('frontend resutl', result)
+            console.log('frontend main dir set result', result, gotDirectory)
         } catch (err) {
             console.log('some error occured when try to open directory', err)
         } finally {
@@ -34,7 +37,7 @@ const PickDir = ({ text: name, mainDir, setMainDir }: Props) => {
                     className='open-dir-button'
                     onClick={selectProjectDirectory}
                 >
-                    Open A Folder
+                    Open A Folder {mainDir}
                 </button>
             }
             {mainDir &&
