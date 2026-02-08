@@ -21,5 +21,5 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 
-EXPOSE 3000
+EXPOSE 3000 10043
 CMD ["npm", "run", "dev"]

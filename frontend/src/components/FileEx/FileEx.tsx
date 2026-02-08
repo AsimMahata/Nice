@@ -1,53 +1,56 @@
 import React, { useEffect, useState } from "react";
 import "./FileEx.css";
-import { FileInfo, useFileActions } from "./FileAcations";
+import { FileInfo } from "./FileActions";
 import { useToast } from "../../utils/Toast";
 import FileItem from "./FileItem";
 import PickDir from "./PickDir";
 
 type props = {
-    codeFile: FileInfo | null,
-    setCodeFile: React.Dispatch<React.SetStateAction<FileInfo | null>>,
-    code: string,
-    setCode: React.Dispatch<React.SetStateAction<string>>,
-    savingCode: boolean,
-    setSavingCode: React.Dispatch<React.SetStateAction<boolean>>,
-    mainDir: string | null,
-    setMainDir: React.Dispatch<React.SetStateAction<string | null>>,
-}
+  codeFile: FileInfo | null;
+  setCodeFile: React.Dispatch<React.SetStateAction<FileInfo | null>>;
+  code: string;
+  setCode: React.Dispatch<React.SetStateAction<string>>;
+  savingCode: boolean;
+  setSavingCode: React.Dispatch<React.SetStateAction<boolean>>;
+  mainDir: string | null;
+  setMainDir: React.Dispatch<React.SetStateAction<string | null>>;
+  FileActions: any;
+};
 
-const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode, mainDir, setMainDir }: props) => {
-    const Toast = useToast();
-    const props = {
-        showToast: Toast.showToast,
-        setCode: setCode
-    }
-    const FileActions = useFileActions(props);
+const FileEx = ({
+  codeFile,
+  setCodeFile,
+  code,
+  setCode,
+  savingCode,
+  mainDir,
+  setMainDir,
+  FileActions,
+}: props) => {
+  const Toast = useToast();
 
-    const [creatingFolder, setCreatingFolder] = useState(false);
-    const [creatingFile, setCreatingFile] = useState(false);
-    const [insideMainDir, setInsideMainDir] = useState<boolean>(false);
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  const [creatingFile, setCreatingFile] = useState(false);
+  const [insideMainDir, setInsideMainDir] = useState<boolean>(false);
 
-    useEffect(() => {
-        FileActions.saveFiles(code, codeFile)
-        console.log('triggered')
-    }, [savingCode])
-    // init path
-    useEffect(() => {
-        async function init() {
-            const dir = mainDir;
-            //setMainDir(dir)
+  useEffect(() => {
+    FileActions.saveFiles(code, codeFile);
+    console.log("triggered");
+  }, [savingCode]);
+  // init path
+  useEffect(() => {
+    async function init() {
+      const dir = mainDir;
+      //setMainDir(dir)
             console.log('mainDir is selcted so change the currentpath to main dir', mainDir)
-            FileActions.setCurrentPath(dir);
-            setInsideMainDir(true)
-        }
-        init();
-    }, [mainDir]);
+      FileActions.setCurrentPath(dir);
+      setInsideMainDir(true);
+    }
+    init();
+  }, [mainDir]);
 
     // reload on path / refresh
     useEffect(() => {
-
-
         async function checkIfInsideMainDir() {
             if (!FileActions.currentPath) {
                 console.log('please have a valid path first')
@@ -71,85 +74,83 @@ const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode, mainDir, set
             }
         }
 
-
-
         // when path changes or refresh is triggered load all files again and checkIfInsideMainDir
         FileActions.loadFiles();
         checkIfInsideMainDir()
 
     }, [FileActions.currentPath, FileActions.refresh]);
 
-    if (!mainDir) return <PickDir text={"Change"} mainDir={mainDir} setMainDir={setMainDir} />
+
+  if (!mainDir)
     return (
-        <div className="file-ex-root">
-            {/* toast */}
-            {Toast.toast && <div className="toast">{Toast.toast}</div>}
+      <PickDir text={"Change"} mainDir={mainDir} setMainDir={setMainDir} />
+    );
+  return (
+    <div className="file-ex-root">
+      {/* toast */}
+      {Toast.toast && <div className="toast">{Toast.toast}</div>}
 
-            {/* header */}
-            <div className="file-ex-header">
-                <span className="path" title={FileActions.currentPath || "NotAllowed"}>
-                    {FileActions.currentPath}
-                </span>
-            </div>
+      {/* header */}
+      <div className="file-ex-header">
+        <span className="path" title={FileActions.currentPath || "NotAllowed"}>
+          {FileActions.currentPath}
+        </span>
+      </div>
 
-            {/* actions */}
-            <div className="file-ex-actions">
-                {insideMainDir && <button>Main</button>}
-                {!insideMainDir && <button onClick={FileActions.goParentDir}>↩</button>}
-                <button onClick={() => setCreatingFolder(true)}>+📁</button>
-                <button onClick={() => setCreatingFile(true)}>+📄</button>
-                <PickDir text="change" mainDir={mainDir} setMainDir={setMainDir} />
-            </div>
+      {/* actions */}
+      <div className="file-ex-actions">
+        {insideMainDir && <button>Main</button>}
+        {!insideMainDir && <button onClick={FileActions.goParentDir}>↩</button>}
+        <button onClick={() => setCreatingFolder(true)}>+📁</button>
+        <button onClick={() => setCreatingFile(true)}>+📄</button>
+        <PickDir text="change" mainDir={mainDir} setMainDir={setMainDir} />
+      </div>
 
-            {/* create folder */}
-            {
-                creatingFolder && (
-                    <input
-                        autoFocus
-                        className="folder-input"
-                        value={FileActions.newFolder}
-                        placeholder="New folder"
-                        onChange={(e) => FileActions.setNewFolder(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                FileActions.createNewFolder(FileActions.newFolder);
-                                FileActions.setNewFolder("");
-                                setCreatingFolder(false);
-                            }
-                            if (e.key === "Escape") {
-                                FileActions.setNewFolder("");
-                                setCreatingFolder(false);
-                            }
-                        }}
-                        onBlur={() => setCreatingFolder(false)}
-                    />
-                )
+      {/* create folder */}
+      {creatingFolder && (
+        <input
+          autoFocus
+          className="folder-input"
+          value={FileActions.newFolder}
+          placeholder="New folder"
+          onChange={(e) => FileActions.setNewFolder(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              FileActions.createNewFolder(FileActions.newFolder);
+              FileActions.setNewFolder("");
+              setCreatingFolder(false);
             }
-
-            {/* create file */}
-            {
-                creatingFile && (
-                    <input
-                        autoFocus
-                        className="file-input"
-                        value={FileActions.newFile}
-                        placeholder="New file"
-                        onChange={(e) => FileActions.setNewFile(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                                FileActions.createNewFiles(FileActions.newFile);
-                                FileActions.setNewFile("");
-                                setCreatingFile(false);
-                            }
-                            if (e.key === "Escape") {
-                                FileActions.setNewFile("");
-                                setCreatingFile(false);
-                            }
-                        }}
-                        onBlur={() => setCreatingFile(false)}
-                    />
-                )
+            if (e.key === "Escape") {
+              FileActions.setNewFolder("");
+              setCreatingFolder(false);
             }
+          }}
+          onBlur={() => setCreatingFolder(false)}
+        />
+      )}
+
+      {/* create file */}
+      {creatingFile && (
+        <input
+          autoFocus
+          className="file-input"
+          value={FileActions.newFile}
+          placeholder="New file"
+          onChange={(e) => FileActions.setNewFile(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              FileActions.createNewFiles(FileActions.newFile);
+              FileActions.setNewFile("");
+              setCreatingFile(false);
+            }
+            if (e.key === "Escape") {
+              FileActions.setNewFile("");
+              setCreatingFile(false);
+            }
+          }}
+          onBlur={() => setCreatingFile(false)}
+        />
+      )}
 
             {/* file list */}
             <div className="filelist">
@@ -166,3 +167,8 @@ const FileEx = ({ codeFile, setCodeFile, code, setCode, savingCode, mainDir, set
 };
 
 export default FileEx;
+
+
+
+
+

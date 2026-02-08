@@ -14,6 +14,7 @@ import cRoutes from "./routes/c.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import connectDatabase from "./db/database.connection.js";
+import bodyParser from "body-parser";
 
 const app: Express = express();
 const httpServer = createServer(app);
@@ -53,4 +54,25 @@ io.on("connection", (socket) => {
   console.log("new user connected" + socket.id);
 });
 
-export { app, httpServer, io };
+
+const cphApp = express();
+
+cphApp.use(express.json());
+
+cphApp.use(cors());
+app.use(bodyParser.json());
+
+cphApp.get("/", (req, res) => {
+  res.send("cph port working!!");
+});
+
+cphApp.post("/", (req, res) => {
+  console.log("hello guys, we got the request!!!!!!");
+  const problemData = req.body;
+  console.log("Received CPH problem:", problemData.name);
+  // Emit to all connected frontend clients
+  io.emit("cph_problem", problemData);
+  res.send("helllooo");
+});
+
+export { app, httpServer, io, cphApp };

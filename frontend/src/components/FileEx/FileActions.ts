@@ -105,7 +105,7 @@ export function useFileActions({ setCode }: props) {
                     console.log('FileActions', 'handleClick', content)
                     console.log('FileActions', 'handleClick', file)
                 } catch (err) {
-                    notify.error('Content', 'Could not find ??')
+                    notify.error('Content', 'Could not find ?? '+err )
                 }
             }
         } catch (err) {
