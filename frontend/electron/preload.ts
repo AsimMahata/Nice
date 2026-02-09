@@ -12,6 +12,10 @@ contextBridge.exposeInMainWorld('electron', {
 contextBridge.exposeInMainWorld('notify', {
     send: (title: string, body: string) => ipcRenderer.invoke('notify', title, body),
 });
+// CodeRunner services
+contextBridge.exposeInMainWorld('runner', {
+    runCode: (lang: string, filePath: string) => ipcRenderer.invoke('runner:run', lang, filePath)
+});
 
 // File system APIs for directory reading
 contextBridge.exposeInMainWorld('fileSystem', {

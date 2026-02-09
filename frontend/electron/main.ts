@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path, { join } from 'path';
 import { createNewFile, createNewFolder, getParentDirectory, isChildOf, openDirectory, readDirectory, readFileContent } from './Modules/FileSystem/FileActions';
 import { showNotification } from './Modules/Notificaiton/Notification'
+import { runCode } from './Modules/CodeRunner/CodeRunner'
 import * as pty from 'node-pty'
 
 declare global {
@@ -51,7 +52,6 @@ function createWindow() {
 
 // PTY handling
 function createPty(options: termOpts) {
-    console.log('kkkkkkkkk=-----------------------j')
     if (!mainWindow) {
         console.error('mainWindow not found error 404', mainWindow)
         return;
@@ -74,6 +74,10 @@ function createPty(options: termOpts) {
 
 app.whenReady().then(() => {
     createWindow();
+    //code runner services handlers
+    ipcMain.handle('runner:run', (_event, lang: string, filePath: string) => {
+        return runCode(lang, filePath)
+    })
 
     // // terminal create
     // ipcMain.handle("pty:create", (_e, options: termOpts) => {

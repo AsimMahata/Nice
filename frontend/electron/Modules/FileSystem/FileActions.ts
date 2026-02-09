@@ -58,8 +58,8 @@ export function join(...args: string[]) {
 }
 
 // get parent directory 
-export function getParentDirectory(directoryPath: string) {
-    return path.dirname(directoryPath);
+export function getParentDirectory(Path: string) {
+    return path.dirname(Path);
 }
 
 // open directory dialog

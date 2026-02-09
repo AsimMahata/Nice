@@ -1,14 +1,20 @@
 import { useState } from "react"
+import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider"
 
 
 type Props = {
     text: string
-    mainDir: string | null
-    setMainDir: React.Dispatch<React.SetStateAction<string | null>>
 }
 
 
-const PickDir = ({ text: name, mainDir, setMainDir }: Props) => {
+const PickDir = ({ text: name }: Props) => {
+    //useWorkspaceContext
+    const { cwd, setCwd } = useWorkspaceContext()
+
+    console.log('cwd', cwd)
+
+
+
     const [_loading, setLoading] = useState(false)
     async function selectProjectDirectory() {
         if (!window.fileSystem) {
@@ -22,7 +28,7 @@ const PickDir = ({ text: name, mainDir, setMainDir }: Props) => {
             if (!gotDirectory) {
                 throw new Error('could not find a main directory')
             }
-            setMainDir(gotDirectory)
+            setCwd(gotDirectory)
             console.log('frontend main dir set result', result, gotDirectory)
         } catch (err) {
             console.log('some error occured when try to open directory', err)
@@ -32,15 +38,15 @@ const PickDir = ({ text: name, mainDir, setMainDir }: Props) => {
     }
     return (
         <div className='dir-picker'>
-            {!mainDir &&
+            {!cwd &&
                 <button
                     className='open-dir-button'
                     onClick={selectProjectDirectory}
                 >
-                    Open A Folder {mainDir}
+                    Open A Folder {cwd}
                 </button>
             }
-            {mainDir &&
+            {cwd &&
                 <button
                     className='change-dir-button nav-link'
                     onClick={selectProjectDirectory}

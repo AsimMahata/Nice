@@ -3,11 +3,11 @@ import { Terminal as XTerm } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { FitAddon } from "@xterm/addon-fit";
 import './Terminal.css';
+import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 
 type Props = {
     onResize?: (cols: number, rows: number) => void,
     setTerminal: React.Dispatch<React.SetStateAction<boolean>>,
-    mainDir: string | null,
 };
 export type termOpts = {
     cwd?: string,
@@ -51,9 +51,12 @@ const theme = {
     brightCyan: '#29b8db',
     brightWhite: '#ffffff',
 }
-const fontFamily = '"Cascadia Code", "Fira Code", Consolas, "Courier New", monospace';
+const fontFamily = '"Cascadia Code", "AnonymicePro Nerd Font","AnonymicePro Nerd Font Propo","Fira Code", Consolas, "Courier New", monospace';
 
-const Terminal = ({ mainDir, onResize }: Props) => {
+const Terminal = ({ onResize }: Props) => {
+    //contexts
+    const { cwd } = useWorkspaceContext()
+
     // these 3 refs are required for terminal to function properly
     const terminalRef = useRef<HTMLDivElement>(null);   //Main terminal
     const xtermRef = useRef<XTerm | null>(null)         // the XTerm provided by xterm
@@ -84,8 +87,8 @@ const Terminal = ({ mainDir, onResize }: Props) => {
         const term = new XTerm({
             theme: theme,
             fontFamily,
-            fontSize: 13,
-            lineHeight: 1.2,
+            fontSize: 14,
+            lineHeight: 1.4,
             letterSpacing: 0,
             cursorBlink: true,
             cursorStyle: 'block',
@@ -130,12 +133,12 @@ const Terminal = ({ mainDir, onResize }: Props) => {
         })
         // create a new pty session
         async function createPtyBackend() {
-            if (!mainDir) {
-                console.error('select a main directory first to open terminal', mainDir)
+            if (!cwd) {
+                console.error('select a main directory first to open terminal', cwd)
                 return;
             }
             const termOpts: termOpts = {
-                cwd: mainDir,
+                cwd: cwd,
                 rows: term.rows,
                 cols: term.cols,
                 name: "xterm-256color",

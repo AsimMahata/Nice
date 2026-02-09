@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { notify } from "../../utils/notification";
+import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 
 //NOTE: FileInfo
 export interface FileInfo {
@@ -27,11 +28,14 @@ declare global {
     }
 }
 type props = {
-    showToast: (msg: string) => void,
     setCode: React.Dispatch<React.SetStateAction<string>>
 }
 
 export function useFileActions({ setCode }: props) {
+    // context
+    const { setIsDirty } = useEditorContext()
+
+
     const [files, setFiles] = useState<FileInfo[]>([]);
     const [currentPath, setCurrentPath] = useState<string | null>(null)
     const [refresh, setRefresh] = useState(false);
@@ -102,10 +106,11 @@ export function useFileActions({ setCode }: props) {
                     const content = await window.fileSystem.readFile(child)
                     setCode(content || "")
                     setCodeFile(file)
+                    setIsDirty(false)
                     console.log('FileActions', 'handleClick', content)
                     console.log('FileActions', 'handleClick', file)
                 } catch (err) {
-                    notify.error('Content', 'Could not find ?? '+err )
+                    notify.error('Content', 'Could not find ?? ' + err)
                 }
             }
         } catch (err) {
@@ -188,6 +193,7 @@ export function useFileActions({ setCode }: props) {
     // save Files
 
     async function saveFiles(contents: string, file: FileInfo | null) {
+        console.log('file save was requested')
         if (!contents) return;
         if (!file) return;
         return;

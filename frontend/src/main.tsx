@@ -7,15 +7,15 @@ import { AuthProvider } from "./contexts/AuthProvider";
 import { SocketProvider } from "./contexts/SocketProvider.tsx";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    {/* <HashRouter> */}
-    <BrowserRouter>
-      <SocketProvider>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </SocketProvider>
-    </BrowserRouter>
-    {/* </HashRouter> */}
-  </StrictMode>,
+    <StrictMode>
+        {/* <HashRouter> */}
+        <BrowserRouter>
+            <SocketProvider>
+                <AuthProvider>
+                    <App />
+                </AuthProvider>
+            </SocketProvider>
+        </BrowserRouter>
+        {/* </HashRouter> */}
+    </StrictMode>,
 );

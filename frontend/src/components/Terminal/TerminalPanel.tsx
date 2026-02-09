@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Terminal from './Terminal';
 import './TerminalPanel.css';
 import { termOpts } from './Terminal';
+import { useWorkspaceContext } from '../../contexts/Workspace/WorkspaceProvider';
 interface Tab {
     id: string;
     name: string;
@@ -10,9 +11,10 @@ interface Tab {
 type Props = {
     onResize?: (cols: number, rows: number) => void,
     setTerminal: React.Dispatch<React.SetStateAction<boolean>>,
-    mainDir: string | null,
 };
-export function TerminalPanel({ setTerminal, mainDir }: Props) {
+export function TerminalPanel({ setTerminal }: Props) {
+    //constexts
+    const { cwd } = useWorkspaceContext()
     const [tabs, setTabs] = useState<Tab[]>([
         { id: '1', name: 'bash', active: true },
     ]);
@@ -22,7 +24,7 @@ export function TerminalPanel({ setTerminal, mainDir }: Props) {
         const newId = String(Date.now());
         setTabs([...tabs, { id: newId, name: 'bash', active: false }]);
         setActiveTab(newId);
-        if (!mainDir) {
+        if (!cwd) {
             console.error('first select a project directory first')
             return;
         }
@@ -30,7 +32,7 @@ export function TerminalPanel({ setTerminal, mainDir }: Props) {
             console.error('window pty api not defined')
         }
         const termOpts: termOpts = {
-            cwd: mainDir,
+            cwd: cwd,
             rows: 80,
             cols: 40,
             name: "xterm-256color",
@@ -94,7 +96,7 @@ export function TerminalPanel({ setTerminal, mainDir }: Props) {
 
             {/* Terminal Content */}
             <div className="terminal-content">
-                <Terminal mainDir={mainDir} setTerminal={setTerminal} />
+                <Terminal setTerminal={setTerminal} />
             </div>
         </div>
     );
