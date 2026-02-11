@@ -1,57 +1,39 @@
-import { useState } from 'react';
-import Terminal from './Terminal';
+import { useEffect, useRef, useState } from 'react';
 import './TerminalPanel.css';
-import { termOpts } from './Terminal';
-import { useWorkspaceContext } from '../../contexts/Workspace/WorkspaceProvider';
-interface Tab {
-    id: string;
-    name: string;
-    active: boolean;
-}
+import { terminalManager } from './terminal.manager';
+import { Tab } from './terminal.options';
+
 type Props = {
     onResize?: (cols: number, rows: number) => void,
     setTerminal: React.Dispatch<React.SetStateAction<boolean>>,
 };
-export function TerminalPanel({ setTerminal }: Props) {
+export function TerminalPanel({ }: Props) {
     //constexts
-    const { cwd } = useWorkspaceContext()
-    const [tabs, setTabs] = useState<Tab[]>([
+    const constainerRef = useRef<HTMLDivElement>(null);   //Main terminal
+    const [tabs, _setTabs] = useState<Tab[]>([
         { id: '1', name: 'bash', active: true },
     ]);
-    const [activeTab, setActiveTab] = useState('1');
+
+    const [activeTab, _setActiveTab] = useState();
 
     const handleNewTerminal = () => {
-        const newId = String(Date.now());
-        setTabs([...tabs, { id: newId, name: 'bash', active: false }]);
-        setActiveTab(newId);
-        if (!cwd) {
-            console.error('first select a project directory first')
-            return;
-        }
-        if (!window.pty) {
-            console.error('window pty api not defined')
-        }
-        const termOpts: termOpts = {
-            cwd: cwd,
-            rows: 80,
-            cols: 40,
-            name: "xterm-256color",
-        }
-        window.pty?.create(termOpts);
+        console.log('new terminal handled')
     };
 
     const handleCloseTab = (id: string) => {
-        if (tabs.length === 1) return;
-        const newTabs = tabs.filter(t => t.id !== id);
-        setTabs(newTabs);
-        if (activeTab === id) {
-            setActiveTab(newTabs[0].id);
-        }
+        console.log('handle close tab', id)
     };
 
     const handleSelectTab = (id: string) => {
-        setActiveTab(id);
+        console.log('handleSelectTab', id)
     };
+    useEffect(() => {
+        if (!constainerRef.current) return
+        terminalManager.mount(constainerRef.current)
+        return () => {
+            terminalManager.unmount()
+        }
+    }, [])
 
     return (
         <div className="terminal-panel">
@@ -96,8 +78,8 @@ export function TerminalPanel({ setTerminal }: Props) {
 
             {/* Terminal Content */}
             <div className="terminal-content">
-                <Terminal setTerminal={setTerminal} />
-            </div>
-        </div>
+                <div ref={constainerRef} className="terminal-container" />
+            </div >
+        </div >
     );
 }

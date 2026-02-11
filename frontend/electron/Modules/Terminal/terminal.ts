@@ -1,18 +1,11 @@
 import { BrowserWindow } from 'electron';
 import * as pty from 'node-pty'
+import { TerminalOptions } from '../../types/terminal.types';
 
-declare global {
-    type termOpts = {
-        cwd: string,
-        cols: number,
-        rows: number,
-        name: string
-    }
-}
 class PtyManager {
     private pty: pty.IPty | null = null;
 
-    create(options: termOpts) {
+    create(options: TerminalOptions) {
         if (this.pty) return;
 
         try {

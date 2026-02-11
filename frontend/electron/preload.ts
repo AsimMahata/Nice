@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { isChildOf } from './Modules/FileSystem/FileActions';
-
+import { TerminalOptions } from './types/terminal.types'
 // Expose APIs to renderer process if needed
 contextBridge.exposeInMainWorld('electron', {
     // Add your electron APIs here
@@ -35,8 +35,7 @@ contextBridge.exposeInMainWorld('fileSystem', {
 // Terminal
 
 contextBridge.exposeInMainWorld("pty", {
-    create: (options: termOpts) => {
-        console.log('----------------------------------')
+    create: (options: TerminalOptions) => {
         ipcRenderer.send('terminal:create', options)
     },
 

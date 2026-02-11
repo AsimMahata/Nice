@@ -4,15 +4,8 @@ import { createNewFile, createNewFolder, getParentDirectory, isChildOf, openDire
 import { showNotification } from './Modules/Notificaiton/Notification'
 import { runCode } from './Modules/CodeRunner/CodeRunner'
 import * as pty from 'node-pty'
+import { TerminalOptions } from './types/terminal.types';
 
-declare global {
-    type termOpts = {
-        cwd: string,
-        cols: number,
-        rows: number,
-        name: string
-    }
-}
 let mainWindow: BrowserWindow | null = null;
 
 let ptyProcess: pty.IPty | null = null;
@@ -51,7 +44,7 @@ function createWindow() {
 }
 
 // PTY handling
-function createPty(options: termOpts) {
+function createPty(options: TerminalOptions) {
     if (!mainWindow) {
         console.error('mainWindow not found error 404', mainWindow)
         return;
@@ -112,8 +105,7 @@ app.whenReady().then(() => {
         }
     });
 
-    ipcMain.on('terminal:create', (_event, options: termOpts) => {
-        console.log('terminal create main-------------------------')
+    ipcMain.on('terminal:create', (_event, options: TerminalOptions) => {
         if (ptyProcess) {
             ptyProcess.kill();
         }

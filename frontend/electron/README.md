@@ -222,14 +222,17 @@ ipcMain.handle('get-system-info', async () => {
 ## Troubleshooting
 
 ### "API not available" in browser
+
 - Did you rebuild? Run `npm run electron:build`
 - Did you rename `.js` to `.cjs`? Check `electron/dist/`
 - Is Vite running? The preload only works in Electron, not browser
 
 ### TypeScript errors after adding new file
+
 - Add the new file to the rename chain in `package.json` `electron:build` script
 
 ### "Cannot find module" error
+
 - Check that your import path matches the renamed `.cjs` file
 
 ---
