@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld("pty", {
     },
 
     write: (data: string) => {
+        console.log('is it calling backend write ---------------')
         ipcRenderer.send("terminal:write", data)
     },
     destroy: () => ipcRenderer.send("terminal:destroy"),

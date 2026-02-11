@@ -54,6 +54,8 @@ function createPty(options: TerminalOptions) {
     ptyProcess = pty.spawn(shell, [], options);
     ptyProcess.onData((data: string) => {
         if (mainWindow) {
+            console.log('is there any reply from the ptyProcess ------------------')
+            console.log(data)
             mainWindow.webContents.send('terminal:data', data);
         }
     });
@@ -95,6 +97,7 @@ app.whenReady().then(() => {
 
     ipcMain.on('terminal:write', (_event, data: string) => {
         if (ptyProcess) {
+            console.log('is there any ptyProcess ------------')
             ptyProcess.write(data);
         }
     });

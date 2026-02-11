@@ -1,6 +1,6 @@
 // import { useParams} from "react-router";
-import NavButton from "../components/CodeActions/NavigateButton";
-import { useAuth } from "../utils/useAuth";
+import NavButton from "../../components/CodeActions/NavigateButton";
+import { useAuth } from "../../utils/useAuth";
 
 // type RouteParams = {
 //   id: string;

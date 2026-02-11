@@ -318,7 +318,7 @@ function Home() {
                         {
                             <Panel id="terminal" defaultSize={40} minSize={10}>
                                 {terminal &&
-                                    <TerminalPanel setTerminal={setTerminal} />
+                                    <TerminalPanel terminal={terminal} setTerminal={setTerminal} />
                                 }
                             </Panel>
                         }

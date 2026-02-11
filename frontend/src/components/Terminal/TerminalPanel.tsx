@@ -2,13 +2,15 @@ import { useEffect, useRef, useState } from 'react';
 import './TerminalPanel.css';
 import { terminalManager } from './terminal.manager';
 import { Tab } from './terminal.options';
-
+import { useWorkspaceContext } from '../../contexts/Workspace/WorkspaceProvider';
+import "@xterm/xterm/css/xterm.css";
 type Props = {
-    onResize?: (cols: number, rows: number) => void,
+    terminal: boolean
     setTerminal: React.Dispatch<React.SetStateAction<boolean>>,
 };
-export function TerminalPanel({ }: Props) {
+export function TerminalPanel({ terminal, setTerminal }: Props) {
     //constexts
+    const { cwd } = useWorkspaceContext()
     const constainerRef = useRef<HTMLDivElement>(null);   //Main terminal
     const [tabs, _setTabs] = useState<Tab[]>([
         { id: '1', name: 'bash', active: true },
@@ -29,12 +31,22 @@ export function TerminalPanel({ }: Props) {
     };
     useEffect(() => {
         if (!constainerRef.current) return
-        terminalManager.mount(constainerRef.current)
-        return () => {
-            terminalManager.unmount()
+        if (!cwd) {
+            console.log('first select a working directory first')
+            return;
         }
+        terminalManager.mount(constainerRef.current, cwd)
+        console.log('created a terminal -----------------')
     }, [])
 
+    useEffect(() => {
+        if (terminal) {
+            console.warn('already terminal is opened')
+            return;
+        }
+        console.log('unmounting the terminal----------------')
+        terminalManager.unmount()
+    }, [terminal])
     return (
         <div className="terminal-panel">
             {/* Terminal Header - VS Code style */}
