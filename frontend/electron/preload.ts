@@ -45,9 +45,15 @@ contextBridge.exposeInMainWorld("pty", {
     },
     destroy: () => ipcRenderer.send("terminal:destroy"),
     onData: (callback: (data: string) => void) => {
-        ipcRenderer.on("terminal:data", (_e, data) => {
+        const listener = (_e: Electron.IpcRendererEvent, data: string) => {
             callback(data)
-        });
+        }
+
+        ipcRenderer.on("terminal:data", listener)
+
+        return () => {
+            ipcRenderer.removeListener("terminal:data", listener)
+        }
     },
     resize: (cols: number, rows: number) =>
         ipcRenderer.send('terminal:resize', cols, rows),

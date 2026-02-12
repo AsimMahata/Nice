@@ -12,19 +12,20 @@ import {
 import CodeEditor from "../../components/CodeEditor/CodeEditor";
 import FileEx from "../../components/FileEx/FileEx";
 import { getPlaceholder } from "../../utils/getPlaceholder";
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useRef } from "react";
 import { FileInfo } from "../../components/FileEx/FileActions";
 
 import "./Home.css"; // Import the new CSS file
 import PickDir from "../../components/FileEx/PickDir";
 import UserDetails from "../../components/User/UserDetails";
-import { Group, Panel, Separator } from "react-resizable-panels";
+import { Group, GroupImperativeHandle, Panel, Separator } from "react-resizable-panels";
 import { TerminalPanel } from "../../components/Terminal/TerminalPanel";
 
 import { useFileActions } from "../../components/FileEx/FileActions";
 import { useSocket } from "../../utils/useSocket";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
+import CodeRunner from "../../components/CodeRunner/CodeRunner";
 
 type status = {
     success: boolean,
@@ -43,11 +44,10 @@ declare global {
 function Home() {
     //contexts
     const { setCwd } = useWorkspaceContext()
-    console.log('all contexts', setCwd)
     const { codeLang, setCodeLang, isDirty } = useEditorContext()
+    const panelsGroupRef = useRef<GroupImperativeHandle | null>(null)
 
-
-    const [terminal, setTerminal] = useState<boolean>(false); // this tells if terminal is available or active
+    const [isTerminalOpen, setIsTerminalOpen] = useState<boolean>(false); // this tells if terminal is available or active
     const [sidePanel, setSidePanle] = useState<boolean>(false); // is side panel visible or not
     const [currentActivity, setCurrentActivity] = useState<string | null>(
         "file-ex",
@@ -59,31 +59,6 @@ function Home() {
     const placeholder = useMemo(() => getPlaceholder(codeLang || ""), [codeLang]);
     const [code, setCode] = useState<string>(placeholder);
 
-    const handleRunCode = async () => {
-        console.log('handle run code was requesting means button is clicked yare yare')
-        if (!codeFile) {
-            console.error('first open a file to run')
-            return
-        }
-        if (!codeLang || codeLang === "PlainText") {
-            console.error("unsupported file type this can't be executed")
-            return
-        }
-        if (isDirty) {
-            console.error('at your own risk we should save the file but well compilation error i guess')
-        }
-        if (!window.runner) {
-            console.log('window.runner api is not define or found')
-        }
-        console.log(codeFile)
-        try {
-            const result = await window.runner?.runCode(codeLang, codeFile.path)
-            console.log('result from running code run ', result)
-        } catch (err) {
-            console.error('something wrong happened when running the codde in frontend ', err)
-        }
-        return;
-    }
     const handleActivityClickEvent = (name: string) => {
         if (!name) setSidePanle(false);
         if (currentActivity == name) {
@@ -165,7 +140,7 @@ function Home() {
 
     // terminal cleanup from backend
     useEffect(() => {
-        if (terminal) {
+        if (isTerminalOpen) {
             console.log("entered but returned from use useEffect in shell");
             return;
         }
@@ -177,8 +152,22 @@ function Home() {
                 console.error("something error occured to destroy pty from backend");
             }
         })();
-    }, [terminal]);
 
+    }, [isTerminalOpen]);
+
+    useEffect(() => {
+        if (!panelsGroupRef.current) return
+        const id = setTimeout(() => {
+            panelsGroupRef.current?.setLayout(
+                isTerminalOpen
+                    ? { "editor-panel": 60, "terminal-panel": 40 }
+                    : { "editor-panel": 100, "terminal-panel": 0 }
+            )
+        }, 20)
+        return () => {
+            clearTimeout(id)
+        }
+    }, [isTerminalOpen])
     const FileActions = useFileActions({ setCode })
 
     const socket = useSocket();
@@ -240,12 +229,12 @@ function Home() {
 
                         <span
                             className="nav-link OpenTerminal"
-                            onClick={() => setTerminal(true)}>
+                            onClick={() => setIsTerminalOpen(true)}>
                             Terminal
                         </span>
                         <span
                             className="nav-link OpenTerminal"
-                            onClick={() => setTerminal(false)}>
+                            onClick={() => setIsTerminalOpen(false)}>
                             Close
                         </span>
                         <span className="currentProgrammingLang">{codeLang}</span>
@@ -257,34 +246,7 @@ function Home() {
                     <input className="search-input" placeholder="Quick search..." />
                 </div>
                 <div style={{ width: "80px" }} />
-                <button
-                    onClick={handleRunCode}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        background: "#111",
-                        color: "#d1d5db",
-                        border: "1px solid #333",
-                        borderRadius: "4px",
-                        padding: "4px 10px",
-                        cursor: "pointer",
-                        fontSize: "12px",
-                        fontFamily: "inherit",
-                        transition: "transform 0.08s ease, background 0.08s ease",
-                    }}
-                    onMouseDown={(e) => {
-                        e.currentTarget.style.transform = "translateY(1px)";
-                    }}
-                    onMouseUp={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                    }}
-                >
-                    ▶ Run
-                </button>
+                <CodeRunner openTerminal={() => setIsTerminalOpen(true)} />
             </header >
 
             <div className="main-body">
@@ -310,16 +272,22 @@ function Home() {
                     <div className="tab-bar">
                         <Tab name="Current" active />
                     </div>
-                    <Group orientation='vertical'>
-                        <Panel>
+                    <Group
+                        orientation='vertical'
+                        groupRef={panelsGroupRef}
+                    >
+                        <Panel id="editor-panel">
                             <CodeEditor key={codeLang} code={code} setCode={setCode} />
                         </Panel>
                         <Separator className="resize-handle" />
                         {
-                            <Panel id="terminal" defaultSize={40} minSize={10}>
-                                {terminal &&
-                                    <TerminalPanel terminal={terminal} setTerminal={setTerminal} />
-                                }
+                            <Panel
+                                key={isTerminalOpen ? "open" : "closed"}
+                                id="terminal-panel"
+                                minSize={isTerminalOpen ? 30 : 0}
+                                collapsible={!isTerminalOpen}
+                            >
+                                <TerminalPanel terminal={isTerminalOpen} setTerminal={setIsTerminalOpen} />
                             </Panel>
                         }
                     </Group>

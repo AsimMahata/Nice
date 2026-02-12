@@ -22,7 +22,7 @@ const FileEx = ({
     savingCode,
 }: props) => {
     //useWorkspaceContext
-    const { cwd } = useWorkspaceContext()
+    const { cwd, setOpenedFiles } = useWorkspaceContext()
 
     const FileActions = useFileActions({ setCode })
 
@@ -158,7 +158,7 @@ const FileEx = ({
                     file && <FileItem
                         key={file.name}
                         file={file}
-                        handleClick={() => FileActions.handleClick(file, setCodeFile)}
+                        handleClick={() => FileActions.handleClick(file, setCodeFile, setOpenedFiles)}
                     />
                 ))}
             </div>

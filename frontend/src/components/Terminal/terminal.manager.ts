@@ -9,12 +9,13 @@ class TerminalManager {
     private onDataCallBack: (() => void) | undefined = undefined;
     private onExitCallBack: (() => void) | undefined = undefined;
     private resizeObserver: ResizeObserver | null = null
-
+    private isMounted = false;
+    private pending: string | null = null;
     private handleResize = () => {
         if (this.fitAddon && this.terminal) {
             this.fitAddon.fit()
             const dims = this.fitAddon.proposeDimensions();
-            if (dims) {
+            if (dims && dims.rows && dims.cols) {
                 window.pty?.resize(dims.cols, dims.rows);
                 this.terminal.resize(dims.cols, dims.rows)
             }
@@ -51,8 +52,23 @@ class TerminalManager {
         this.resizeObserver.observe(container)
 
         console.log("MOUNT")
+        this.isMounted = true;
+        if (this.pending) {
+            await this.execute(this.pending);
+            this.pending = null;
+        }
     }
+    async run(command: string) {
+        if (!this.isMounted) {
+            this.pending = command;
+            return;
+        }
 
+        await this.execute(command);
+    }
+    private async execute(command: string) {
+        await window.pty?.write(`clear && ${command}` + "\r");
+    }
     async unmount() {
         try {
             await this.disconnectBackend()
@@ -76,7 +92,6 @@ class TerminalManager {
 
         console.log("UNMOUNT")
     }
-
     private async disconnectBackend() {
         if (!this.isConnected) return
 

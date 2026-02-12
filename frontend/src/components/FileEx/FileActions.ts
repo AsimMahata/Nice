@@ -86,7 +86,7 @@ export function useFileActions({ setCode }: props) {
     /**
      * Handles what to do when user clicks on a file or foler
      * */
-    async function handleClick(file: FileInfo, setCodeFile: React.Dispatch<React.SetStateAction<FileInfo | null>>) {
+    async function handleClick(file: FileInfo, setCodeFile: React.Dispatch<React.SetStateAction<FileInfo | null>>, setOpenedFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>) {
         console.log('frontend file ex -> FileActions inside handle click CLICKED!!', file)
         // if Directory open else open file content
         if (!window.fileSystem) {
@@ -101,12 +101,17 @@ export function useFileActions({ setCode }: props) {
             const child = await window.fileSystem.join(currentPath, file.name)
             if (file.isDirectory) {
                 setCurrentPath(child);
+                setOpenedFiles([])
             } else {
                 try {
                     const content = await window.fileSystem.readFile(child)
                     setCode(content || "")
                     setCodeFile(file)
                     setIsDirty(false)
+                    setOpenedFiles((prev) => {
+                        if (prev) return [file, ...prev]
+                        return [file]
+                    })
                     console.log('FileActions', 'handleClick', content)
                     console.log('FileActions', 'handleClick', file)
                 } catch (err) {

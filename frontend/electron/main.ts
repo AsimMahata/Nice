@@ -52,6 +52,7 @@ function createPty(options: TerminalOptions) {
     const shell = process.platform === 'win32' ? 'powershell.exe' : process.env.SHELL || '/bin/bash';
 
     ptyProcess = pty.spawn(shell, [], options);
+    console.log('created new pty in backend--------------------------')
     ptyProcess.onData((data: string) => {
         if (mainWindow) {
             console.log('is there any reply from the ptyProcess ------------------')
@@ -104,7 +105,11 @@ app.whenReady().then(() => {
 
     ipcMain.on('terminal:resize', (_event, cols: number, rows: number) => {
         if (ptyProcess) {
-            ptyProcess.resize(cols, rows);
+            try {
+                ptyProcess.resize(cols, rows);
+            } catch (err) {
+                console.error('error occured while resizing terminal i backend', err)
+            }
         }
     });
 
@@ -116,7 +121,9 @@ app.whenReady().then(() => {
     });
     ipcMain.on('terminal:destroy', () => {
         if (ptyProcess) {
-            ptyProcess.kill()
+            ptyProcess.kill();
+            ptyProcess = null;
+            console.log('pty in backend destroyed-------------------------', ptyProcess)
         }
     })
 

@@ -1,5 +1,5 @@
 // import { useParams} from "react-router";
-import NavButton from "../../components/CodeActions/NavigateButton";
+import NavButton from "../../components/CodeActionPanels/NavigateButton"
 import { useAuth } from "../../utils/useAuth";
 
 // type RouteParams = {

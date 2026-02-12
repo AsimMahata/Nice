@@ -6,9 +6,9 @@ import WorkspaceContext from "./WorkspaceContext";
 const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     const [cwd, setCwd] = useState<string | null>(null)
     const [openedFiles, setOpenedFiles] = useState<FileInfo[]>([])
-
+    const [openedFileIndex, setOpenedFileIndex] = useState<number | null>(null)
     return (
-        <WorkspaceContext.Provider value={{ cwd, setCwd, openedFiles, setOpenedFiles }}>
+        <WorkspaceContext.Provider value={{ cwd, setCwd, openedFiles, setOpenedFiles, openedFileIndex, setOpenedFileIndex }}>
             {children}
         </WorkspaceContext.Provider>
     )

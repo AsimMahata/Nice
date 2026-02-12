@@ -37,7 +37,7 @@ export function TerminalPanel({ terminal, setTerminal }: Props) {
         }
         terminalManager.mount(constainerRef.current, cwd)
         console.log('created a terminal -----------------')
-    }, [])
+    }, [terminal])
 
     useEffect(() => {
         if (terminal) {
@@ -47,6 +47,7 @@ export function TerminalPanel({ terminal, setTerminal }: Props) {
         console.log('unmounting the terminal----------------')
         terminalManager.unmount()
     }, [terminal])
+    if (!terminal) return null
     return (
         <div className="terminal-panel">
             {/* Terminal Header - VS Code style */}
@@ -77,10 +78,10 @@ export function TerminalPanel({ terminal, setTerminal }: Props) {
                 </div>
                 <div className="terminal-actions">
                     <button className="terminal-action" title="Split Terminal">
-                        ⊞
+                        Split
                     </button>
-                    <button className="terminal-action" title="Kill Terminal">
-                        🗑
+                    <button onClick={() => setTerminal(false)} className="terminal-action" title="Kill Terminal">
+                        X
                     </button>
                     <button className="terminal-action" title="Maximize">
                         ⤢
