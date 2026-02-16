@@ -33,13 +33,15 @@
         "socket.io-client": "^4.8.3",
         "tailwindcss": "^4.1.18",
         "vscode-jsonrpc": "^8.2.0",
-        "vscode-ws-jsonrpc": "^3.3.2"
+        "vscode-ws-jsonrpc": "^3.3.2",
+        "ws": "^8.19.0"
     },
     "devDependencies": {
         "@eslint/js": "^9.39.1",
         "@types/node": "^24.10.11",
         "@types/react": "^19.2.5",
         "@types/react-dom": "^19.2.3",
+        "@types/ws": "^8.18.1",
         "@vitejs/plugin-react": "^5.1.1",
         "cross-env": "^10.1.0",
         "electron": "^40.2.1",

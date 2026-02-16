@@ -5,7 +5,7 @@ import { showNotification } from './Modules/Notificaiton/Notification'
 import { runCode } from './Modules/CodeRunner/CodeRunner'
 import * as pty from 'node-pty'
 import { TerminalOptions } from './types/terminal.types';
-
+import { setupLSPWebSocket } from "./Modules/WebSocket/ws.lsp"
 let mainWindow: BrowserWindow | null = null;
 
 let ptyProcess: pty.IPty | null = null;
@@ -70,6 +70,7 @@ function createPty(options: TerminalOptions) {
 
 app.whenReady().then(() => {
     createWindow();
+    setupLSPWebSocket()
     //code runner services handlers
     ipcMain.handle('runner:run', (_event, lang: string, filePath: string) => {
         return runCode(lang, filePath)
