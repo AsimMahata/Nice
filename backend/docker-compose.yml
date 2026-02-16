@@ -5,9 +5,16 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+<<<<<<< HEAD
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - PORT=3000
       - NODE_ENV=development
+=======
+      - "10043:10043"
+    volumes:
+      - .:/app
+      - /app/node_modules
+>>>>>>> electron

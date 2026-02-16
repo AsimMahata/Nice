@@ -1,9 +1,0 @@
-{
-  "identifier": "custom",
-  "windows": [
-    "main"
-  ],
-  "permissions": [
-    "dialog:default"
-  ]
-}

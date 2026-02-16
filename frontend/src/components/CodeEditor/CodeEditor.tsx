@@ -1,5 +1,5 @@
 import Editor from "@monaco-editor/react";
-import { useRef } from "react";
+import React, { useRef } from "react";
 
 import {
     WebSocketMessageReader,
@@ -8,14 +8,20 @@ import {
 } from "vscode-ws-jsonrpc";
 
 import { createMessageConnection } from "vscode-jsonrpc/browser";
+import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 
 // DEBUG TOGGLE
 const DEBUG = true;
 const log = (...args: any[]) => {
     if (DEBUG) console.log(...args);
 };
-
-export default function CodeEditor({ code, setCode, lang }: any) {
+type props = {
+    code: string,
+    setCode: React.Dispatch<React.SetStateAction<string>>,
+}
+export default function CodeEditor({ code, setCode }: props) {
+    //constext 
+    const { codeLang, setIsDirty } = useEditorContext()
     // LSP document version (must monotonically increase)
     const version = useRef(1);
 
@@ -24,12 +30,19 @@ export default function CodeEditor({ code, setCode, lang }: any) {
 
     // True after initialize + didOpen (used for completion)
     const initialized = useRef(false);
-
+    const handleOnChange = (value: string | undefined) => {
+        if (value === undefined) {
+            console.log('nothing to save')
+            return;
+        }
+        setIsDirty(true)
+        setCode(value)
+    }
     const handleMount = (editor: any, monaco: any) => {
-        log("codeeditor/handleMount/init", { lang });
+        log("codeeditor/handleMount/init", { codeLang });
 
         // Connect to backend LSP bridge
-        const ws = new WebSocket(`ws://localhost:3001?lang=${lang}`);
+        const ws = new WebSocket(`ws://localhost:3001?lang=${codeLang}`);
         ws.binaryType = "arraybuffer";
 
         ws.onopen = () => {
@@ -50,7 +63,7 @@ export default function CodeEditor({ code, setCode, lang }: any) {
 
             // Decide extension (clangd relies on this)
             const ext =
-                lang === "python" ? "py" : lang === "c" ? "c" : "cpp";
+                codeLang === "python" ? "py" : codeLang === "c" ? "c" : "cpp";
 
             // SINGLE SOURCE OF TRUTH FOR URI (clangd requires file://)
             const fileUri = `file:///workspace/main.${ext}`;
@@ -73,7 +86,7 @@ export default function CodeEditor({ code, setCode, lang }: any) {
                 conn.sendNotification("textDocument/didOpen", {
                     textDocument: {
                         uri: fileUri,
-                        languageId: lang,
+                        languageId: codeLang,
                         version: version.current,
                         text: editor.getValue(),
                     },
@@ -119,7 +132,7 @@ export default function CodeEditor({ code, setCode, lang }: any) {
                 "registering"
             );
 
-            monaco.languages.registerCompletionItemProvider(lang, {
+            monaco.languages.registerCompletionItemProvider(codeLang, {
                 triggerCharacters: [".", ">", ":", "("],
 
                 provideCompletionItems: async (
@@ -231,7 +244,7 @@ export default function CodeEditor({ code, setCode, lang }: any) {
 
                     monaco.editor.setModelMarkers(
                         editor.getModel(),
-                        lang,
+                        codeLang,
                         markers
                     );
                 }
@@ -242,10 +255,10 @@ export default function CodeEditor({ code, setCode, lang }: any) {
     return (
         <Editor
             height="100%"
-            language={lang}
+            language={codeLang || "PlainText"}
             theme="vs-dark"
-            value={code}
-            onChange={(v) => setCode(v)}
+            value={code || ""}
+            onChange={(value) => handleOnChange(value)}
             onMount={handleMount}
         />
     );

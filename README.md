@@ -10,7 +10,11 @@ competitive programming
 ## Frontend
 
 * Built with **React** and **TypeScript**
+<<<<<<< HEAD
 * Runs on **Tauri** for a lightweight desktop experience
+=======
+* Runs on **Electron** for a lightweight desktop experience
+>>>>>>> electron
 
 ## Backend
 

@@ -16,6 +16,10 @@
     "@google/genai": "^1.37.0",
     "@types/cors": "^2.8.19",
     "bcryptjs": "^3.0.3",
+<<<<<<< HEAD
+=======
+    "body-parser": "^2.2.2",
+>>>>>>> electron
     "connect-mongo": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
