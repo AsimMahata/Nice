@@ -9,12 +9,12 @@ export default defineConfig({
         host: '0.0.0.0', // This allows Docker to access the dev server
         port: 5173,
         proxy: {
-            // This handles the Socket.io handshake and WebSocket upgrade
-            "/socket.io": {
-                target: "http://localhost:3000",
-                ws: true,
-                changeOrigin: true,
-            },
+            // // This handles the Socket.io handshake and WebSocket upgrade
+            // "/socket.io": {
+            //     target: "http://localhost:3000",
+            //     ws: true,
+            //     changeOrigin: true,
+            // },
         }
     }
 })
