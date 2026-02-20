@@ -2,15 +2,15 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path, { join } from 'path';
 import { createNewFile, createNewFolder, getParentDirectory, isChildOf, openDirectory, readDirectory, readFileContent } from './Modules/FileSystem/FileActions';
 import { showNotification } from './Modules/Notificaiton/Notification'
-import { runCode } from './Modules/CodeRunner/CodeRunner'
+import { CodeRunnerParams, runCode } from './Modules/CodeRunner/CodeRunner'
 import * as pty from 'node-pty'
 import { TerminalOptions } from './types/terminal.types';
 import { setupLSPWebSocket } from "./Modules/WebSocket/ws.lsp"
+import { ptyManager } from "./Modules/Terminal/terminal"
 let mainWindow: BrowserWindow | null = null;
 
 let ptyProcess: pty.IPty | null = null;
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-
 // main window
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -37,6 +37,7 @@ function createWindow() {
     mainWindow.on('closed', () => {
         mainWindow = null
         if (ptyProcess) {
+
             ptyProcess.kill();
             ptyProcess = null;
         }
@@ -49,11 +50,9 @@ function createPty(options: TerminalOptions) {
         console.error('mainWindow not found error 404', mainWindow)
         return;
     }
-    const shell = process.platform === 'win32' ? 'powershell.exe' : process.env.SHELL || '/bin/bash';
-
-    ptyProcess = pty.spawn(shell, [], options);
-    console.log('created new pty in backend--------------------------')
-    ptyProcess.onData((data: string) => {
+    ptyManager.create(options);
+    ptyProcess = ptyManager.getPty();
+    ptyProcess?.onData((data: string) => {
         if (mainWindow) {
             console.log('is there any reply from the ptyProcess ------------------')
             console.log(data)
@@ -61,7 +60,7 @@ function createPty(options: TerminalOptions) {
         }
     });
 
-    ptyProcess.onExit(() => {
+    ptyProcess?.onExit(() => {
         if (mainWindow) {
             mainWindow.webContents.send('terminal:exit');
         }
@@ -70,10 +69,12 @@ function createPty(options: TerminalOptions) {
 
 app.whenReady().then(() => {
     createWindow();
-    setupLSPWebSocket()
-    //code runner services handlers
-    ipcMain.handle('runner:run', (_event, lang: string, filePath: string) => {
-        return runCode(lang, filePath)
+    //    setupLSPWebSocket()
+
+    // code runner
+    ipcMain.handle('runner:run', async (_event, { codeFile, codeLang, cwd }: CodeRunnerParams) => {
+        console.log('invoke in main ==================================')
+        await runCode({ codeFile, codeLang, cwd })
     })
 
     // // terminal create
@@ -98,16 +99,16 @@ app.whenReady().then(() => {
     // });
 
     ipcMain.on('terminal:write', (_event, data: string) => {
-        if (ptyProcess) {
+        if (ptyManager.getPty()) {
             console.log('is there any ptyProcess ------------')
-            ptyProcess.write(data);
+            ptyManager.write(data);
         }
     });
 
     ipcMain.on('terminal:resize', (_event, cols: number, rows: number) => {
-        if (ptyProcess) {
+        if (ptyManager.getPty()) {
             try {
-                ptyProcess.resize(cols, rows);
+                ptyManager.resize(cols, rows);
             } catch (err) {
                 console.error('error occured while resizing terminal i backend', err)
             }
@@ -121,10 +122,8 @@ app.whenReady().then(() => {
         createPty(options);
     });
     ipcMain.on('terminal:destroy', () => {
-        if (ptyProcess) {
-            ptyProcess.kill();
-            ptyProcess = null;
-            console.log('pty in backend destroyed-------------------------', ptyProcess)
+        if (ptyManager.getPty()) {
+            ptyManager.destroy()
         }
     })
 

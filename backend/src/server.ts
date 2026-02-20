@@ -14,10 +14,7 @@ import cRoutes from "./routes/c.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import connectDatabase from "./db/database.connection.js";
-<<<<<<< HEAD
-=======
 import bodyParser from "body-parser";
->>>>>>> electron
 
 const app: Express = express();
 const httpServer = createServer(app);
@@ -26,10 +23,10 @@ connectDatabase();
 
 app.use(express.json());
 app.use(
-  cors({
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-  }),
+    cors({
+        origin: process.env.CLIENT_URL,
+        credentials: true,
+    }),
 );
 
 app.use(session(sessionConfig));
@@ -38,7 +35,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.get("/", (_req, res) => {
-  res.send("Backend OK");
+    res.send("Backend OK");
 });
 
 app.use("/api/auth", authRoutes);
@@ -50,16 +47,13 @@ app.use("/api/c", cRoutes);
 app.use("/api/user", userRoutes);
 
 const io = new Server(httpServer, {
-  cors: { origin: "*" },
+    cors: { origin: "*" },
 });
 
 io.on("connection", (socket) => {
-  console.log("new user connected" + socket.id);
+    console.log("new user connected" + socket.id);
 });
 
-<<<<<<< HEAD
-export { app, httpServer, io };
-=======
 
 const cphApp = express();
 
@@ -69,17 +63,16 @@ cphApp.use(cors());
 app.use(bodyParser.json());
 
 cphApp.get("/", (req, res) => {
-  res.send("cph port working!!");
+    res.send("cph port working!!");
 });
 
 cphApp.post("/", (req, res) => {
-  console.log("hello guys, we got the request!!!!!!");
-  const problemData = req.body;
-  console.log("Received CPH problem:", problemData.name);
-  // Emit to all connected frontend clients
-  io.emit("cph_problem", problemData);
-  res.send("helllooo");
+    console.log("hello guys, we got the request!!!!!!");
+    const problemData = req.body;
+    console.log("Received CPH problem:", problemData.name);
+    // Emit to all connected frontend clients
+    io.emit("cph_problem", problemData);
+    res.send("helllooo");
 });
 
 export { app, httpServer, io, cphApp };
->>>>>>> electron
