@@ -2,6 +2,13 @@ import { terminalManager } from "../Terminal/terminal.manager";
 import { CodeRunnerParams } from "./code.options";
 
 
+declare global {
+    interface Window {
+        runner?: {
+            runCode: ({ codeFile, codeLang, cwd }: CodeRunnerParams) => Promise<void>
+        };
+    }
+}
 class CodeManager {
     time = Date.now()
     constructor() {
@@ -16,6 +23,12 @@ class CodeManager {
     async runCode({ codeFile, codeLang, cwd }: CodeRunnerParams) {
         console.log('----------called run code for ', codeFile, codeLang, cwd);
         // its already filtered for now but i think i should filter inside this file
+        if (!window.runner) {
+            console.error('window runner is not defined ')
+        }
+        window.runner?.runCode({ codeFile, codeLang, cwd })
+        return;
+        // now its working in backend so fronend logic is commented for now i mean returned early
         if (!cwd) {
             console.error('first open a working Directory')
             return

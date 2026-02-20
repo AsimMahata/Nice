@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { isChildOf } from './Modules/FileSystem/FileActions';
 import { TerminalOptions } from './types/terminal.types'
+import { CodeRunnerParams } from './Modules/CodeRunner/CodeRunner';
 // Expose APIs to renderer process if needed
 contextBridge.exposeInMainWorld('electron', {
     // Add your electron APIs here
@@ -12,9 +13,17 @@ contextBridge.exposeInMainWorld('electron', {
 contextBridge.exposeInMainWorld('notify', {
     send: (title: string, body: string) => ipcRenderer.invoke('notify', title, body),
 });
+
+
+
+
 // CodeRunner services
 contextBridge.exposeInMainWorld('runner', {
-    runCode: (lang: string, filePath: string) => ipcRenderer.invoke('runner:run', lang, filePath)
+    runCode: ({ codeFile, codeLang, cwd }: CodeRunnerParams) => {
+        console.log('invoke =================================')
+        console.log('----------called run code for ', codeFile, codeLang, cwd);
+        ipcRenderer.invoke('runner:run', { codeFile, codeLang, cwd })
+    }
 });
 
 // File system APIs for directory reading

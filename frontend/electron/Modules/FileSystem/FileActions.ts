@@ -2,7 +2,7 @@ import { dialog } from 'electron';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-interface FileInfo {
+export interface FileInfo {
     name: string;
     path: string;
     isDirectory: boolean;
