@@ -69,7 +69,7 @@ function createPty(options: TerminalOptions) {
 
 app.whenReady().then(() => {
     createWindow();
-    //    setupLSPWebSocket()
+    setupLSPWebSocket()
 
     // code runner
     ipcMain.handle('runner:run', async (_event, { codeFile, codeLang, cwd }: CodeRunnerParams) => {

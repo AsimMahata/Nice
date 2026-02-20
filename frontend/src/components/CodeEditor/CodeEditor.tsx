@@ -9,80 +9,67 @@ import {
 
 import { createMessageConnection } from "vscode-jsonrpc/browser";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
+import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 
-// DEBUG TOGGLE
 const DEBUG = true;
 const log = (...args: any[]) => {
     if (DEBUG) console.log(...args);
 };
+
 type props = {
     code: string,
     setCode: React.Dispatch<React.SetStateAction<string>>,
 }
+
 export default function CodeEditor({ code, setCode }: props) {
-    //constext 
+
     const { codeLang, setIsDirty } = useEditorContext()
-    // LSP document version (must monotonically increase)
+    const { openedFiles, cwd } = useWorkspaceContext()
+
     const version = useRef(1);
-
-    // True after didOpen
     const opened = useRef(false);
-
-    // True after initialize + didOpen (used for completion)
     const initialized = useRef(false);
+
+    function toFileUri(p: string) {
+        return "file:///" + p.replace(/\\/g, "/");
+    }
+
     const handleOnChange = (value: string | undefined) => {
-        if (value === undefined) {
-            console.log('nothing to save')
-            return;
-        }
+        if (value === undefined) return;
         setIsDirty(true)
         setCode(value)
     }
-    const handleMount = (editor: any, monaco: any) => {
-        log("codeeditor/handleMount/init", { codeLang });
 
-        // Connect to backend LSP bridge
+    const handleMount = (editor: any, monaco: any) => {
+
         const ws = new WebSocket(`ws://localhost:3001?lang=${codeLang}`);
         ws.binaryType = "arraybuffer";
 
         ws.onopen = () => {
-            log("codeeditor/ws/onopen", "connected");
 
-            // Wrap WebSocket → JSON-RPC
             const socket = toSocket(ws);
             const reader = new WebSocketMessageReader(socket);
             const writer = new WebSocketMessageWriter(socket);
 
-            log("codeeditor/lsp/socket", "reader/writer ready");
-
-            // Create LSP connection
             const conn = createMessageConnection(reader, writer);
             conn.listen();
 
-            log("codeeditor/lsp/connection", "listening");
+            const realPath = openedFiles[0].path;
+            const fileUri = toFileUri(realPath);
 
-            // Decide extension (clangd relies on this)
-            const ext =
-                codeLang === "python" ? "py" : codeLang === "c" ? "c" : "cpp";
+            const rootUri = cwd ? toFileUri(cwd) : null;
 
-            // SINGLE SOURCE OF TRUTH FOR URI (clangd requires file://)
-            const fileUri = `file:///workspace/main.${ext}`;
+            log("LSP fileUri:", fileUri);
+            log("LSP rootUri:", rootUri);
 
-            log("codeeditor/lsp/document", fileUri);
-
-            // INITIALIZE
             conn.sendRequest("initialize", {
                 processId: null,
-                rootUri: "file:///workspace",
+                rootUri,
                 capabilities: {},
             }).then(() => {
-                log("codeeditor/lsp/initialize", "ok");
 
-                // INITIALIZED
                 conn.sendNotification("initialized");
-                log("codeeditor/lsp/initialized", "sent");
 
-                // DID OPEN
                 conn.sendNotification("textDocument/didOpen", {
                     textDocument: {
                         uri: fileUri,
@@ -94,23 +81,12 @@ export default function CodeEditor({ code, setCode }: props) {
 
                 opened.current = true;
                 initialized.current = true;
-
-                log("codeeditor/lsp/ready", {
-                    uri: fileUri,
-                    version: version.current,
-                });
             });
 
-            // DOCUMENT CHANGES
             editor.onDidChangeModelContent(() => {
                 if (!opened.current) return;
 
                 version.current++;
-                const text = editor.getValue();
-
-                log("codeeditor/editor/didChange", {
-                    version: version.current,
-                });
 
                 conn.sendNotification("textDocument/didChange", {
                     textDocument: {
@@ -119,36 +95,18 @@ export default function CodeEditor({ code, setCode }: props) {
                     },
                     contentChanges: [
                         {
-                            range: null, // full document replace
-                            text,
+                            text: editor.getValue(),
                         },
                     ],
                 });
             });
 
-            // COMPLETION PROVIDER
-            log(
-                "codeeditor/completion/provider/register",
-                "registering"
-            );
-
             monaco.languages.registerCompletionItemProvider(codeLang, {
                 triggerCharacters: [".", ">", ":", "("],
 
-                provideCompletionItems: async (
-                    model: any,
-                    position: any
-                ) => {
-                    log(
-                        "codeeditor/completion/provide/start",
-                        position
-                    );
+                provideCompletionItems: async (model: any, position: any) => {
 
                     if (!initialized.current) {
-                        log(
-                            "codeeditor/completion/blocked",
-                            "lsp not ready"
-                        );
                         return { suggestions: [] };
                     }
 
@@ -156,14 +114,6 @@ export default function CodeEditor({ code, setCode }: props) {
                         line: position.lineNumber - 1,
                         character: position.column - 1,
                     };
-
-                    log(
-                        "codeeditor/completion/request/send",
-                        {
-                            uri: fileUri,
-                            lspPosition,
-                        }
-                    );
 
                     const result: any = await conn.sendRequest(
                         "textDocument/completion",
@@ -174,21 +124,12 @@ export default function CodeEditor({ code, setCode }: props) {
                         }
                     );
 
-                    log(
-                        "codeeditor/completion/response/raw",
-                        result
-                    );
-
                     const items = Array.isArray(result)
                         ? result
                         : result?.items ?? [];
 
-                    log(
-                        "codeeditor/completion/items/count",
-                        items.length
-                    );
-
                     const word = model.getWordUntilPosition(position);
+
                     const range = {
                         startLineNumber: position.lineNumber,
                         endLineNumber: position.lineNumber,
@@ -205,23 +146,13 @@ export default function CodeEditor({ code, setCode }: props) {
                         range,
                     }));
 
-                    log(
-                        "codeeditor/completion/monaco/suggestions",
-                        suggestions
-                    );
-
                     return { suggestions };
                 },
             });
 
-            // DIAGNOSTICS
             conn.onNotification(
                 "textDocument/publishDiagnostics",
                 (p: any) => {
-                    log(
-                        "codeeditor/lsp/publishDiagnostics/raw",
-                        p
-                    );
 
                     const markers = p.diagnostics.map((d: any) => ({
                         startLineNumber: d.range.start.line + 1,
@@ -236,11 +167,6 @@ export default function CodeEditor({ code, setCode }: props) {
                                     ? monaco.MarkerSeverity.Warning
                                     : monaco.MarkerSeverity.Info,
                     }));
-
-                    log(
-                        "codeeditor/monaco/setMarkers",
-                        markers
-                    );
 
                     monaco.editor.setModelMarkers(
                         editor.getModel(),
