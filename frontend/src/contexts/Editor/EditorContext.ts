@@ -1,7 +1,9 @@
 import React, { createContext } from "react";
+import { FileInfo } from "../../components/FileEx/FileActions";
 interface OpenFile {
     content: string,
     isDirty: boolean
+    fileInfo: FileInfo
 }
 
 export interface EditorState {
@@ -16,6 +18,8 @@ interface EditorContextType {
     editorState: EditorState;
     setEditorState: React.Dispatch<React.SetStateAction<EditorState>>;
     getDirtyStatus: () => boolean;
+    getCurrentFileName: () => string | null;
+    getCurrentFileInfo: () => FileInfo | null;
 }
 
 const EditorContext = createContext<EditorContextType | undefined>(undefined)

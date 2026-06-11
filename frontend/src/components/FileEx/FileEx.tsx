@@ -7,9 +7,6 @@ import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider"
 
 type props = {
     codeFile: FileInfo | null;
-    setCodeFile: React.Dispatch<React.SetStateAction<FileInfo | null>>;
-    code: string;
-    setCode: React.Dispatch<React.SetStateAction<string>>;
     savingCode: boolean;
     setSavingCode: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -19,11 +16,7 @@ export type HandleClickResult = {
     content: string;
 };
 
-const FileEx = ({
-    setCodeFile,
-    setCode,
-
-}: props) => {
+const FileEx = ({ }: props) => {
     //useWorkspaceContext
     const { cwd } = useWorkspaceContext();
 
@@ -37,8 +30,6 @@ const FileEx = ({
     const handleClick = async (file: FileInfo) => {
         const result: HandleClickResult | null = await FileActions.handleClick(file)
         if (!result) return;
-        setCodeFile(result.file)
-        setCode(result.content)
     }
 
     // init path

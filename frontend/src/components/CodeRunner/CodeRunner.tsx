@@ -9,21 +9,20 @@ type Props = {
 
 const CodeRunner = ({ openTerminal }: Props) => {
     //constexts
-    const { cwd, openedFiles, openedFileIndex } = useWorkspaceContext()
-    const { codeLang, isDirty } = useEditorContext()
+    const { cwd } = useWorkspaceContext()
+    const { editorState, getDirtyStatus, codeLang } = useEditorContext()
     const handleRunCode = async () => {
-        if (!openedFiles.length) {
+        if (!editorState.activeFile) {
             console.error('please open some files to run')
             return
         }
-        if (isDirty) {
-            console.error('not implemened save and run wait')
+        if (getDirtyStatus()) {
+            console.error('not implemened save and run wait/codeRunner ---------------------')
             return
         }
-        const index = openedFileIndex ?? 0
-        const activeFile = openedFiles[index]
+        const openedFile = editorState.openFiles[editorState.activeFile]
         const codeRunnerParams: CodeRunnerParams = {
-            codeFile: activeFile,
+            codeFile: openedFile.fileInfo,
             codeLang,
             cwd
         }

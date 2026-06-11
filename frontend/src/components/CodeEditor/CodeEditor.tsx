@@ -1,5 +1,5 @@
 import Editor from "@monaco-editor/react";
-import React, { useRef } from "react";
+import { useRef } from "react";
 
 import {
     WebSocketMessageReader,
@@ -16,15 +16,15 @@ const log = (...args: any[]) => {
     if (DEBUG) console.log(...args);
 };
 
-type props = {
-    code: string,
-    setCode: React.Dispatch<React.SetStateAction<string>>,
-}
 
-export default function CodeEditor({ code, setCode }: props) {
-
+export default function CodeEditor() {
     const { codeLang, setEditorState, editorState } = useEditorContext()
     const { cwd } = useWorkspaceContext()
+
+    const code =
+        editorState.activeFile
+            ? editorState.openFiles[editorState.activeFile]?.content ?? ""
+            : "";
 
     const version = useRef(1);
     const opened = useRef(false);
@@ -35,6 +35,7 @@ export default function CodeEditor({ code, setCode }: props) {
         return "file:///" + p.replace(/\\/g, "/");
     }
 
+
     const handleOnChange = (value: string | undefined) => {
         if (value === undefined) return;
 
@@ -42,7 +43,6 @@ export default function CodeEditor({ code, setCode }: props) {
 
         if (!path) return;
 
-        setCode(value);
 
         setEditorState(prev => ({
             ...prev,
@@ -200,7 +200,7 @@ export default function CodeEditor({ code, setCode }: props) {
             height="100%"
             language={codeLang || "PlainText"}
             theme="vs-dark"
-            value={code || ""}
+            value={code}
             onChange={(value) => handleOnChange(value)}
             onMount={handleMount}
         />

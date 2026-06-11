@@ -5,15 +5,12 @@ import {
     Terminal as TERMLOGO,
     Settings,
     User,
-    X,
     Command,
     VenetianMask,
 } from "lucide-react";
 import CodeEditor from "../../components/CodeEditor/CodeEditor";
 import FileEx from "../../components/FileEx/FileEx";
-import { getPlaceholder } from "../../utils/getPlaceholder";
-import { useMemo, useEffect, useState, useRef } from "react";
-import { FileInfo } from "../../components/FileEx/FileActions";
+import { useEffect, useState, useRef } from "react";
 
 import "./Home.css"; // Import the new CSS file
 import PickDir from "../../components/FileEx/PickDir";
@@ -27,25 +24,13 @@ import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider"
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import CodeRunner from "../../components/CodeRunner/CodeRunner";
 import SaveButton from "../../components/Utility/SaveButton";
+import Greeter from "../../components/Greeter/Greeter";
+import TabManager from "../../components/CodeEditor/TabManager";
 
-// type status = {
-//     success: boolean,
-//     output: string
-//     error: string
-//     runtimeError: string
-//     compilationError: string
-// }
-// declare global {
-//     interface Window {
-//         runner?: {
-//             runCode: ({ codeFile, codeLang, cwd }: CodeRunnerParams) => Promise<void> | undefined;
-//         }
-//     }
-// }
 function Home() {
     //contexts
     const { setCwd } = useWorkspaceContext()
-    const { codeLang, setCodeLang } = useEditorContext()
+    const { editorState, codeLang, setCodeLang, getCurrentFileInfo } = useEditorContext()
     const panelsGroupRef = useRef<GroupImperativeHandle | null>(null)
 
     const [isTerminalOpen, setIsTerminalOpen] = useState<boolean>(false); // this tells if terminal is available or active
@@ -53,12 +38,9 @@ function Home() {
     const [currentActivity, setCurrentActivity] = useState<string | null>(
         "file-ex",
     ); // what is the current active button on side panel
-    const [codeFile, setCodeFile] = useState<FileInfo | null>(null);
     const [savingCode, setSavingCode] = useState<boolean>(false);
-    const [asim, _setAsim] = useState(true);
+    const [isDev, _setAsim] = useState(true);
 
-    const placeholder = useMemo(() => getPlaceholder(codeLang || ""), [codeLang]);
-    const [code, setCode] = useState<string>(placeholder);
 
     const handleActivityClickEvent = (name: string) => {
         if (!name) setSidePanle(false);
@@ -81,22 +63,13 @@ function Home() {
         </div>
     );
 
-    const Tab = ({ name, active = false }: any) => (
-        <div className={`tab-item ${active ? "active" : ""}`}>
-            <span>{name}</span>
-            {active && <X size={14} className="close-icon" />}
-        </div>
-    );
 
     function getCorrectActivitybar() {
         switch (currentActivity) {
             case "FileEx":
                 return (
                     <FileEx
-                        codeFile={codeFile}
-                        setCodeFile={setCodeFile}
-                        code={code}
-                        setCode={setCode}
+                        codeFile={getCurrentFileInfo()}
                         savingCode={savingCode}
                         setSavingCode={setSavingCode}
                     />
@@ -115,18 +88,14 @@ function Home() {
                 return null;
         }
     }
-    // i dont think we need placeholders
-    //    useEffect(() => {
-    //        if (code !== placeholder) setCode(placeholder);
-    //    }, [codeLang]);
 
     useEffect(() => {
-        if (asim) setCwd(import.meta.env.VITE_TESTING_FOLDER);
+        if (isDev) setCwd(import.meta.env.VITE_TESTING_FOLDER);
     }, []);
 
     useEffect(() => {
         async function setFileType() {
-            const extension = codeFile?.extension || "";
+            const extension = getCurrentFileInfo()?.extension || "";
             const map: Record<string, string> = {
                 ".cpp": "cpp",
                 ".py": "python",
@@ -137,7 +106,7 @@ function Home() {
             setCodeLang(map[extension] ?? "PlainText");
         }
         setFileType();
-    }, [codeFile]);
+    }, [editorState.activeFile]);
 
     // terminal cleanup from backend
     useEffect(() => {
@@ -212,21 +181,6 @@ function Home() {
                     </div>
                     <nav className="nav-menu">
                         <PickDir text="Project" />
-                        {//<button
-                            //     onClick={() => FileActions.saveFiles()}
-                            //     style={{
-                            //         background: "none",
-                            //         border: "none",
-                            //         padding: 0,
-                            //         margin: 0,
-                            //         color: isDirty ? "goldenrod" : "green",
-                            //         cursor: "pointer",
-                            //         font: "inherit",
-                            //     }}
-                            // >
-                            //     {isDirty ? "NotSaved" : "Saved"}
-                            // </button>
-                        }
                         <span
                             className="nav-link OpenTerminal"
                             onClick={() => setIsTerminalOpen(true)}>
@@ -268,31 +222,33 @@ function Home() {
                     style={{ display: (sidePanel ? "block" : "none"), minWidth: "40vh" }}>
                     {getCorrectActivitybar()}
                 </div>
-
-                <main className="editor-container">
-                    <div className="tab-bar">
-                        <Tab name="Current" active />
-                    </div>
-                    <Group
-                        orientation='vertical'
-                        groupRef={panelsGroupRef}
-                    >
-                        <Panel id="editor-panel">
-                            <CodeEditor key={codeLang} code={code} setCode={setCode} />
-                        </Panel>
-                        <Separator className="resize-handle" />
-                        {
+                {editorState.activeFile &&
+                    <main className="editor-container">
+                        <TabManager />
+                        <Group
+                            orientation='vertical'
+                            groupRef={panelsGroupRef}
+                        >
+                            <Panel id="editor-panel">
+                                <CodeEditor key={codeLang} />
+                            </Panel>
+                            <Separator className="resize-handle" />
                             <Panel
                                 key={isTerminalOpen ? "open" : "closed"}
                                 id="terminal-panel"
                                 minSize={isTerminalOpen ? 30 : 0}
+                                defaultSize={isTerminalOpen ? 30 : 0}
                                 collapsible={!isTerminalOpen}
                             >
                                 <TerminalPanel terminal={isTerminalOpen} setTerminal={setIsTerminalOpen} />
                             </Panel>
-                        }
-                    </Group>
-                </main>
+                        </Group>
+                    </main>
+                }
+                {
+                    !editorState.activeFile &&
+                    <Greeter />
+                }
             </div>
         </div >
     );

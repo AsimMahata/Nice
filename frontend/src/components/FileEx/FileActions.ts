@@ -142,6 +142,7 @@ export function useFileActions() {
                     [file.path]: {
                         content,
                         isDirty: false,
+                        fileInfo: file,
                     },
                 },
 
