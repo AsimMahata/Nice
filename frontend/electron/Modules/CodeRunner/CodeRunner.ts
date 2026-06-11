@@ -1,6 +1,6 @@
 import { join } from "path"
 import { FileInfo, getParentDirectory } from "../FileSystem/FileActions"
-import { exec, spawn } from "child_process"
+import { exec } from "child_process"
 import { ptyManager } from "../Terminal/terminal"
 import { existsSync, mkdirSync } from "fs"
 type status = {
@@ -83,7 +83,7 @@ async function sendCommandToTerminal(command: RunCommand) {
     console.log('command sent to terminal---------', command)
 }
 
-const compileCppCode = (filePath: string): Promise<status> => {
+export const compileCppCode = (filePath: string): Promise<status> => {
     const status: status = {
         success: false,
         output: "",

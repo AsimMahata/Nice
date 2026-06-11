@@ -1,8 +1,7 @@
 import "./Greeter.css"
-type Props = {}
 
 
-const Greeter = (_props: Props) => {
+const Greeter = () => {
     return (
         <div className="Greeter-main-component">
             <div className="Greeter-Header">

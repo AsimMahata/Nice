@@ -24,7 +24,7 @@ const MainBody = () => {
                 await window.pty?.destroy();
                 console.log("destroyed terminal from backend succesfully");
             } catch (err) {
-                console.error("something error occured to destroy pty from backend");
+                console.error("something error occured to destroy pty from backend", err);
             }
         })();
 

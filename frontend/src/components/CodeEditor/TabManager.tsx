@@ -39,7 +39,7 @@ const TabManager = () => {
 
     const changeActiveFile = (path: string) => {
         setEditorState((prev) => {
-            let newActiveFile = path;
+            const newActiveFile = path;
             return {
                 ...prev,
                 activeFile: newActiveFile,

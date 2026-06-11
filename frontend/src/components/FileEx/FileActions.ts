@@ -17,7 +17,7 @@ export function useFileActions() {
     // context
     const { setEditorState, editorState } = useEditorContext()
     const { setFiles, currentPath, setCurrentPath, setRefresh } = useWorkspaceContext()
-    const [_loading, setLoading] = useState(false);
+    const [, setLoading] = useState(false);
     const [newFolder, setNewFolder] = useState("")
     const [newFile, setNewFile] = useState("")
 

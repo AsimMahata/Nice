@@ -1,9 +1,8 @@
 import { useEditorContext } from "../../contexts/Editor/EditorProvider"
 import { useFileActions } from "../FileEx/FileActions";
 
-type Props = {}
 
-const SaveButton = ({ }: Props) => {
+const SaveButton = () => {
     const { editorState, setEditorState } = useEditorContext()
     const getDirtyStatus = () => {
         return editorState.activeFile
