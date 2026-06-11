@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./FileEx.css";
 import { FileInfo, useFileActions } from "./FileActions";
 import FileItem from "./FileItem";
@@ -7,8 +7,6 @@ import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider"
 
 type props = {
     codeFile: FileInfo | null;
-    savingCode: boolean;
-    setSavingCode: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export type HandleClickResult = {
@@ -18,7 +16,7 @@ export type HandleClickResult = {
 
 const FileEx = ({ }: props) => {
     //useWorkspaceContext
-    const { cwd } = useWorkspaceContext();
+    const { cwd, setCurrentPath, currentPath, files, refresh } = useWorkspaceContext();
 
     const FileActions = useFileActions()
 
@@ -42,7 +40,7 @@ const FileEx = ({ }: props) => {
             const dir = cwd;
             //setCwd(dir)
             console.log('cwd is selcted so change the currentpath to main dir', cwd)
-            FileActions.setCurrentPath(dir);
+            setCurrentPath(dir);
             setInsideMainDir(true);
         }
         init();
@@ -51,7 +49,7 @@ const FileEx = ({ }: props) => {
     // reload on path / refresh
     useEffect(() => {
         async function checkIfInsideMainDir() {
-            if (!FileActions.currentPath) {
+            if (!currentPath) {
                 console.log('please have a valid path first')
                 return;
             }
@@ -64,7 +62,7 @@ const FileEx = ({ }: props) => {
                 return;
             }
             try {
-                const result = await window.fileSystem.isChildOf(cwd, FileActions.currentPath);
+                const result = await window.fileSystem.isChildOf(cwd, currentPath);
                 if (result.isExactMatch) {
                     setInsideMainDir(true)
                 } else setInsideMainDir(false)
@@ -77,7 +75,7 @@ const FileEx = ({ }: props) => {
         FileActions.loadFiles();
         checkIfInsideMainDir()
 
-    }, [FileActions.currentPath, FileActions.refresh]);
+    }, [currentPath, refresh]);
 
 
     if (!cwd)
@@ -89,8 +87,8 @@ const FileEx = ({ }: props) => {
 
             {/* header */}
             <div className="file-ex-header">
-                <span className="path" title={FileActions.currentPath || "NotAllowed"}>
-                    {FileActions.currentPath}
+                <span className="path" title={currentPath || "NotAllowed"}>
+                    {currentPath}
                 </span>
             </div>
 
@@ -151,7 +149,7 @@ const FileEx = ({ }: props) => {
 
             {/* file list */}
             <div className="filelist">
-                {FileActions.files.map((file: FileInfo) => (
+                {files.map((file: FileInfo) => (
                     file && <FileItem
                         key={file.name}
                         file={file}

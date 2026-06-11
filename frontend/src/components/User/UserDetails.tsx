@@ -1,6 +1,6 @@
 import { useState } from "react"
 import Login from "../../pages/Auth/Login"
-import { AuthContext } from "../../contexts/AuthContext"
+import { AuthContext } from "../../contexts/Auth/AuthContext"
 
 type Props = {}
 

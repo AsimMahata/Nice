@@ -6,6 +6,7 @@ import { CodeRunnerParams } from "./code.options"
 type Props = {
     openTerminal: () => void
 }
+//FIX: duing running code if compilation failed it runs run code anyway fix 
 
 const CodeRunner = ({ openTerminal }: Props) => {
     //constexts

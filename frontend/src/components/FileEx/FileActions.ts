@@ -2,8 +2,9 @@ import { useState } from "react";
 import { notify } from "../../utils/notification";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { HandleClickResult } from "./FileEx";
+import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 
-//NOTE: FileInfo
+//FIX: here i am exporting it and many modules is recieving it where as it should be taken from fileactions.options.ts
 export interface FileInfo {
     name: string;
     path: string;
@@ -12,31 +13,10 @@ export interface FileInfo {
     modifiedAt: Date;
     extension: string;
 }
-
-// Type declaration for the exposed Electron API this global assure we can access anywhere
-declare global {
-    interface Window {
-        fileSystem?: {
-            readDirectory: (path: string) => Promise<FileInfo[]>;
-            openFolderDialog: () => Promise<{ canceled: boolean, filePaths: string, folderPath: string; files: FileInfo[] } | null>;
-            readFile: (path: string) => Promise<string>;
-            writeFileContent: (path: string, content: string) => Promise<boolean>;
-            getParDir: (path: string) => Promise<string>;
-            join: (...args: string[]) => Promise<string>;
-            createFolder: (path: string) => Promise<number>;
-            createFile: (path: string) => Promise<number>;
-            isChildOf: (parent: string, child: string) => Promise<{ isInside: boolean, isExactMatch: boolean }>;
-        };
-    }
-}
-
 export function useFileActions() {
     // context
     const { setEditorState, editorState } = useEditorContext()
-
-    const [files, setFiles] = useState<FileInfo[]>([]);
-    const [currentPath, setCurrentPath] = useState<string | null>(null)
-    const [refresh, setRefresh] = useState(false);
+    const { setFiles, currentPath, setCurrentPath, setRefresh } = useWorkspaceContext()
     const [_loading, setLoading] = useState(false);
     const [newFolder, setNewFolder] = useState("")
     const [newFile, setNewFile] = useState("")
@@ -262,10 +242,6 @@ export function useFileActions() {
 
     return {
         selectProjectDirectory,
-        files,
-        currentPath,
-        setCurrentPath,
-        refresh,
         loadFiles,
         handleClick,
         goParentDir,
