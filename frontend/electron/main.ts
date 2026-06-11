@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path, { join } from 'path';
-import { createNewFile, createNewFolder, getParentDirectory, isChildOf, openDirectory, readDirectory, readFileContent } from './Modules/FileSystem/FileActions';
+import { createNewFile, createNewFolder, getParentDirectory, isChildOf, openDirectory, readDirectory, readFileContent, writeFileContent } from './Modules/FileSystem/FileActions';
 import { showNotification } from './Modules/Notificaiton/Notification'
 import { CodeRunnerParams, runCode } from './Modules/CodeRunner/CodeRunner'
 import * as pty from 'node-pty'
@@ -161,6 +161,10 @@ app.whenReady().then(() => {
     // IPC readFiles
     ipcMain.handle('read-file', (_event, path: string) => {
         return readFileContent(path);
+    })
+    // IPC writeFileContent
+    ipcMain.handle('write-file-content', (_event, path: string, content: string) => {
+        return writeFileContent(path, content);
     })
     // IPC open-folder-dialog 
     ipcMain.handle('open-folder-dialog', async () => {

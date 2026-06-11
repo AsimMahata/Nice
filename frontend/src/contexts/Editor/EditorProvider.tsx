@@ -1,17 +1,36 @@
 import { ReactNode, useContext, useState } from "react"
-import EditorContext from "./EditorContext"
+import EditorContext, { EditorState } from "./EditorContext"
 
 
-
+const defaultEditorState: EditorState = {
+    openFiles: {},
+    openTabs: [],
+    activeFile: null,
+};
 const EditorProvider = ({ children }: { children: ReactNode }) => {
-    const [codeLang, setCodeLang] = useState<string | null>(null)
-    const [isDirty, setIsDirty] = useState<boolean>(false)
+    const [codeLang, setCodeLang] = useState<string | null>(null);
+    const [editorState, setEditorState] = useState<EditorState>(defaultEditorState);
+
+    const getDirtyStatus = () => {
+        return editorState.activeFile
+            ? editorState.openFiles[editorState.activeFile]?.isDirty ?? false
+            : false;
+    };
+
     return (
-        <EditorContext.Provider value={{ codeLang, setCodeLang, isDirty, setIsDirty }}>
+        <EditorContext.Provider
+            value={{
+                codeLang,
+                setCodeLang,
+                editorState,
+                setEditorState,
+                getDirtyStatus,
+            }}
+        >
             {children}
         </EditorContext.Provider>
-    )
-}
+    );
+};
 
 export default EditorProvider
 

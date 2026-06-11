@@ -11,7 +11,7 @@ const PickDir = ({ text: name }: Props) => {
     //useWorkspaceContext
     const { cwd, setCwd } = useWorkspaceContext()
 
-    console.log('cwd', cwd)
+    // console.log('cwd', cwd)
 
 
 

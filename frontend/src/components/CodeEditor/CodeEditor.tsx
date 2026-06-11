@@ -23,22 +23,39 @@ type props = {
 
 export default function CodeEditor({ code, setCode }: props) {
 
-    const { codeLang, setIsDirty } = useEditorContext()
-    const { openedFiles, cwd } = useWorkspaceContext()
+    const { codeLang, setEditorState, editorState } = useEditorContext()
+    const { cwd } = useWorkspaceContext()
 
     const version = useRef(1);
     const opened = useRef(false);
     const initialized = useRef(false);
 
-    function toFileUri(p: string) {
+    function toFileUri(p: string | null) {
+        if (!p) return;
         return "file:///" + p.replace(/\\/g, "/");
     }
 
     const handleOnChange = (value: string | undefined) => {
         if (value === undefined) return;
-        setIsDirty(true)
-        setCode(value)
-    }
+
+        const path = editorState.activeFile;
+
+        if (!path) return;
+
+        setCode(value);
+
+        setEditorState(prev => ({
+            ...prev,
+            openFiles: {
+                ...prev.openFiles,
+                [path]: {
+                    ...prev.openFiles[path],
+                    content: value,
+                    isDirty: true,
+                },
+            },
+        }));
+    };
 
     const handleMount = (editor: any, monaco: any) => {
 
@@ -54,7 +71,7 @@ export default function CodeEditor({ code, setCode }: props) {
             const conn = createMessageConnection(reader, writer);
             conn.listen();
 
-            const realPath = openedFiles[0].path;
+            const realPath = editorState.activeFile;
             const fileUri = toFileUri(realPath);
 
             const rootUri = cwd ? toFileUri(cwd) : null;

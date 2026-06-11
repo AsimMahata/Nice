@@ -14,27 +14,33 @@ type props = {
     setSavingCode: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+export type HandleClickResult = {
+    file: FileInfo;
+    content: string;
+};
+
 const FileEx = ({
-    codeFile,
     setCodeFile,
-    code,
     setCode,
-    savingCode,
+
 }: props) => {
     //useWorkspaceContext
-    const { cwd, setOpenedFiles } = useWorkspaceContext()
+    const { cwd } = useWorkspaceContext();
 
-    const FileActions = useFileActions({ setCode })
+    const FileActions = useFileActions()
 
 
     const [creatingFolder, setCreatingFolder] = useState(false);
     const [creatingFile, setCreatingFile] = useState(false);
     const [insideMainDir, setInsideMainDir] = useState<boolean>(false);
 
-    useEffect(() => {
-        FileActions.saveFiles(code, codeFile);
-        console.log("triggered");
-    }, [savingCode]);
+    const handleClick = async (file: FileInfo) => {
+        const result: HandleClickResult | null = await FileActions.handleClick(file)
+        if (!result) return;
+        setCodeFile(result.file)
+        setCode(result.content)
+    }
+
     // init path
     useEffect(() => {
         async function init() {
@@ -158,7 +164,7 @@ const FileEx = ({
                     file && <FileItem
                         key={file.name}
                         file={file}
-                        handleClick={() => FileActions.handleClick(file, setCodeFile, setOpenedFiles)}
+                        handleClick={() => handleClick(file)}
                     />
                 ))}
             </div>

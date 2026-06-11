@@ -26,25 +26,26 @@ import { useSocket } from "../../utils/useSocket";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import CodeRunner from "../../components/CodeRunner/CodeRunner";
+import SaveButton from "../../components/Utility/SaveButton";
 
-type status = {
-    success: boolean,
-    output: string
-    error: string
-    runtimeError: string
-    compilationError: string
-}
-declare global {
-    interface Window {
-        runner?: {
-            runCode: (lang: string, filePath: string) => Promise<status>;
-        }
-    }
-}
+// type status = {
+//     success: boolean,
+//     output: string
+//     error: string
+//     runtimeError: string
+//     compilationError: string
+// }
+// declare global {
+//     interface Window {
+//         runner?: {
+//             runCode: ({ codeFile, codeLang, cwd }: CodeRunnerParams) => Promise<void> | undefined;
+//         }
+//     }
+// }
 function Home() {
     //contexts
     const { setCwd } = useWorkspaceContext()
-    const { codeLang, setCodeLang, isDirty } = useEditorContext()
+    const { codeLang, setCodeLang } = useEditorContext()
     const panelsGroupRef = useRef<GroupImperativeHandle | null>(null)
 
     const [isTerminalOpen, setIsTerminalOpen] = useState<boolean>(false); // this tells if terminal is available or active
@@ -168,7 +169,7 @@ function Home() {
             clearTimeout(id)
         }
     }, [isTerminalOpen])
-    const FileActions = useFileActions({ setCode })
+    const FileActions = useFileActions()
 
     const socket = useSocket();
 
@@ -181,11 +182,11 @@ function Home() {
         const filename = `${formattedName}.cpp`;
         try {
             await FileActions.createNewFiles(filename);
-            console.log(FileActions.currentPath);
+            console.log('FileActions.currentPath from home ---', FileActions.currentPath);
             // FileActions.setCurrentPath()
             // need to open file and than set lang so that it loads placeholder by useEffect
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
         console.log("created file and now ......");
     };
@@ -200,7 +201,6 @@ function Home() {
         };
     }, [FileActions]);
 
-    console.log(FileActions.currentPath);
 
     return (
         <div className="ide-container">
@@ -212,21 +212,21 @@ function Home() {
                     </div>
                     <nav className="nav-menu">
                         <PickDir text="Project" />
-                        <button
-                            onClick={() => FileActions.saveFiles(code, codeFile)}
-                            style={{
-                                background: "none",
-                                border: "none",
-                                padding: 0,
-                                margin: 0,
-                                color: isDirty ? "goldenrod" : "green",
-                                cursor: "pointer",
-                                font: "inherit",
-                            }}
-                        >
-                            {isDirty ? "NotSaved" : "Saved"}
-                        </button>
-
+                        {//<button
+                            //     onClick={() => FileActions.saveFiles()}
+                            //     style={{
+                            //         background: "none",
+                            //         border: "none",
+                            //         padding: 0,
+                            //         margin: 0,
+                            //         color: isDirty ? "goldenrod" : "green",
+                            //         cursor: "pointer",
+                            //         font: "inherit",
+                            //     }}
+                            // >
+                            //     {isDirty ? "NotSaved" : "Saved"}
+                            // </button>
+                        }
                         <span
                             className="nav-link OpenTerminal"
                             onClick={() => setIsTerminalOpen(true)}>
@@ -246,6 +246,7 @@ function Home() {
                     <input className="search-input" placeholder="Quick search..." />
                 </div>
                 <div style={{ width: "80px" }} />
+                <SaveButton />
                 <CodeRunner openTerminal={() => setIsTerminalOpen(true)} />
             </header >
 

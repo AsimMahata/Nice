@@ -1,5 +1,4 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { isChildOf } from './Modules/FileSystem/FileActions';
 import { TerminalOptions } from './types/terminal.types'
 import { CodeRunnerParams } from './Modules/CodeRunner/CodeRunner';
 // Expose APIs to renderer process if needed
@@ -31,6 +30,7 @@ contextBridge.exposeInMainWorld('fileSystem', {
     readDirectory: (path: string) => ipcRenderer.invoke('read-directory', path),
     openFolderDialog: () => ipcRenderer.invoke('open-folder-dialog'),
     readFile: (path: string) => ipcRenderer.invoke('read-file', path),
+    writeFileContent: (path: string, content: string) => ipcRenderer.invoke('write-file-content', path, content),
     getParDir: (path: string) => ipcRenderer.invoke('get-par-dir', path),
     join: (...args: string[]) => ipcRenderer.invoke('join', ...args),
     createFolder: (path: string) => ipcRenderer.invoke('create-folder', path),

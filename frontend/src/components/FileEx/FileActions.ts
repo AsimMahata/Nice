@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { notify } from "../../utils/notification";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
+import { HandleClickResult } from "./FileEx";
 
 //NOTE: FileInfo
 export interface FileInfo {
@@ -19,6 +20,7 @@ declare global {
             readDirectory: (path: string) => Promise<FileInfo[]>;
             openFolderDialog: () => Promise<{ canceled: boolean, filePaths: string, folderPath: string; files: FileInfo[] } | null>;
             readFile: (path: string) => Promise<string>;
+            writeFileContent: (path: string, content: string) => Promise<boolean>;
             getParDir: (path: string) => Promise<string>;
             join: (...args: string[]) => Promise<string>;
             createFolder: (path: string) => Promise<number>;
@@ -27,14 +29,10 @@ declare global {
         };
     }
 }
-type props = {
-    setCode: React.Dispatch<React.SetStateAction<string>>
-}
 
-export function useFileActions({ setCode }: props) {
+export function useFileActions() {
     // context
-    const { setIsDirty } = useEditorContext()
-
+    const { setEditorState, editorState } = useEditorContext()
 
     const [files, setFiles] = useState<FileInfo[]>([]);
     const [currentPath, setCurrentPath] = useState<string | null>(null)
@@ -57,11 +55,11 @@ export function useFileActions({ setCode }: props) {
             }
             // fetch from Electron backend 
             const result = await window?.fileSystem.readDirectory(currentPath);
-            console.log('got file list form backend laodfiles', result)
+            // console.log('got file list form backend laodfiles', result)
             setFiles(result)
-            console.log('got this ', result)
+            // console.log('got this ', result)
         } catch (err) {
-            console.log('something went wrong', err)
+            console.error('something went wrong', err)
         } finally {
             setLoading(false)
         }
@@ -75,10 +73,10 @@ export function useFileActions({ setCode }: props) {
         setLoading(true)
         try {
             const result = await window?.fileSystem.openFolderDialog();
-            console.log('frontend resutl', result)
+            console.log('frontend resutl   in file action', result)
 
         } catch (err) {
-            console.log('some error occured when try to open directory', err)
+            console.error('some error occured when try to open directory', err)
         } finally {
             setLoading(false)
         }
@@ -86,40 +84,82 @@ export function useFileActions({ setCode }: props) {
     /**
      * Handles what to do when user clicks on a file or foler
      * */
-    async function handleClick(file: FileInfo, setCodeFile: React.Dispatch<React.SetStateAction<FileInfo | null>>, setOpenedFiles: React.Dispatch<React.SetStateAction<FileInfo[]>>) {
-        console.log('frontend file ex -> FileActions inside handle click CLICKED!!', file)
-        // if Directory open else open file content
+
+    async function handleClick(
+        file: FileInfo
+    ): Promise<HandleClickResult | null> {
+        console.log(
+            'frontend file ex -> FileActions inside handle click CLICKED!!',
+            file.path
+        );
+
         if (!window.fileSystem) {
-            console.error('fileSystem is not available')
-            return;
+            console.error('fileSystem is not available');
+            return null;
         }
+
         if (!currentPath) {
-            console.error('first set a working directory')
-            return;
+            console.error('first set a working directory');
+            return null;
         }
+
         try {
-            const child = await window.fileSystem.join(currentPath, file.name)
+            const child = await window.fileSystem.join(
+                currentPath,
+                file.name
+            );
+
+            // Directory click
             if (file.isDirectory) {
                 setCurrentPath(child);
-                setOpenedFiles([])
-            } else {
-                try {
-                    const content = await window.fileSystem.readFile(child)
-                    setCode(content || "")
-                    setCodeFile(file)
-                    setIsDirty(false)
-                    setOpenedFiles((prev) => {
-                        if (prev) return [file, ...prev]
-                        return [file]
-                    })
-                    console.log('FileActions', 'handleClick', content)
-                    console.log('FileActions', 'handleClick', file)
-                } catch (err) {
-                    notify.error('Content', 'Could not find ?? ' + err)
-                }
+                return null;
             }
+
+            // Already open -> just switch tab
+            const alreadyOpen = editorState.openFiles[file.path];
+
+            if (alreadyOpen) {
+                setEditorState((prev) => ({
+                    ...prev,
+                    activeFile: file.path,
+                }));
+
+                return {
+                    file,
+                    content: alreadyOpen.content,
+                };
+            }
+
+            // First time opening file
+            const content = await window.fileSystem.readFile(child);
+
+            setEditorState((prev) => ({
+                ...prev,
+
+                openFiles: {
+                    ...prev.openFiles,
+
+                    [file.path]: {
+                        content,
+                        isDirty: false,
+                    },
+                },
+
+                openTabs: prev.openTabs.includes(file.path)
+                    ? prev.openTabs
+                    : [...prev.openTabs, file.path],
+
+                activeFile: file.path,
+            }));
+
+            return {
+                file,
+                content,
+            };
         } catch (err) {
-            console.error('something error occured', err)
+            console.error('something error occurred', err);
+            notify.error('File', String(err));
+            return null;
         }
     }
 
@@ -197,11 +237,26 @@ export function useFileActions({ setCode }: props) {
     }
     // save Files
 
-    async function saveFiles(contents: string, file: FileInfo | null) {
-        console.log('file save was requested')
-        if (!contents) return;
-        if (!file) return;
-        return;
+    async function saveFiles(path: string) {
+        console.log('file save was requested', path)
+        if (!window.fileSystem) {
+            notify.error('error', 'Electron fileSystem API not available.Are you running in Electron ? ');
+            return false;
+        }
+        const file = editorState.openFiles[path];
+        if (!file) return false;
+        try {
+            const success = await window.fileSystem.writeFileContent(
+                path,
+                file.content
+            );
+            console.log('status of file save ----', success)
+            return success;
+        } catch (err) {
+            console.error('error occured while saving file ', err)
+            notify.error('Save Failed', String(err));
+            return false;
+        }
     }
 
     return {

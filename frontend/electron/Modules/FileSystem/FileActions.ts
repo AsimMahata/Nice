@@ -11,6 +11,20 @@ export interface FileInfo {
     extension: string;
 }
 
+//  Save an already existing File 
+//  1 -> success
+// -1 -> unsuccessful
+export async function saveExistingFile(filePath: string) {
+    try {
+        await fs.writeFile(filePath, "", { flag: 'wx' });
+        return 1;
+    } catch (err: any) {
+        if (err?.code === "EEXIST") return 0;
+        console.error("something wrong happened while making new file", err);
+        return -1;
+    }
+}
+
 // create a new file (actually folder — keeping your intent)
 //  1 -> success
 //  0 -> already exists
@@ -115,5 +129,18 @@ export async function readFileContent(filePath: string): Promise<string> {
     } catch (error) {
         console.error('Error reading file:', error);
         throw error;
+    }
+}
+// writeFile
+export async function writeFileContent(
+    filePath: string,
+    content: string
+): Promise<boolean> {
+    try {
+        await fs.writeFile(filePath, content, 'utf8');
+        return true;
+    } catch (error) {
+        console.error('Error writing file:', error);
+        return false;
     }
 }

@@ -1,14 +1,11 @@
 import { ReactNode, useContext, useState } from "react"
-import { FileInfo } from "../../components/FileEx/FileActions";
 import WorkspaceContext from "./WorkspaceContext";
 
 
 const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     const [cwd, setCwd] = useState<string | null>(null)
-    const [openedFiles, setOpenedFiles] = useState<FileInfo[]>([])
-    const [openedFileIndex, setOpenedFileIndex] = useState<number | null>(null)
     return (
-        <WorkspaceContext.Provider value={{ cwd, setCwd, openedFiles, setOpenedFiles, openedFileIndex, setOpenedFileIndex }}>
+        <WorkspaceContext.Provider value={{ cwd, setCwd }}>
             {children}
         </WorkspaceContext.Provider>
     )
