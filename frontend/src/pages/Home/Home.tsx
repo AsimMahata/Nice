@@ -38,10 +38,11 @@ function Home() {
 
         const filename = `${formattedName}.cpp`;
         try {
-            await FileActions.createNewFiles(filename);
+            const fileInfo = await FileActions.createNewFiles(filename);
+            if (fileInfo) {
+                await FileActions.handleClick(fileInfo);
+            }
             console.log('FileActions.currentPath from home ---', currentPath);
-            // FileActions.setCurrentPath()
-            // need to open file and than set lang so that it loads placeholder by useEffect
         } catch (error) {
             console.error(error);
         }

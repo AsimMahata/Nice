@@ -190,15 +190,15 @@ export function useFileActions() {
         }
     }
     //createNewFiles
-    async function createNewFiles(fileName: string) {
-        if (!fileName) return;
+    async function createNewFiles(fileName: string): Promise<FileInfo | null> {
+        if (!fileName) return null;
         if (!window.fileSystem) {
             notify.error('error', 'Electron fileSystem API not available.Are you running in Electron ? ');
-            return;
+            return null;
         }
         if (!currentPath) {
             console.error('please be inside a valid folder')
-            return;
+            return null;
         }
         try {
             const filePath = await window.fileSystem.join(currentPath, fileName)
@@ -209,9 +209,20 @@ export function useFileActions() {
                 notify.error('err', 'some error occured')
                 throw new Error('some error occured while createNewFiles')
             } else notify.info('file already exists', '!!!!!')
+
+            const fileInfo: FileInfo = {
+                name: fileName,
+                path: filePath,
+                isDirectory: false,
+                size: 0,
+                modifiedAt: new Date(),
+                extension: fileName.substring(fileName.lastIndexOf('.')).toLowerCase()
+            };
+            return fileInfo;
         } catch (err) {
             console.error('while createNewFile', err)
             notify.error('error', "Can't create file");
+            return null;
         } finally {
             setRefresh(v => !v);
         }
