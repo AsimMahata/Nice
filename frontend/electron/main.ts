@@ -7,6 +7,7 @@ import * as pty from 'node-pty'
 import { TerminalOptions } from './types/terminal.types';
 import { setupLSPWebSocket } from "./Modules/WebSocket/ws.lsp"
 import { ptyManager } from "./Modules/Terminal/terminal"
+import { setupCPHServer } from './Modules/CPH/cph';
 let mainWindow: BrowserWindow | null = null;
 
 let ptyProcess: pty.IPty | null = null;
@@ -70,6 +71,8 @@ function createPty(options: TerminalOptions) {
 app.whenReady().then(() => {
     createWindow();
     setupLSPWebSocket()
+
+    setupCPHServer(() => mainWindow);
 
     // code runner
     ipcMain.handle('runner:run', async (_event, { codeFile, codeLang, cwd }: CodeRunnerParams) => {

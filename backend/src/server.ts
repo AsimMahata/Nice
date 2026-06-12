@@ -55,24 +55,4 @@ io.on("connection", (socket) => {
 });
 
 
-const cphApp = express();
-
-cphApp.use(express.json());
-
-cphApp.use(cors());
-app.use(bodyParser.json());
-
-cphApp.get("/", (req, res) => {
-    res.send("cph port working!!");
-});
-
-cphApp.post("/", (req, res) => {
-    console.log("hello guys, we got the request!!!!!!");
-    const problemData = req.body;
-    console.log("Received CPH problem:", problemData.name);
-    // Emit to all connected frontend clients
-    io.emit("cph_problem", problemData);
-    res.send("helllooo");
-});
-
-export { app, httpServer, io, cphApp };
+export { app, httpServer, io};

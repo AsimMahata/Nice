@@ -3,11 +3,18 @@ import { useEffect, useState } from "react";
 import "./Home.css"; // Import the new CSS file
 
 import { useFileActions } from "../../components/FileEx/FileActions";
-import { useSocket } from "../../utils/useSocket";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 import ActivityBar from "../../components/Body/ActivityBar/ActivityBar";
 import MainBody from "../../components/Body/MainBody/MainBody";
 import Header from "../../components/Body/Header/Header";
+
+declare global {
+    interface Window {
+        cph?: {
+            onProblem: (callback: (data: any) => void) => () => void;
+        };
+    }
+}
 
 function Home() {
     //contexts
@@ -22,8 +29,6 @@ function Home() {
 
 
     const FileActions = useFileActions()
-
-    const socket = useSocket();
 
     const handleCPHProblem = async (data: any) => {
         const formattedName = data.name
@@ -44,13 +49,15 @@ function Home() {
     };
 
     useEffect(() => {
-        socket.on("cph_problem", (data: any) => {
-            console.log("New Problem:", data.name);
-            handleCPHProblem(data);
-        });
-        return () => {
-            socket.off("cph_problem");
-        };
+       if (window.cph) {
+           const unsubscribe = window.cph.onProblem((data: any) => {
+               console.log("New Problem:", data.name);
+               handleCPHProblem(data);
+           });
+           return () => {
+               unsubscribe();
+           };
+       }
     }, [FileActions]);
 
 

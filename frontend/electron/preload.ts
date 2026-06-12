@@ -13,6 +13,19 @@ contextBridge.exposeInMainWorld('notify', {
     send: (title: string, body: string) => ipcRenderer.invoke('notify', title, body),
 });
 
+contextBridge.exposeInMainWorld('cph', {
+    onProblem: (callback: (data: any) => void) => {
+        const listener = (_e: Electron.IpcRendererEvent, data: any) => {
+            callback(data);
+        };
+        ipcRenderer.on('cph:problem', listener);
+        
+        // Return an unsubscribe/cleanup function
+        return () => {
+            ipcRenderer.removeListener('cph:problem', listener);
+        };
+    }
+});
 
 
 
