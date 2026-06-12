@@ -8,6 +8,17 @@ contextBridge.exposeInMainWorld('electron', {
     // openFile: () => ipcRenderer.invoke('dialog:openFile'),
 });
 
+contextBridge.exposeInMainWorld('settings', {
+    getSettings: () => ipcRenderer.invoke('get-settings'),
+    saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),
+});
+
+contextBridge.exposeInMainWorld('snippets', {
+    getSnippetsRaw: (language: string) => ipcRenderer.invoke('get-snippets-raw', language),
+    saveSnippetsRaw: (language: string, rawJson: string) => ipcRenderer.invoke('save-snippets-raw', language, rawJson),
+    getSnippetsParsed: (language: string) => ipcRenderer.invoke('get-snippets-parsed', language),
+});
+
 // notification service 
 contextBridge.exposeInMainWorld('notify', {
     send: (title: string, body: string) => ipcRenderer.invoke('notify', title, body),

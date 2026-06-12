@@ -8,6 +8,8 @@ import { TerminalOptions } from './types/terminal.types';
 import { setupLSPWebSocket } from "./Modules/WebSocket/ws.lsp"
 import { ptyManager } from "./Modules/Terminal/terminal"
 import { setupCPHServer } from './Modules/CPH/cph';
+import { settingsManager } from './Modules/Settings/SettingsManager';
+import { snippetManager } from './Modules/Snippets/SnippetManager';
 let mainWindow: BrowserWindow | null = null;
 
 let ptyProcess: pty.IPty | null = null;
@@ -183,6 +185,28 @@ app.whenReady().then(() => {
             filters: [{ name: 'Text Files', extensions: ['txt'] }]
         });
         return result.canceled ? null : result.filePath;
+    });
+
+    // IPC for Settings
+    ipcMain.handle('get-settings', () => {
+        return settingsManager.getSettings();
+    });
+    
+    ipcMain.handle('save-settings', (_event, settings: any) => {
+        return settingsManager.saveSettings(settings);
+    });
+
+    // IPC for Snippets
+    ipcMain.handle('get-snippets-raw', (_event, language: string) => {
+        return snippetManager.getSnippetsRaw(language);
+    });
+
+    ipcMain.handle('save-snippets-raw', (_event, language: string, rawJson: string) => {
+        return snippetManager.saveSnippetsRaw(language, rawJson);
+    });
+
+    ipcMain.handle('get-snippets-parsed', (_event, language: string) => {
+        return snippetManager.getSnippetsParsed(language);
     });
 
 

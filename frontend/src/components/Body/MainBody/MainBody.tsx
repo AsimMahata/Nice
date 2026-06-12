@@ -4,6 +4,7 @@ import { useWorkspaceContext } from "../../../contexts/Workspace/WorkspaceProvid
 import { useEffect, useRef } from "react"
 import TabManager from "../../CodeEditor/TabManager"
 import CodeEditor from "../../CodeEditor/CodeEditor"
+import SettingsView from "../../Settings/SettingsView"
 import { TerminalPanel } from "../../Terminal/TerminalPanel"
 import Greeter from "../../Greeter/Greeter"
 
@@ -54,7 +55,11 @@ const MainBody = () => {
                         groupRef={panelsGroupRef}
                     >
                         <Panel id="editor-panel">
-                            <CodeEditor key={codeLang} />
+                            {editorState.activeFile === "nice://settings" ? (
+                                <SettingsView />
+                            ) : (
+                                <CodeEditor key={codeLang} />
+                            )}
                         </Panel>
                         <Separator className="resize-handle" />
                         <Panel

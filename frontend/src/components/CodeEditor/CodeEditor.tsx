@@ -10,6 +10,7 @@ import {
 import { createMessageConnection } from "vscode-jsonrpc/browser";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
+import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
 
 const DEBUG = true;
 const log = (...args: any[]) => {
@@ -22,9 +23,67 @@ export default function CodeEditor() {
     const { codeLang, setEditorState, editorState, buffersRef } = useEditorContext()
     const { cwd } = useWorkspaceContext()
     const [editorContent, setEditorContent] = useState<string>("");
+    const { settings } = useSettingsContext()
+    const editorRef = useRef<any>(null);
+
+    // Fetch snippets on codeLang change
+    useEffect(() => {
+        const fetchSnippets = async () => {
+            if (codeLang && window.snippets) {
+                const data = await window.snippets.getSnippetsParsed(codeLang);
+                snippetsRef.current = data || {};
+            }
+        };
+        fetchSnippets();
+    }, [codeLang]);
+
+    // Sync model-specific options when settings change
+    useEffect(() => {
+        if (editorRef.current) {
+            const model = editorRef.current.getModel();
+            if (model) {
+                model.updateOptions({
+                    tabSize: settings.editor.tabSize,
+                    insertSpaces: settings.editor.insertSpaces
+                });
+            }
+            // Update editor visual options
+            editorRef.current.updateOptions({
+                fontFamily: settings.editor.fontFamily,
+                fontWeight: settings.editor.fontWeight,
+                fontSize: settings.editor.fontSize,
+                lineHeight: settings.editor.lineHeight,
+                letterSpacing: settings.editor.letterSpacing,
+                cursorBlinking: settings.editor.cursorBlinking,
+                cursorSmoothCaretAnimation: settings.editor.cursorSmoothCaretAnimation,
+                fontLigatures: settings.editor.fontLigatures,
+                wordWrap: settings.editor.wordWrap,
+                minimap: { enabled: settings.editor.minimap },
+                lineNumbers: settings.editor.lineNumbers,
+                smoothScrolling: settings.editor.smoothScrolling,
+                autoClosingBrackets: settings.editor.autoClosingBrackets,
+                autoClosingQuotes: settings.editor.autoClosingQuotes,
+            });
+        }
+    }, [settings.editor]);
+
+    const code =
+        editorState.activeFile
+            ? editorState.openFiles[editorState.activeFile]?.content ?? ""
+            : "";
+
     const version = useRef(1);
     const opened = useRef(false);
     const initialized = useRef(false);
+    const wsRef = useRef<WebSocket | null>(null);
+
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            disposables.current.forEach(d => d.dispose());
+            if (wsRef.current) wsRef.current.close();
+        };
+    }, []);
 
     useEffect(() => {
         const code = editorState.activeFile ? buffersRef.current[editorState.activeFile] ?? "" : "";
@@ -62,8 +121,26 @@ export default function CodeEditor() {
     };
 
     const handleMount = (editor: any, monaco: any) => {
+        editorRef.current = editor;
+        
+        // Initial sync of model options
+        const model = editor.getModel();
+        if (model) {
+            model.updateOptions({
+                tabSize: settings.editor.tabSize,
+                insertSpaces: settings.editor.insertSpaces
+            });
+        }
+
+        // Clean up previous connections and providers
+        if (wsRef.current) {
+            wsRef.current.close();
+        }
+        disposables.current.forEach(d => d.dispose());
+        disposables.current = [];
 
         const ws = new WebSocket(`ws://localhost:3001?lang=${codeLang}`);
+        wsRef.current = ws;
         ws.binaryType = "arraybuffer";
 
         ws.onopen = () => {
@@ -122,7 +199,7 @@ export default function CodeEditor() {
                 });
             });
 
-            monaco.languages.registerCompletionItemProvider(codeLang, {
+            const lspProvider = monaco.languages.registerCompletionItemProvider(codeLang, {
                 triggerCharacters: [".", ">", ":", "("],
 
                 provideCompletionItems: async (model: any, position: any) => {
@@ -136,18 +213,20 @@ export default function CodeEditor() {
                         character: position.column - 1,
                     };
 
-                    const result: any = await conn.sendRequest(
-                        "textDocument/completion",
-                        {
-                            textDocument: { uri: fileUri },
-                            position: lspPosition,
-                            context: { triggerKind: 1 },
-                        }
-                    );
-
-                    const items = Array.isArray(result)
-                        ? result
-                        : result?.items ?? [];
+                    let items: any[] = [];
+                    try {
+                        const result: any = await conn.sendRequest(
+                            "textDocument/completion",
+                            {
+                                textDocument: { uri: fileUri },
+                                position: lspPosition,
+                                context: { triggerKind: 1 },
+                            }
+                        );
+                        items = Array.isArray(result) ? result : result?.items ?? [];
+                    } catch (err) {
+                        console.warn("LSP completion failed:", err);
+                    }
 
                     const word = model.getWordUntilPosition(position);
 
@@ -170,8 +249,38 @@ export default function CodeEditor() {
                     return { suggestions };
                 },
             });
+            disposables.current.push(lspProvider);
 
-            conn.onNotification(
+            // Register a separate, dedicated provider for snippets so they aren't blocked by LSP latency/failures
+            const snippetProvider = monaco.languages.registerCompletionItemProvider(codeLang, {
+                provideCompletionItems: (model: any, position: any) => {
+                    const word = model.getWordUntilPosition(position);
+                    const range = {
+                        startLineNumber: position.lineNumber,
+                        endLineNumber: position.lineNumber,
+                        startColumn: word.startColumn,
+                        endColumn: word.endColumn,
+                    };
+
+                    const suggestions: any[] = [];
+                    Object.keys(snippetsRef.current).forEach((key) => {
+                        const snippet = snippetsRef.current[key];
+                        suggestions.push({
+                            label: snippet.prefix,
+                            kind: monaco.languages.CompletionItemKind.Snippet,
+                            insertText: Array.isArray(snippet.body) ? snippet.body.join("\n") : snippet.body,
+                            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                            detail: key,
+                            documentation: snippet.description,
+                            range,
+                        });
+                    });
+                    return { suggestions };
+                }
+            });
+            disposables.current.push(snippetProvider);
+
+            const diagDisposable = conn.onNotification(
                 "textDocument/publishDiagnostics",
                 (p: any) => {
 
@@ -203,8 +312,27 @@ export default function CodeEditor() {
         <Editor
             height="100%"
             language={codeLang || "PlainText"}
-            theme="vs-dark"
-            value={editorContent}
+            theme={settings.appearance.theme}
+            value={code}
+            options={{
+                fontFamily: settings.editor.fontFamily,
+                fontWeight: settings.editor.fontWeight,
+                fontSize: settings.editor.fontSize,
+                lineHeight: settings.editor.lineHeight,
+                letterSpacing: settings.editor.letterSpacing,
+                cursorBlinking: settings.editor.cursorBlinking,
+                cursorSmoothCaretAnimation: settings.editor.cursorSmoothCaretAnimation,
+                fontLigatures: settings.editor.fontLigatures,
+                wordWrap: settings.editor.wordWrap,
+                minimap: { enabled: settings.editor.minimap },
+                lineNumbers: settings.editor.lineNumbers,
+                tabSize: settings.editor.tabSize,
+                insertSpaces: settings.editor.insertSpaces,
+                autoClosingBrackets: settings.editor.autoClosingBrackets,
+                autoClosingQuotes: settings.editor.autoClosingQuotes,
+                formatOnPaste: true,
+                smoothScrolling: settings.editor.smoothScrolling,
+            }}
             onChange={(value) => handleOnChange(value)}
             onMount={handleMount}
         />

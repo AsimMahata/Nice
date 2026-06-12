@@ -13,13 +13,41 @@ import UserDetails from "../../User/UserDetails";
 
 const ActivityBar = () => {
     //contexts
-    const { getCurrentFileInfo } = useEditorContext()
+    const { getCurrentFileInfo, setEditorState } = useEditorContext()
     const [sidePanel, setSidePanle] = useState<boolean>(false); // is side panel visible or not
 
     const [currentActivity, setCurrentActivity] = useState<string | null>(
         "file-ex",
     ); // what is the current active button on side panel
     const handleActivityClickEvent = (name: string) => {
+        if (name === "Settings") {
+            setEditorState((prev) => {
+                const isSettingsOpen = prev.openTabs.includes("nice://settings");
+                return {
+                    ...prev,
+                    openFiles: {
+                        ...prev.openFiles,
+                        "nice://settings": {
+                            content: "",
+                            isDirty: false,
+                            fileInfo: {
+                                name: "Settings",
+                                path: "nice://settings",
+                                isDirectory: false,
+                                size: 0,
+                                modifiedAt: new Date(),
+                                extension: "",
+                            }
+                        }
+                    },
+                    openTabs: isSettingsOpen ? prev.openTabs : [...prev.openTabs, "nice://settings"],
+                    activeFile: "nice://settings"
+                };
+            });
+            setSidePanle(false);
+            return;
+        }
+
         if (!name) setSidePanle(false);
         if (currentActivity == name) {
             console.log(
@@ -57,8 +85,6 @@ const ActivityBar = () => {
                 return <div> CodeAction </div>;
             case "User":
                 return <UserDetails />;
-            case "Settings":
-                return <div> Settings</div>;
             default:
                 return null;
         }

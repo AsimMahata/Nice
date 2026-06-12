@@ -4,13 +4,15 @@ import { BrowserRouter, HashRouter as _ } from "react-router-dom";
 import "./index.css";
 import App from "./App.tsx";
 import { AuthProvider } from "./contexts/Auth/AuthProvider.tsx";
-
+import SettingsProvider from "./contexts/Settings/SettingsProvider.tsx";
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
         {/* <HashRouter> */}
         <BrowserRouter>
             <AuthProvider>
-                <App />
+                <SettingsProvider>
+                    <App />
+                </SettingsProvider>
             </AuthProvider>
         </BrowserRouter>
         {/* </HashRouter> */}
