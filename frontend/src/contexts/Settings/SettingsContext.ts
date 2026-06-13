@@ -25,9 +25,15 @@ export interface AppearanceSettings {
     iconTheme: string;
 }
 
+export interface FileSettings {
+    autoSave: "off" | "afterDelay";
+    autoSaveDelay: number;
+}
+
 export interface SettingsState {
     editor: EditorSettings;
     appearance: AppearanceSettings;
+    files: FileSettings;
 }
 
 export interface SettingsContextType {
@@ -35,6 +41,7 @@ export interface SettingsContextType {
     updateSettings: (newSettings: SettingsState) => void;
     updateEditorSettings: (newEditorSettings: Partial<EditorSettings>) => void;
     updateAppearanceSettings: (newAppearanceSettings: Partial<AppearanceSettings>) => void;
+    updateFilesSettings: (newFilesSettings: Partial<FileSettings>) => void;
 }
 
 export const DEFAULT_SETTINGS: SettingsState = {
@@ -60,6 +67,10 @@ export const DEFAULT_SETTINGS: SettingsState = {
     appearance: {
         theme: "vs-dark",
         iconTheme: "material"
+    },
+    files: {
+        autoSave: "off",
+        autoSaveDelay: 1000,
     }
 };
 

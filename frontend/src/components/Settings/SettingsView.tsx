@@ -3,6 +3,7 @@ import EditorSettings from "./EditorSettings";
 import UserSettings from "./UserSettings";
 import AppearanceSettings from "./AppearanceSettings";
 import SnippetsSettings from "./SnippetsSettings";
+import FileSettings from "./FileSettings";
 import "./Settings.css";
 
 type SettingsTab = "editor" | "appearance" | "files" | "snippets" | "cph" | "advanced" | "user";
@@ -42,8 +43,9 @@ const SettingsView = () => {
                 {activeTab === "editor" && <EditorSettings />}
                 {activeTab === "appearance" && <AppearanceSettings />}
                 {activeTab === "snippets" && <SnippetsSettings />}
+                {activeTab === "files" && <FileSettings />}
                 {activeTab === "user" && <UserSettings />}
-                {["files", "cph", "advanced"].includes(activeTab) && (
+                {["cph", "advanced"].includes(activeTab) && (
                     <div className="settings-section">
                         <h3>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Settings</h3>
                         <p style={{ color: "var(--label-color)" }}>Yet to be added</p>

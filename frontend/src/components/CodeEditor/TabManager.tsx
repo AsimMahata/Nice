@@ -1,5 +1,7 @@
 import { X } from "lucide-react";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
+import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
+import { useFileActions } from "../FileEx/FileActions";
 import { notify } from "../../utils/notification";
 
 interface TabProps {
@@ -35,7 +37,8 @@ const Tab = ({
 
 const TabManager = () => {
     const { editorState, setEditorState } = useEditorContext();
-
+    const { settings } = useSettingsContext();
+    const FileActions = useFileActions();
 
     const changeActiveFile = (path: string) => {
         setEditorState((prev) => {
@@ -44,17 +47,22 @@ const TabManager = () => {
                 ...prev,
                 activeFile: newActiveFile,
             };
-        })
-    }
+        });
+    };
 
-    const closeTab = (path: string) => {
+    const closeTab = async (path: string) => {
+        const closedFile = editorState.openFiles[path];
+        if (closedFile?.isDirty) {
+            if (settings.files.autoSave === "afterDelay") {
+                await FileActions.saveFiles(path, closedFile.content);
+            } else {
+                console.error('file is not saved are your sure you want to close');
+                notify.error('File Not Saved!', 'You closed a file with unsaved changes.');
+            }
+        }
+
         setEditorState((prev) => {
             const newOpenFiles = { ...prev.openFiles };
-            const closedFile = newOpenFiles[path];
-            if (closedFile.isDirty) {
-                console.error('file is not saved are your sure you want to close');
-                notify.error('!!!!!!!!!!!!!!!', '!!!!!!!!!')
-            }
             delete newOpenFiles[path];
 
             const newOpenTabs = prev.openTabs.filter(

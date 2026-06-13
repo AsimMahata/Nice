@@ -44,13 +44,25 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
         updateSettings(updated);
     };
 
+    const updateFilesSettings = (newFilesSettings: Partial<SettingsState["files"]>) => {
+        const updated = {
+            ...settings,
+            files: {
+                ...settings.files,
+                ...newFilesSettings
+            }
+        };
+        updateSettings(updated);
+    };
+
     return (
         <SettingsContext.Provider
             value={{
                 settings,
                 updateSettings,
                 updateEditorSettings,
-                updateAppearanceSettings
+                updateAppearanceSettings,
+                updateFilesSettings
             }}
         >
             {children}

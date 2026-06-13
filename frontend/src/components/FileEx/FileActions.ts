@@ -231,7 +231,7 @@ export function useFileActions() {
     }
     // save Files
 
-    async function saveFiles(path: string) {
+    async function saveFiles(path: string, overrideContent?: string) {
         console.log('file save was requested', path)
         if (!window.fileSystem) {
             notify.error('error', 'Electron fileSystem API not available.Are you running in Electron ? ');
@@ -250,7 +250,8 @@ export function useFileActions() {
 
         try {
             const success = await window.fileSystem.writeFileContent(
-                path, content
+                path,
+                overrideContent !== undefined ? overrideContent : file.content
             );
             console.log('status of file save ----', success)
             return success;

@@ -25,6 +25,10 @@ export interface ISettings extends Document {
         theme: string;
         iconTheme: string;
     };
+    files: {
+        autoSave: string;
+        autoSaveDelay: number;
+    };
     snippets: Map<string, string>; // language -> raw JSON string
 }
 
@@ -58,6 +62,10 @@ const settingsSchema: Schema<ISettings> = new Schema(
         appearance: {
             theme: { type: String, default: "vs-dark" },
             iconTheme: { type: String, default: "material" }
+        },
+        files: {
+            autoSave: { type: String, default: "off" },
+            autoSaveDelay: { type: Number, default: 1000 }
         },
         snippets: {
             type: Map,

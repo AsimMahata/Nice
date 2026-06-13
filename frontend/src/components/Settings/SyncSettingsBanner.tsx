@@ -9,7 +9,9 @@ interface SyncSettingsBannerProps {
 }
 
 export const SyncSettingsBanner = ({ sectionName, onSave, onImport }: SyncSettingsBannerProps) => {
-    const { settings, updateAppearanceSettings, updateEditorSettings } = useSettingsContext();
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const { settings, updateAppearanceSettings, updateEditorSettings, updateFilesSettings } = useSettingsContext();
     const authContext = useContext(AuthContext);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -27,6 +29,7 @@ export const SyncSettingsBanner = ({ sectionName, onSave, onImport }: SyncSettin
                 let payload = {};
                 if (sectionName.toLowerCase() === "editor") payload = { editor: settings.editor };
                 else if (sectionName.toLowerCase() === "appearance") payload = { appearance: settings.appearance };
+                else if (sectionName.toLowerCase() === "files") payload = { files: settings.files };
 
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
                     method: "POST",
@@ -71,6 +74,11 @@ export const SyncSettingsBanner = ({ sectionName, onSave, onImport }: SyncSettin
                     } else if (sectionName.toLowerCase() === "appearance" && result.data.appearance) {
                         updateAppearanceSettings(result.data.appearance);
                         alert("Appearance settings imported successfully!");
+                    } else if (sectionName.toLowerCase() === "files" && result.data.files) {
+                        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                        // @ts-ignore
+                        updateFilesSettings?.(result.data.files);
+                        alert("Files settings imported successfully!");
                     } else {
                         alert(`No ${sectionName} settings found in cloud.`);
                     }

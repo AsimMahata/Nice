@@ -25,6 +25,10 @@ export const DEFAULT_SETTINGS = {
     appearance: {
         theme: "vs-dark",
         iconTheme: "material"
+    },
+    files: {
+        autoSave: "off",
+        autoSaveDelay: 1000,
     }
 };
 

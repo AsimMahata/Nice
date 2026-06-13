@@ -11,6 +11,7 @@ import { createMessageConnection } from "vscode-jsonrpc/browser";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
+import { useFileActions } from "../FileEx/FileActions";
 
 const DEBUG = true;
 const log = (...args: any[]) => {
@@ -24,6 +25,8 @@ export default function CodeEditor() {
     const { cwd } = useWorkspaceContext()
     const [editorContent, setEditorContent] = useState<string>("");
     const { settings } = useSettingsContext()
+    const FileActions = useFileActions()
+
     const editorRef = useRef<any>(null);
 
     // Fetch snippets on codeLang change
@@ -89,6 +92,7 @@ export default function CodeEditor() {
         const code = editorState.activeFile ? buffersRef.current[editorState.activeFile] ?? "" : "";
         setEditorContent(code);
     }, [editorState.activeFile]);
+    const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     function toFileUri(p: string | null) {
         if (!p) return;
@@ -116,13 +120,35 @@ export default function CodeEditor() {
                         isDirty: true,
                     },
                 },
-            }));
+            })),
+        }
+
+        // Handle autoSave = afterDelay
+        if (settings.files.autoSave === "afterDelay") {
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
+            autoSaveTimeoutRef.current = setTimeout(async () => {
+                const success = await FileActions.saveFiles(path, value);
+                if (success) {
+                    setEditorState(prev => ({
+                        ...prev,
+                        openFiles: {
+                            ...prev.openFiles,
+                            [path]: {
+                                ...prev.openFiles[path],
+                                isDirty: false,
+                            },
+                        },
+                    }));
+                }
+            }, settings.files.autoSaveDelay);
         }
     };
 
     const handleMount = (editor: any, monaco: any) => {
         editorRef.current = editor;
-        
+
         // Initial sync of model options
         const model = editor.getModel();
         if (model) {

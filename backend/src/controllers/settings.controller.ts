@@ -31,7 +31,7 @@ export const updateSettings = async (req: Request, res: Response) => {
             return res.status(401).json(new ApiResponse(401, null, "User not authenticated"));
         }
 
-        const { editor, appearance, snippets } = req.body;
+        const { editor, appearance, files, snippets } = req.body;
 
         let settings = await Settings.findOne({ user: user._id });
 
@@ -41,6 +41,7 @@ export const updateSettings = async (req: Request, res: Response) => {
 
         if (editor) settings.editor = { ...settings.editor, ...editor };
         if (appearance) settings.appearance = { ...settings.appearance, ...appearance };
+        if (files) settings.files = { ...settings.files, ...files };
         if (snippets) {
             // Snippets is a Map. If the payload provides it as an object mapping lang to raw json:
             Object.keys(snippets).forEach(lang => {
