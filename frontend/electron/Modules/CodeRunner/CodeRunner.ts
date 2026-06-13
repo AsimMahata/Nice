@@ -1,112 +1,87 @@
-import { join } from "path"
-import { FileInfo, getParentDirectory } from "../FileSystem/FileActions"
-import { exec } from "child_process"
+import { extractMetadata } from "./helper"
+import { FileInfo } from "../FileSystem/FileActions"
 import { ptyManager } from "../Terminal/terminal"
-import { existsSync, mkdirSync } from "fs"
-type status = {
-    success: boolean,
-    output: string
-    error: string
-    runtimeError: string
-    compilationError: string
+import { CodeRunnerParams } from "./codeRunner.options"
+import { getStepsToRun } from "./LanguageRegistry"
+import { ShellType } from "../../types/terminal.types"
+
+export function attachCommands(
+    commands: string[],
+    shellType: ShellType,
+): string {
+
+    switch (shellType) {
+
+        case "pwsh":
+        case "cmd":
+        case "bash":
+            return commands.join(" && ");
+
+        case "powershell":
+            return commands
+                .map((command, index) => {
+                    if (index === 0) {
+                        return command;
+                    }
+
+                    return `if ($?) { ${command} }`;
+                })
+                .join("; ");
+
+        default:
+            throw new Error(
+                `Unsupported shell: ${shellType}`
+            );
+    }
 }
 
-export interface CodeRunnerParams {
-    codeFile: FileInfo,
-    codeLang: string | null,
-    cwd: string | null
-}
+//TODO: i think we should make a class of this 
 
-export interface RunCommand {
-    cdTopath: string | null,
-    compileCommand: string | null,
-    runCommand: string | null
-}
-// i think we should make a class of this 
+// runcode 
 
-export async function runCode({ codeFile, codeLang, cwd }: CodeRunnerParams) {
-
-    console.log('----------called run code for ', codeFile, codeLang, cwd);
-    // its already filtered for now but i think i should filter inside this file
-    if (!cwd) {
-        console.error('first open a working Directory')
-        return
-    }
-    if (codeLang === null || codeLang === "PlainText") {
-        console.error('this type of files is not supported ')
-        return
-    }
-    if (!codeFile) {
-        console.error('please select an active file first')
-        return
-    }
-    const runCommand: RunCommand = await getRunCommand({ codeFile, codeLang, cwd })
-    console.log('got run command -----------------', runCommand)
-    await sendCommandToTerminal(runCommand)
-
-}
-async function createObjectCodeFolder(objectFileFolder: string | null) {
-    if (!objectFileFolder) {
-        throw new Error('incomplete have to create ObjectCodeFolder')
-    }
-    if (!existsSync(objectFileFolder)) {
-        mkdirSync(objectFileFolder, { recursive: true });
-    }
-
-}
-async function getRunCommand({ codeFile, codeLang, cwd }: CodeRunnerParams) {
-    console.log('getting run command ------------')
-    if (codeLang !== 'cpp') {
-        throw new Error('for now only support cpp lang try later')
-    }
-    if (!cwd) {
-        throw new Error('cwd not defined')
-    }
-    // main commands
-    const cdToPath = `cd ${cwd}`
-    const random_path = ".nice"
-    const objectFileFolder = join(cwd, random_path, codeLang)
-    await createObjectCodeFolder(objectFileFolder)
-    const obejctFileName = "out"
-    const objectFile = join(objectFileFolder, obejctFileName)
-    const compileCommand = `g++ ${codeFile.path} -o ${objectFile}`
-    const runCommand = `${objectFile}`
-    const concatinated: RunCommand = {
-        cdTopath: cdToPath,
-        compileCommand: compileCommand,
-        runCommand: runCommand,
-    }
-    return concatinated;
-}
-async function sendCommandToTerminal(command: RunCommand) {
+async function sendCommandToTerminal(command: string) {
     await ptyManager.run(command)
     console.log('command sent to terminal---------', command)
 }
 
-export const compileCppCode = (filePath: string): Promise<status> => {
-    const status: status = {
-        success: false,
-        output: "",
-        error: "",
-        runtimeError: "",
-        compilationError: ""
-    }
-    return new Promise((resolve) => {
-        const codeFolder = getParentDirectory(filePath);
-        const objectCode = codeFolder + '/output';
-        console.log('ok this is objectCode that is getting gen', objectCode)
-        exec(`g++ "${filePath}" -o "${objectCode}"`, (err, _, stderr) => {
-            if (err) {
-                console.error(stderr);
-                status.error = stderr
-                status.compilationError = stderr
-                return resolve(status);
-            }
-            status.success = true;
-            resolve(status);
-        });
+export async function runCommand(command: string) {
+    await sendCommandToTerminal(command);
+}
+
+export function commandBuilder(steps: string[], metadata: CodeRunnerParams): string[] {
+    return steps.map((step) => {
+        return step
+            .replace(
+                "$dir",
+                metadata.directory,
+            )
+            .replace(
+                "$fileNameWithoutExt",
+                metadata.fileNameWithoutExt,
+            )
+            .replace(
+                "$fileName",
+                metadata.fileName,
+            );
     });
-};
+}
+export async function runCode(codeFile: FileInfo) {
+    if (!codeFile) {
+        console.error('please select an active file first')
+        throw new Error('please select an active file first')
+    }
 
-
+    try {
+        const metadata: CodeRunnerParams = await extractMetadata(codeFile);
+        console.log('----------called run code for ', metadata, codeFile);
+        const steps = getStepsToRun(metadata)
+        const commands = commandBuilder(steps, metadata)
+        const command = attachCommands(commands, "powershell")
+        await runCommand(command);
+        console.log('steps', steps)
+        console.log('final command ----------', command)
+    } catch (err) {
+        throw err;
+    }
+}
 

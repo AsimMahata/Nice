@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { TerminalOptions } from './types/terminal.types'
-import { CodeRunnerParams } from './Modules/CodeRunner/CodeRunner';
+import { FileInfo } from './Modules/FileSystem/FileActions';
 // Expose APIs to renderer process if needed
 contextBridge.exposeInMainWorld('electron', {
     // Add your electron APIs here
@@ -19,7 +19,7 @@ contextBridge.exposeInMainWorld('cph', {
             callback(data);
         };
         ipcRenderer.on('cph:problem', listener);
-        
+
         // Return an unsubscribe/cleanup function
         return () => {
             ipcRenderer.removeListener('cph:problem', listener);
@@ -31,10 +31,10 @@ contextBridge.exposeInMainWorld('cph', {
 
 // CodeRunner services
 contextBridge.exposeInMainWorld('runner', {
-    runCode: ({ codeFile, codeLang, cwd }: CodeRunnerParams) => {
+    runCode: (codeFile: FileInfo) => {
         console.log('invoke =================================')
-        console.log('----------called run code for ', codeFile, codeLang, cwd);
-        ipcRenderer.invoke('runner:run', { codeFile, codeLang, cwd })
+        console.log('----------called run code for ', codeFile);
+        ipcRenderer.invoke('runner:run', codeFile)
     }
 });
 

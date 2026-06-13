@@ -48,6 +48,7 @@ const FileEx = ({ }: props) => {
 
     // reload on path / refresh
     useEffect(() => {
+        console.log('files list refreshed')
         async function checkIfInsideMainDir() {
             if (!currentPath) {
                 console.log('please have a valid path first')

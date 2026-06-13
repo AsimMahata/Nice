@@ -1,4 +1,4 @@
-import { ReactNode, useContext, useState } from "react"
+import { ReactNode, useContext, useRef, useState } from "react"
 import EditorContext, { EditorState } from "./EditorContext"
 import { FileInfo } from "../../components/FileEx/FileActions";
 
@@ -9,8 +9,10 @@ const defaultEditorState: EditorState = {
     activeFile: null,
 };
 const EditorProvider = ({ children }: { children: ReactNode }) => {
+    console.log("EditorProvider");
     const [codeLang, setCodeLang] = useState<string | null>(null);
     const [editorState, setEditorState] = useState<EditorState>(defaultEditorState);
+    const buffersRef = useRef<Record<string, string>>({});
 
     const getDirtyStatus = (): boolean => {
         return editorState.activeFile
@@ -38,7 +40,8 @@ const EditorProvider = ({ children }: { children: ReactNode }) => {
                 setEditorState,
                 getDirtyStatus,
                 getCurrentFileName,
-                getCurrentFileInfo
+                getCurrentFileInfo,
+                buffersRef
             }}
         >
             {children}

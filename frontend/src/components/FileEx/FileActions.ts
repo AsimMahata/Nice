@@ -15,7 +15,7 @@ export interface FileInfo {
 }
 export function useFileActions() {
     // context
-    const { setEditorState, editorState } = useEditorContext()
+    const { setEditorState, editorState, buffersRef } = useEditorContext()
     const { setFiles, currentPath, setCurrentPath, setRefresh } = useWorkspaceContext()
     const [, setLoading] = useState(false);
     const [newFolder, setNewFolder] = useState("")
@@ -97,6 +97,7 @@ export function useFileActions() {
 
             // Already open -> just switch tab
             const alreadyOpen = editorState.openFiles[file.path];
+            const fileContent = buffersRef.current[file.path]
 
             if (alreadyOpen) {
                 setEditorState((prev) => ({
@@ -106,12 +107,14 @@ export function useFileActions() {
 
                 return {
                     file,
-                    content: alreadyOpen.content,
+                    content: fileContent
                 };
             }
 
             // First time opening file
             const content = await window.fileSystem.readFile(child);
+
+            buffersRef.current[file.path] = content
 
             setEditorState((prev) => ({
                 ...prev,
@@ -120,7 +123,6 @@ export function useFileActions() {
                     ...prev.openFiles,
 
                     [file.path]: {
-                        content,
                         isDirty: false,
                         fileInfo: file,
                     },
@@ -235,12 +237,20 @@ export function useFileActions() {
             notify.error('error', 'Electron fileSystem API not available.Are you running in Electron ? ');
             return false;
         }
+
+        if (!path) {
+            notify.error('error', "paht not available");
+            return false;
+        }
+
         const file = editorState.openFiles[path];
+        const content = buffersRef.current[path];
+        console.log(content, '----------------------')
         if (!file) return false;
+
         try {
             const success = await window.fileSystem.writeFileContent(
-                path,
-                file.content
+                path, content
             );
             console.log('status of file save ----', success)
             return success;

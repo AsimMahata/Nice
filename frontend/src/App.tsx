@@ -10,6 +10,7 @@ import WorkspaceProvider from './contexts/Workspace/WorkspaceProvider';
 import EditorProvider from './contexts/Editor/EditorProvider';
 
 function App() {
+    console.log('render app')
     return (
         <WorkspaceProvider>
             <EditorProvider>

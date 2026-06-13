@@ -1,11 +1,11 @@
-import { terminalManager } from "../Terminal/terminal.manager";
+import { FileInfo } from "../FileEx/FileActions";
 import { CodeRunnerParams } from "./code.options";
 
 
 declare global {
     interface Window {
         runner?: {
-            runCode: ({ codeFile, codeLang, cwd }: CodeRunnerParams) => Promise<void>
+            runCode: (codeFile: FileInfo) => Promise<void>
         };
     }
 }
@@ -26,43 +26,11 @@ class CodeManager {
         if (!window.runner) {
             console.error('window runner is not defined ')
         }
-        window.runner?.runCode({ codeFile, codeLang, cwd })
-        return;
-        // now its working in backend so fronend logic is commented for now i mean returned early
         if (!cwd) {
-            console.error('first open a working Directory')
-            return
+            console.error('please open a Directory first to run code');
         }
-        if (codeLang === null || codeLang === "PlainText") {
-            console.error('this type of files is not supported ')
-            return
-        }
-        if (!codeFile) {
-            console.error('please select an active file first')
-            return
-        }
-        const runCommand = await this.getRunCommand({ codeFile, codeLang, cwd })
-        console.log('got run command -----------------', runCommand)
-        await this.sendCommandToTerminal(runCommand)
+        window.runner?.runCode(codeFile)
 
-    }
-    private async getRunCommand({ codeFile, codeLang, cwd }: CodeRunnerParams) {
-        console.log('getting run command ------------')
-        if (codeLang !== 'cpp') {
-            throw new Error('for now only support cpp lang try later')
-        }
-        const cdToPath = `cd ${cwd}`
-        const objectFileFolder = `${cwd}random_path/${codeLang}`
-        const mkdirRandom = `mkdir -p ${cwd}random_path/${codeLang}`
-        const objectFile = `${objectFileFolder}/out`
-        const compilecommand = `g++ ${codeFile.path} -o ${objectFile}`
-        const runCommand = `${objectFile}`
-        const concatinated = `${cdToPath} && ${mkdirRandom} && ${compilecommand} && ${runCommand}`
-        return concatinated;
-    }
-    private async sendCommandToTerminal(command: string) {
-        await terminalManager.run(command)
-        console.log('command sent to terminal---------', command)
     }
 }
 

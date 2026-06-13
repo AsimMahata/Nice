@@ -1,5 +1,5 @@
 import Editor from "@monaco-editor/react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
     WebSocketMessageReader,
@@ -18,17 +18,18 @@ const log = (...args: any[]) => {
 
 
 export default function CodeEditor() {
-    const { codeLang, setEditorState, editorState } = useEditorContext()
+    console.log("CodeEditor");
+    const { codeLang, setEditorState, editorState, buffersRef } = useEditorContext()
     const { cwd } = useWorkspaceContext()
-
-    const code =
-        editorState.activeFile
-            ? editorState.openFiles[editorState.activeFile]?.content ?? ""
-            : "";
-
+    const [editorContent, setEditorContent] = useState<string>("");
     const version = useRef(1);
     const opened = useRef(false);
     const initialized = useRef(false);
+
+    useEffect(() => {
+        const code = editorState.activeFile ? buffersRef.current[editorState.activeFile] ?? "" : "";
+        setEditorContent(code);
+    }, [editorState.activeFile]);
 
     function toFileUri(p: string | null) {
         if (!p) return;
@@ -40,21 +41,24 @@ export default function CodeEditor() {
         if (value === undefined) return;
 
         const path = editorState.activeFile;
+        setEditorContent(value ?? "");
 
         if (!path) return;
 
+        buffersRef.current[path] = value ?? "";
 
-        setEditorState(prev => ({
-            ...prev,
-            openFiles: {
-                ...prev.openFiles,
-                [path]: {
-                    ...prev.openFiles[path],
-                    content: value,
-                    isDirty: true,
+        if (!editorState.openFiles[path].isDirty) {
+            setEditorState(prev => ({
+                ...prev,
+                openFiles: {
+                    ...prev.openFiles,
+                    [path]: {
+                        ...prev.openFiles[path],
+                        isDirty: true,
+                    },
                 },
-            },
-        }));
+            }));
+        }
     };
 
     const handleMount = (editor: any, monaco: any) => {
@@ -200,7 +204,7 @@ export default function CodeEditor() {
             height="100%"
             language={codeLang || "PlainText"}
             theme="vs-dark"
-            value={code}
+            value={editorContent}
             onChange={(value) => handleOnChange(value)}
             onMount={handleMount}
         />

@@ -6,11 +6,11 @@ import { CodeRunnerParams } from "./code.options"
 type Props = {
     openTerminal: () => void
 }
-//FIX: duing running code if compilation failed it runs run code anyway fix 
+//FIX:duing running code if compilation failed it runs run code anyway fix 
 
 const CodeRunner = ({ openTerminal }: Props) => {
     //constexts
-    const { cwd } = useWorkspaceContext()
+    const { cwd, setRefresh } = useWorkspaceContext()
     const { editorState, getDirtyStatus, codeLang } = useEditorContext()
     const handleRunCode = async () => {
         if (!editorState.activeFile) {
@@ -33,8 +33,11 @@ const CodeRunner = ({ openTerminal }: Props) => {
             setTimeout(async () => {
                 await codeManager.runCode(codeRunnerParams);
             }, 30)
+
         } catch (err) {
             console.error('some error occured while calling run code in code manager', err)
+        } finally {
+            setRefresh(p => !p);
         }
     }
     return (

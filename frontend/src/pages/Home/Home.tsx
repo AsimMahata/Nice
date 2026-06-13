@@ -20,7 +20,7 @@ function Home() {
     //contexts
     const { setCwd, currentPath } = useWorkspaceContext()
     const [isDev, _setAsim] = useState(true);
-
+    console.log('rendered Home')
 
     useEffect(() => {
         if (isDev) setCwd(import.meta.env.VITE_TESTING_FOLDER);
@@ -50,15 +50,15 @@ function Home() {
     };
 
     useEffect(() => {
-       if (window.cph) {
-           const unsubscribe = window.cph.onProblem((data: any) => {
-               console.log("New Problem:", data.name);
-               handleCPHProblem(data);
-           });
-           return () => {
-               unsubscribe();
-           };
-       }
+        if (window.cph) {
+            const unsubscribe = window.cph.onProblem((data: any) => {
+                console.log("New Problem:", data.name);
+                handleCPHProblem(data);
+            });
+            return () => {
+                unsubscribe();
+            };
+        }
     }, [FileActions]);
 
 

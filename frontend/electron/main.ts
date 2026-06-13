@@ -1,8 +1,8 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path, { join } from 'path';
-import { createNewFile, createNewFolder, getParentDirectory, isChildOf, openDirectory, readDirectory, readFileContent, writeFileContent } from './Modules/FileSystem/FileActions';
+import { createNewFile, createNewFolder, FileInfo, getParentDirectory, isChildOf, openDirectory, readDirectory, readFileContent, writeFileContent } from './Modules/FileSystem/FileActions';
 import { showNotification } from './Modules/Notificaiton/Notification'
-import { CodeRunnerParams, runCode } from './Modules/CodeRunner/CodeRunner'
+import { runCode } from './Modules/CodeRunner/CodeRunner'
 import * as pty from 'node-pty'
 import { TerminalOptions } from './types/terminal.types';
 import { setupLSPWebSocket } from "./Modules/WebSocket/ws.lsp"
@@ -75,9 +75,9 @@ app.whenReady().then(() => {
     setupCPHServer(() => mainWindow);
 
     // code runner
-    ipcMain.handle('runner:run', async (_event, { codeFile, codeLang, cwd }: CodeRunnerParams) => {
+    ipcMain.handle('runner:run', async (_event, codeFile: FileInfo) => {
         console.log('invoke in main ==================================')
-        await runCode({ codeFile, codeLang, cwd })
+        await runCode(codeFile)
     })
 
     // // terminal create

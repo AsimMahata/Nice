@@ -1,10 +1,11 @@
 import * as pty from 'node-pty'
-import { TerminalOptions } from '../../types/terminal.types';
-import { RunCommand } from '../CodeRunner/CodeRunner';
+import { ShellType, TerminalOptions } from '../../types/terminal.types';
+
 
 class PtyManager {
     private pty: pty.IPty | null = null;
-    private pending: RunCommand | null = null;  //TODO: make use of this pending thing cause its still unused
+    private pending: string[] = [];
+    private shellType: ShellType | null = null;
     create(options: TerminalOptions) {
         if (this.pty) return;
 
@@ -14,20 +15,19 @@ class PtyManager {
                 [],
                 options
             );
+            this.shellType =
+                process.platform === "win32"
+                    ? "powershell"
+                    : "bash";
             return;
         } catch (err) {
             console.error('error while creating terminal ??', err)
             this.destroy()
         }
-        //        this.pty?.onData((data) => {
-        //            console.log('are we inside pty.onData please speed i need this ')
-        //            const win = BrowserWindow.getAllWindows()[0]
-        //            if (!win || win.isDestroyed()) return
-        //            win.webContents.send('pty:data', data)
-        //        })
-        //        this.pty?.onExit(() => {
-        //            this.destroy();
-        //        });
+    }
+
+    getShellType() {
+        return this.shellType;
     }
 
     async write(data: string) {
@@ -45,32 +45,21 @@ class PtyManager {
 
     destroy() {
         if (!this.pty) return;
+        this.pending = []
         console.log('pty in backend destroyed')
         this.pty.kill();
         this.pty = null;
     }
-    async run(command: RunCommand) {
-        if (!ptyManager.getPty()) {
-            this.pending = command;
+    async run(command: string) {
+        if (!this.getPty()) {
+            this.pending = [...this.pending, command]; //TODO:pending is never getting used
             return;
         }
-        // clear the terminal first 
-        this.execute("clear")
-
-        // running all commands
-        if (!command.cdTopath) {
-            throw new Error('incomplete run command')
+        if (!command) {
+            throw new Error('incomplete command , missing  command ')
         }
-        await this.execute(command.cdTopath);
-
-        if (!command.compileCommand) {
-            throw new Error('incomplete run command,compile first')
-        }
-        await this.execute(command.compileCommand)
-        if (!command.runCommand) {
-            throw new Error('incomplete run command , missing run command ')
-        }
-        await this.execute(command.runCommand)
+        await this.execute("clear")
+        await this.execute(command)
     }
 
     private async execute(command: string) {
