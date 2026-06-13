@@ -13,6 +13,7 @@ import javaRoutes from "./routes/java.routes.js";
 import cRoutes from "./routes/c.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import settingsRoutes from "./routes/settings.routes.js";
 import connectDatabase from "./db/database.connection.js";
 import bodyParser from "body-parser";
 
@@ -45,6 +46,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/java", javaRoutes);
 app.use("/api/c", cRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/settings", settingsRoutes);
 
 const io = new Server(httpServer, {
     cors: { origin: "*" },

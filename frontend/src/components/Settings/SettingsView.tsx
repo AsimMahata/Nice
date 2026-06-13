@@ -5,7 +5,7 @@ import AppearanceSettings from "./AppearanceSettings";
 import SnippetsSettings from "./SnippetsSettings";
 import "./Settings.css";
 
-type SettingsTab = "editor" | "appearance" | "files" | "snippets" | "keybindings" | "cph" | "advanced" | "user";
+type SettingsTab = "editor" | "appearance" | "files" | "snippets" | "cph" | "advanced" | "user";
 
 const SettingsView = () => {
     const [activeTab, setActiveTab] = useState<SettingsTab>("editor");
@@ -27,9 +27,6 @@ const SettingsView = () => {
                     <li className={activeTab === "snippets" ? "active" : ""} onClick={() => setActiveTab("snippets")}>
                         Snippets
                     </li>
-                    <li className={activeTab === "keybindings" ? "active" : ""} onClick={() => setActiveTab("keybindings")}>
-                        Keybindings
-                    </li>
                     <li className={activeTab === "cph" ? "active" : ""} onClick={() => setActiveTab("cph")}>
                         Competitive Programming
                     </li>
@@ -46,7 +43,7 @@ const SettingsView = () => {
                 {activeTab === "appearance" && <AppearanceSettings />}
                 {activeTab === "snippets" && <SnippetsSettings />}
                 {activeTab === "user" && <UserSettings />}
-                {["files", "keybindings", "cph", "advanced"].includes(activeTab) && (
+                {["files", "cph", "advanced"].includes(activeTab) && (
                     <div className="settings-section">
                         <h3>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Settings</h3>
                         <p style={{ color: "var(--label-color)" }}>These settings are not yet implemented but the architecture is ready for them.</p>

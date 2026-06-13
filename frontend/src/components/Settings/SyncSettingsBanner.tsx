@@ -1,16 +1,89 @@
+import { useContext, useState } from "react";
 import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
+import { AuthContext } from "../../contexts/Auth/AuthContext";
 
-export const SyncSettingsBanner = ({ sectionName }: { sectionName: string }) => {
-    const { settings } = useSettingsContext();
+interface SyncSettingsBannerProps {
+    sectionName: string;
+    onSave?: () => Promise<void>;
+    onImport?: () => Promise<void>;
+}
 
-    const handleSyncSettings = () => {
-        console.log(`Syncing ${sectionName} settings to DB...`, settings);
-        alert(`${sectionName} Settings synced to cloud successfully!`);
+export const SyncSettingsBanner = ({ sectionName, onSave, onImport }: SyncSettingsBannerProps) => {
+    const { settings, updateAppearanceSettings, updateEditorSettings } = useSettingsContext();
+    const authContext = useContext(AuthContext);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSyncSettings = async () => {
+        if (!authContext?.isAuthenticated) {
+            alert("You must be logged in to sync settings to the cloud.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            if (onSave) {
+                await onSave();
+            } else {
+                let payload = {};
+                if (sectionName.toLowerCase() === "editor") payload = { editor: settings.editor };
+                else if (sectionName.toLowerCase() === "appearance") payload = { appearance: settings.appearance };
+
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    alert(`${sectionName} Settings synced to cloud successfully!`);
+                } else {
+                    alert(`Failed to sync: ${result.message}`);
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            alert("An error occurred while syncing to the cloud.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
-    const handleImportSettings = () => {
-        console.log(`Importing ${sectionName} settings from DB...`);
-        alert(`${sectionName} Settings imported from cloud successfully!`);
+    const handleImportSettings = async () => {
+        if (!authContext?.isAuthenticated) {
+            alert("You must be logged in to import settings from the cloud.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            if (onImport) {
+                await onImport();
+            } else {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
+                    credentials: "include"
+                });
+                const result = await response.json();
+                if (response.ok && result.success && result.data) {
+                    if (sectionName.toLowerCase() === "editor" && result.data.editor) {
+                        updateEditorSettings(result.data.editor);
+                        alert("Editor settings imported successfully!");
+                    } else if (sectionName.toLowerCase() === "appearance" && result.data.appearance) {
+                        updateAppearanceSettings(result.data.appearance);
+                        alert("Appearance settings imported successfully!");
+                    } else {
+                        alert(`No ${sectionName} settings found in cloud.`);
+                    }
+                } else {
+                    alert(`Failed to import: ${result.message}`);
+                }
+            }
+        } catch (error) {
+            console.error(error);
+            alert("An error occurred while importing from the cloud.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -23,32 +96,36 @@ export const SyncSettingsBanner = ({ sectionName }: { sectionName: string }) => 
             <div style={{ display: "flex", gap: "10px" }}>
                 <button 
                     onClick={handleSyncSettings}
+                    disabled={isLoading}
                     style={{
                         backgroundColor: "var(--accent-color, #007acc)",
                         color: "white",
                         border: "none",
                         padding: "8px 16px",
                         borderRadius: "3px",
-                        cursor: "pointer",
-                        fontSize: "0.9rem"
+                        cursor: isLoading ? "not-allowed" : "pointer",
+                        fontSize: "0.9rem",
+                        opacity: isLoading ? 0.7 : 1
                     }}
                 >
-                    Save to Cloud
+                    {isLoading ? "Syncing..." : "Save to Cloud"}
                 </button>
 
                 <button 
                     onClick={handleImportSettings}
+                    disabled={isLoading}
                     style={{
                         backgroundColor: "var(--input-bg, #3c3c3c)",
                         color: "white",
                         border: "1px solid var(--border-color, #333)",
                         padding: "8px 16px",
                         borderRadius: "3px",
-                        cursor: "pointer",
-                        fontSize: "0.9rem"
+                        cursor: isLoading ? "not-allowed" : "pointer",
+                        fontSize: "0.9rem",
+                        opacity: isLoading ? 0.7 : 1
                     }}
                 >
-                    Import from Cloud
+                    {isLoading ? "Importing..." : "Import from Cloud"}
                 </button>
             </div>
         </div>

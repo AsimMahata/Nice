@@ -42,6 +42,54 @@ const SnippetsSettings = () => {
         editorRef.current = editor;
     };
 
+    const handleCloudSave = async () => {
+        const currentValue = editorRef.current ? editorRef.current.getValue() : rawSnippets;
+        const payload = {
+            snippets: {
+                [language]: currentValue
+            }
+        };
+
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (response.ok && result.success) {
+            alert(`Snippets for ${language} synced to cloud successfully!`);
+        } else {
+            alert(`Failed to sync snippets: ${result.message}`);
+        }
+    };
+
+    const handleCloudImport = async () => {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
+            credentials: "include"
+        });
+
+        const result = await response.json();
+        if (response.ok && result.success && result.data && result.data.snippets && result.data.snippets[language]) {
+            const cloudSnippet = result.data.snippets[language];
+            
+            // Save it to electron local storage
+            if (window.snippets) {
+                await window.snippets.saveSnippetsRaw(language, cloudSnippet);
+            }
+
+            // Update UI
+            setRawSnippets(cloudSnippet);
+            if (editorRef.current) {
+                editorRef.current.setValue(cloudSnippet);
+            }
+            alert(`Snippets for ${language} imported from cloud successfully!`);
+        } else {
+            alert(`No snippets found in cloud for ${language}.`);
+        }
+    };
+
     return (
         <div className="settings-section" style={{ display: "flex", flexDirection: "column", height: "100%", width: "100%" }}>
             <h3>Snippets Settings</h3>
@@ -95,7 +143,11 @@ const SnippetsSettings = () => {
                 </button>
             </div>
 
-            <SyncSettingsBanner sectionName="Snippets" />
+            <SyncSettingsBanner 
+                sectionName="Snippets" 
+                onSave={handleCloudSave} 
+                onImport={handleCloudImport} 
+            />
         </div>
     );
 };
