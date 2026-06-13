@@ -42,6 +42,17 @@ const SnippetsSettings = () => {
         editorRef.current = editor;
     };
 
+    const handleBeforeMount = (monaco: any) => {
+        monaco.editor.defineTheme('snippet-theme', {
+            base: 'vs-dark',
+            inherit: true,
+            rules: [],
+            colors: {
+                'editor.background': '#2d2d2d',
+            }
+        });
+    };
+
     const handleCloudSave = async () => {
         const currentValue = editorRef.current ? editorRef.current.getValue() : rawSnippets;
         const payload = {
@@ -114,9 +125,10 @@ const SnippetsSettings = () => {
                 <Editor
                     height="100%"
                     language="json"
-                    theme="vs-dark"
+                    theme="snippet-theme"
                     value={rawSnippets}
                     onMount={handleMount}
+                    beforeMount={handleBeforeMount}
                     options={{
                         minimap: { enabled: false },
                         tabSize: 4,

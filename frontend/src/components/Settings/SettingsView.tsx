@@ -46,7 +46,7 @@ const SettingsView = () => {
                 {["files", "cph", "advanced"].includes(activeTab) && (
                     <div className="settings-section">
                         <h3>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Settings</h3>
-                        <p style={{ color: "var(--label-color)" }}>These settings are not yet implemented but the architecture is ready for them.</p>
+                        <p style={{ color: "var(--label-color)" }}>Yet to be added</p>
                     </div>
                 )}
             </div>
