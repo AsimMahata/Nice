@@ -36,7 +36,7 @@ const Tab = ({
 );
 
 const TabManager = () => {
-    const { editorState, setEditorState } = useEditorContext();
+    const { editorState, setEditorState, buffersRef } = useEditorContext();
     const { settings } = useSettingsContext();
     const FileActions = useFileActions();
 
@@ -54,7 +54,7 @@ const TabManager = () => {
         const closedFile = editorState.openFiles[path];
         if (closedFile?.isDirty) {
             if (settings.files.autoSave === "afterDelay") {
-                await FileActions.saveFiles(path, closedFile.content);
+                await FileActions.saveFiles(path, buffersRef.current[path]);
             } else {
                 console.error('file is not saved are your sure you want to close');
                 notify.error('File Not Saved!', 'You closed a file with unsaved changes.');

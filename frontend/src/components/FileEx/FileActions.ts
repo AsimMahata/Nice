@@ -251,7 +251,7 @@ export function useFileActions() {
         try {
             const success = await window.fileSystem.writeFileContent(
                 path,
-                overrideContent !== undefined ? overrideContent : file.content
+                overrideContent !== undefined ? overrideContent : content
             );
             console.log('status of file save ----', success)
             return success;

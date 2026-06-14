@@ -28,6 +28,8 @@ export default function CodeEditor() {
     const FileActions = useFileActions()
 
     const editorRef = useRef<any>(null);
+    const snippetsRef = useRef<any>({});
+    const disposables = useRef<any[]>([]);
 
     // Fetch snippets on codeLang change
     useEffect(() => {
@@ -70,10 +72,7 @@ export default function CodeEditor() {
         }
     }, [settings.editor]);
 
-    const code =
-        editorState.activeFile
-            ? editorState.openFiles[editorState.activeFile]?.content ?? ""
-            : "";
+
 
     const version = useRef(1);
     const opened = useRef(false);
@@ -120,7 +119,7 @@ export default function CodeEditor() {
                         isDirty: true,
                     },
                 },
-            })),
+            }))
         }
 
         // Handle autoSave = afterDelay
@@ -339,7 +338,7 @@ export default function CodeEditor() {
             height="100%"
             language={codeLang || "PlainText"}
             theme={settings.appearance.theme}
-            value={code}
+            value={editorContent}
             options={{
                 fontFamily: settings.editor.fontFamily,
                 fontWeight: settings.editor.fontWeight,
