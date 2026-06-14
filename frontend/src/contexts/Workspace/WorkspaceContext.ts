@@ -12,9 +12,7 @@ interface WorkspaceContextType {
     setRefresh: React.Dispatch<React.SetStateAction<boolean>>,
     isTerminalOpen: boolean,
     setIsTerminalOpen: React.Dispatch<React.SetStateAction<boolean>>,
-
 }
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined)
-
 
 export default WorkspaceContext

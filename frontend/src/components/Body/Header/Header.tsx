@@ -1,13 +1,15 @@
-import { Command, VenetianMask } from "lucide-react"
+import { VenetianMask } from "lucide-react"
 import { useEffect } from "react"
 import { useEditorContext } from "../../../contexts/Editor/EditorProvider"
 import { useWorkspaceContext } from "../../../contexts/Workspace/WorkspaceProvider"
 import PickDir from "../../FileEx/PickDir"
 import SaveButton from "../../Utility/SaveButton"
 import CodeRunner from "../../CodeRunner/CodeRunner"
+import SearchBox from "../Search/SearchBox"
 
 
 const Header = () => {
+    console.log('rendered Header')
     // contexts
     const { editorState, codeLang, getCurrentFileInfo, setCodeLang } = useEditorContext()
     const { setIsTerminalOpen } = useWorkspaceContext()
@@ -50,11 +52,7 @@ const Header = () => {
                         <span className="currentProgrammingLang">{codeLang}</span>
                     </nav>
                 </div>
-
-                <div className="search-wrapper">
-                    <Command size={14} className="search-icon" color="#585b70" />
-                    <input className="search-input" placeholder="Quick search..." />
-                </div>
+                <SearchBox />
                 <div style={{ width: "80px" }} />
                 <SaveButton />
                 <CodeRunner openTerminal={() => setIsTerminalOpen(true)} />

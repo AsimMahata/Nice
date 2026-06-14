@@ -12,6 +12,9 @@ import { settingsManager } from './Modules/Settings/SettingsManager';
 import { snippetManager } from './Modules/Snippets/SnippetManager';
 let mainWindow: BrowserWindow | null = null;
 
+import { scanDirectory } from "./Modules/SearchEngine/SearchEngine"
+
+
 let ptyProcess: pty.IPty | null = null;
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 // main window
@@ -57,8 +60,6 @@ function createPty(options: TerminalOptions) {
     ptyProcess = ptyManager.getPty();
     ptyProcess?.onData((data: string) => {
         if (mainWindow) {
-            console.log('is there any reply from the ptyProcess ------------------')
-            console.log(data)
             mainWindow.webContents.send('terminal:data', data);
         }
     });
@@ -78,7 +79,6 @@ app.whenReady().then(() => {
 
     // code runner
     ipcMain.handle('runner:run', async (_event, codeFile: FileInfo) => {
-        console.log('invoke in main ==================================')
         await runCode(codeFile)
     })
 
@@ -105,7 +105,6 @@ app.whenReady().then(() => {
 
     ipcMain.on('terminal:write', (_event, data: string) => {
         if (ptyManager.getPty()) {
-            console.log('is there any ptyProcess ------------')
             ptyManager.write(data);
         }
     });
@@ -136,6 +135,10 @@ app.whenReady().then(() => {
     ipcMain.handle('notify', (_event, title: string, body: string) => {
         showNotification(title, body)
 
+    });
+    // SearchEngine service 
+    ipcMain.handle('scanDirectory', (_event, path: string) => {
+        return scanDirectory(path)
     });
 
     // join paths 
@@ -191,7 +194,7 @@ app.whenReady().then(() => {
     ipcMain.handle('get-settings', () => {
         return settingsManager.getSettings();
     });
-    
+
     ipcMain.handle('save-settings', (_event, settings: any) => {
         return settingsManager.saveSettings(settings);
     });

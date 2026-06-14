@@ -24,6 +24,12 @@ contextBridge.exposeInMainWorld('notify', {
     send: (title: string, body: string) => ipcRenderer.invoke('notify', title, body),
 });
 
+// SearchEngine service 
+contextBridge.exposeInMainWorld('search', {
+    scanDirectory: (path: string) => ipcRenderer.invoke('scanDirectory', path),
+});
+
+// CP helper
 contextBridge.exposeInMainWorld('cph', {
     onProblem: (callback: (data: any) => void) => {
         const listener = (_e: Electron.IpcRendererEvent, data: any) => {

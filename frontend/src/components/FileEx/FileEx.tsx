@@ -4,6 +4,7 @@ import { FileInfo, useFileActions } from "./FileActions";
 import FileItem from "./FileItem";
 import PickDir from "./PickDir";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
+import { searchEngine } from "../../services/Search/SearchEngine";
 
 type props = {
     codeFile: FileInfo | null;
@@ -44,6 +45,10 @@ const FileEx = ({ }: props) => {
             setInsideMainDir(true);
         }
         init();
+        if (cwd) {
+            console.log(`building index for ${cwd}`);
+            void searchEngine.buildIndex(cwd);
+        }
     }, [cwd]);
 
     // reload on path / refresh

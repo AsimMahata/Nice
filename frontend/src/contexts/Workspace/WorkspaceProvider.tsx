@@ -20,7 +20,7 @@ const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
             refresh,
             setRefresh,
             isTerminalOpen,
-            setIsTerminalOpen
+            setIsTerminalOpen,
         }}>
             {children}
         </WorkspaceContext.Provider>
