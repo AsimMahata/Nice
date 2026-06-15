@@ -237,3 +237,51 @@
     font-size: 15px;
     margin: 10px;
 }
+
+/* Resize Handles for Resizable Panels */
+.resize-handle-horizontal {
+    width: 6px;
+    background-color: transparent;
+    cursor: col-resize;
+    transition: background-color 0.2s ease;
+    z-index: 10;
+    margin: 0 -3px; /* Allow overlap for easier dragging */
+}
+
+.resize-handle-horizontal:hover,
+.resize-handle-horizontal:active {
+    background-color: #89b4fa;
+}
+
+.resize-handle-vertical {
+    height: 6px;
+    background-color: transparent;
+    cursor: row-resize;
+    transition: background-color 0.2s ease;
+    z-index: 10;
+    margin: -3px 0; /* Allow overlap for easier dragging */
+}
+
+.resize-handle-vertical:hover,
+.resize-handle-vertical:active {
+    background-color: #89b4fa;
+}
+
+/* Sidebar Resize Handle */
+.sidebar-resize-handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    background-color: transparent;
+    transition: background-color 0.2s ease;
+    z-index: 50;
+    margin-right: -3px; /* Center handle on right boundary */
+}
+
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle:active {
+    background-color: #89b4fa;
+}
