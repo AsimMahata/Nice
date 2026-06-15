@@ -18,7 +18,6 @@ export function setupCPHServer(getMainWindow: () => BrowserWindow | null) {
             const problemData = req.body;
             console.log("Received CPH problem:", problemData.name);
 
-            // Retrieve the active window and dispatch problem data via IPC
             const mainWindow = getMainWindow();
             if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.webContents.send("cph:problem", problemData);

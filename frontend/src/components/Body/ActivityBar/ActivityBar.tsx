@@ -11,12 +11,11 @@ import { useEditorContext } from "../../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../../contexts/Workspace/WorkspaceProvider";
 import FileEx from "../../FileEx/FileEx";
 import UserDetails from "../../User/UserDetails";
-import CphPanel from "../../CphPanel/CphPanel";
+import CphPanel from "../../CphPanel/CphPanel.tsx";
 
 const ActivityBar = () => {
     const { getCurrentFileInfo } = useEditorContext();
     
-    // Consume states globally from WorkspaceContext
     const { sidePanel, setSidePanel, currentActivity, setCurrentActivity } = useWorkspaceContext();
 
     const handleActivityClickEvent = (name: string) => {

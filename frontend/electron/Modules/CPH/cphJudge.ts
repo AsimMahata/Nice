@@ -26,7 +26,6 @@ export async function compileCPH(filePath: string): Promise<CompileResult> {
     const ext = path.extname(filePath);
     const baseName = path.basename(filePath, ext);
     
-    // Create .cph/bin directory inside the source file's parent folder
     const cphBinDir = path.join(dir, '.cph', 'bin');
     if (!fs.existsSync(cphBinDir)) {
         fs.mkdirSync(cphBinDir, { recursive: true });
@@ -52,7 +51,7 @@ export async function compileCPH(filePath: string): Promise<CompileResult> {
         const resolvedPath = resolvedPaths[0]?.trim();
         if (resolvedPath && fs.existsSync(resolvedPath)) {
             const compilerDir = path.dirname(resolvedPath);
-            // Prepend compiler directory to PATH to avoid toolchain linker conflicts
+
             env.PATH = `${compilerDir}${path.delimiter}${env.PATH || ''}`;
             console.log(`[CPH Compile Debug] Prepended compiler dir to PATH: ${compilerDir}`);
         }
@@ -108,14 +107,12 @@ export async function runTestcaseCPH(
         let stderr = '';
         let timeout = false;
         
-        // Timeout handler
         const timer = setTimeout(() => {
             timeout = true;
             console.warn(`[CPH Run] Process timed out after ${timeLimit}ms. Terminating process...`);
             child.kill();
         }, timeLimit);
         
-        // Feed stdin
         if (child.stdin) {
             child.stdin.write(input);
             child.stdin.end();
