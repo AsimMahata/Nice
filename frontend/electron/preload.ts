@@ -36,12 +36,15 @@ contextBridge.exposeInMainWorld('cph', {
             callback(data);
         };
         ipcRenderer.on('cph:problem', listener);
-
+        
         // Return an unsubscribe/cleanup function
         return () => {
             ipcRenderer.removeListener('cph:problem', listener);
         };
-    }
+    },
+    compile: (filePath: string) => ipcRenderer.invoke('cph:compile', filePath),
+    runTestcase: (binaryPath: string, input: string, timeLimit: number) =>
+        ipcRenderer.invoke('cph:run-testcase', { binaryPath, input, timeLimit })
 });
 
 

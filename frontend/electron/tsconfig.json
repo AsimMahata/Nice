@@ -7,10 +7,14 @@
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "types": ["node"]
     },
     "include": [
-        "*.ts",
-        "Modules/FileSystem/reader.ts"
+        "**/*.ts"
+    ],
+    "exclude": [
+        "dist",
+        "node_modules"
     ]
 }

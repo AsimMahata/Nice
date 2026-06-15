@@ -21,9 +21,5 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 
-<<<<<<< HEAD
 EXPOSE 3000
-=======
-EXPOSE 3000 10043
->>>>>>> electron
 CMD ["npm", "run", "dev"]

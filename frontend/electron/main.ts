@@ -10,6 +10,7 @@ import { ptyManager } from "./Modules/Terminal/terminal"
 import { setupCPHServer } from './Modules/CPH/cph';
 import { settingsManager } from './Modules/Settings/SettingsManager';
 import { snippetManager } from './Modules/Snippets/SnippetManager';
+import { compileCPH, runTestcaseCPH } from './Modules/CPH/cphJudge';
 let mainWindow: BrowserWindow | null = null;
 
 import { scanDirectory } from "./Modules/SearchEngine/SearchEngine"
@@ -210,6 +211,14 @@ app.whenReady().then(() => {
 
     ipcMain.handle('get-snippets-parsed', (_event, language: string) => {
         return snippetManager.getSnippetsParsed(language);
+    });
+
+    ipcMain.handle('cph:compile', async (_event, filePath: string) => {
+        return await compileCPH(filePath);
+    });
+
+    ipcMain.handle('cph:run-testcase', async (_event, { binaryPath, input, timeLimit }) => {
+        return await runTestcaseCPH(binaryPath, input, timeLimit);
     });
 
 
