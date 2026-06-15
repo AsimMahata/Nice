@@ -44,14 +44,42 @@ export async function compileCPH(filePath: string): Promise<CompileResult> {
         return { success: false, error: `Unsupported file extension: ${ext}` };
     }
     
+    const { execSync } = require("child_process");
+    let env = { ...process.env };
+    try {
+        const compilerName = (ext === '.c') ? 'gcc' : 'g++';
+        const resolvedPaths = execSync(`where ${compilerName}`).toString().split(/\r?\n/);
+        const resolvedPath = resolvedPaths[0]?.trim();
+        if (resolvedPath && fs.existsSync(resolvedPath)) {
+            const compilerDir = path.dirname(resolvedPath);
+            // Prepend compiler directory to PATH to avoid toolchain linker conflicts
+            env.PATH = `${compilerDir}${path.delimiter}${env.PATH || ''}`;
+            console.log(`[CPH Compile Debug] Prepended compiler dir to PATH: ${compilerDir}`);
+        }
+    } catch (err: any) {
+        console.error(`[CPH Compile Debug] Error resolving compiler path: ${err.message}`);
+    }
+
+    console.log(`[CPH Compile] Running command: ${compileCmd}`);
+    
     return new Promise((resolve) => {
-        exec(compileCmd, (error, stdout, stderr) => {
+        exec(compileCmd, { env }, (error, stdout, stderr) => {
+            console.log(`[CPH Compile] stdout:\n${stdout}`);
+            console.log(`[CPH Compile] stderr:\n${stderr}`);
             if (error) {
+                console.error(`[CPH Compile] Error: ${error.message}`);
+                const completeError = [
+                    stderr.trim(),
+                    stdout.trim(),
+                    error.message.trim()
+                ].filter(Boolean).join('\n\n');
+                
                 resolve({
                     success: false,
-                    error: stderr || error.message
+                    error: completeError || "Compilation failed with unknown error"
                 });
             } else {
+                console.log(`[CPH Compile] Compilation successful. Binary: ${binaryPath}`);
                 resolve({
                     success: true,
                     binaryPath: binaryPath
@@ -70,6 +98,8 @@ export async function runTestcaseCPH(
     input: string, 
     timeLimit: number = 2000
 ): Promise<RunResult> {
+    console.log(`[CPH Run] Executing binary: ${binaryPath} with timeLimit: ${timeLimit}ms`);
+    console.log(`[CPH Run] Input:\n${input}`);
     return new Promise((resolve) => {
         const start = Date.now();
         const child = spawn(binaryPath);
@@ -81,6 +111,7 @@ export async function runTestcaseCPH(
         // Timeout handler
         const timer = setTimeout(() => {
             timeout = true;
+            console.warn(`[CPH Run] Process timed out after ${timeLimit}ms. Terminating process...`);
             child.kill();
         }, timeLimit);
         
@@ -100,6 +131,7 @@ export async function runTestcaseCPH(
         
         child.on('error', (err) => {
             clearTimeout(timer);
+            console.error(`[CPH Run] Process error: ${err.message}`);
             resolve({
                 stdout,
                 stderr,
@@ -112,11 +144,15 @@ export async function runTestcaseCPH(
         
         child.on('exit', (code) => {
             clearTimeout(timer);
+            const duration = Date.now() - start;
+            console.log(`[CPH Run] Process exited with code ${code} in ${duration}ms`);
+            console.log(`[CPH Run] Stdout: ${stdout}`);
+            console.log(`[CPH Run] Stderr: ${stderr}`);
             resolve({
                 stdout,
                 stderr,
                 exitCode: code,
-                time: Date.now() - start,
+                time: duration,
                 timeout
             });
         });
