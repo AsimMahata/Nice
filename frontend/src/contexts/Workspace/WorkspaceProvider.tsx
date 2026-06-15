@@ -9,6 +9,8 @@ const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     const [currentPath, setCurrentPath] = useState<string | null>(null)
     const [refresh, setRefresh] = useState(false);
     const [isTerminalOpen, setIsTerminalOpen] = useState<boolean>(false); // this tells if terminal is available or active
+    const [sidePanel, setSidePanel] = useState<boolean>(false);
+    const [currentActivity, setCurrentActivity] = useState<string | null>("FileEx");
     return (
         <WorkspaceContext.Provider value={{
             cwd,
@@ -21,6 +23,10 @@ const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
             setRefresh,
             isTerminalOpen,
             setIsTerminalOpen,
+            sidePanel,
+            setSidePanel,
+            currentActivity,
+            setCurrentActivity
         }}>
             {children}
         </WorkspaceContext.Provider>

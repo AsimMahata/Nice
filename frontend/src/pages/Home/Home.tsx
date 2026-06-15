@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import "./Home.css"; // Import the new CSS file
+import "./Home.css"; 
 
 import { useFileActions } from "../../components/FileEx/FileActions";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
@@ -12,13 +12,22 @@ declare global {
     interface Window {
         cph?: {
             onProblem: (callback: (data: any) => void) => () => void;
+            compile: (filePath: string) => Promise<{ success: boolean; error?: string; binaryPath?: string }>;
+            runTestcase: (binaryPath: string, input: string, timeLimit: number) => Promise<{
+                stdout: string;
+                stderr: string;
+                exitCode: number | null;
+                time: number;
+                timeout: boolean;
+                error?: string;
+            }>;
         };
     }
 }
 
 function Home() {
-    //contexts
-    const { setCwd, currentPath } = useWorkspaceContext()
+
+    const { currentPath, setCurrentActivity, setSidePanel, setCwd } = useWorkspaceContext();
     const [isDev, _setAsim] = useState(true);
     console.log('rendered Home')
 
@@ -29,6 +38,8 @@ function Home() {
 
     // TODO: can Anyone Move this to another component
     const FileActions = useFileActions()
+
+    
 
     const handleCPHProblem = async (data: any) => {
         const formattedName = data.name
@@ -41,12 +52,32 @@ function Home() {
             const fileInfo = await FileActions.createNewFiles(filename);
             if (fileInfo) {
                 await FileActions.handleClick(fileInfo);
+                
+                if (currentPath && window.fileSystem) {
+                    const cphFolder = await window.fileSystem.join(currentPath, ".cph");
+                    await window.fileSystem.createFolder(cphFolder);
+                    
+                    // Create test case JSON structure
+                    const cphJsonPath = await window.fileSystem.join(cphFolder, `${filename}.json`);
+                    const cphData = {
+                        name: data.name,
+                        timeLimit: data.timeLimit || 2000,
+                        tests: data.tests.map((test: any, index: number) => ({
+                            id: index + 1,
+                            input: test.input,
+                            expectedOutput: test.output
+                        }))
+                    };
+                    
+                    await window.fileSystem.writeFileContent(cphJsonPath, JSON.stringify(cphData, null, 2));
+                }
             }
-            console.log('FileActions.currentPath from home ---', currentPath);
+
+            setCurrentActivity("CPH");
+            setSidePanel(true);
         } catch (error) {
             console.error(error);
         }
-        console.log("created file and now ......");
     };
 
     useEffect(() => {

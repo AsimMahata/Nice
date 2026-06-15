@@ -5,69 +5,37 @@ import {
     Terminal as TERMLOGO,
     Settings,
     User,
+    Trophy,
 } from "lucide-react";
-import { useState } from "react";
 import { useEditorContext } from "../../../contexts/Editor/EditorProvider";
+import { useWorkspaceContext } from "../../../contexts/Workspace/WorkspaceProvider";
 import FileEx from "../../FileEx/FileEx";
 import UserDetails from "../../User/UserDetails";
+import CphPanel from "../../CphPanel/CphPanel";
 
 const ActivityBar = () => {
-    //contexts
-    const { getCurrentFileInfo, setEditorState } = useEditorContext()
-    const [sidePanel, setSidePanle] = useState<boolean>(false); // is side panel visible or not
+    const { getCurrentFileInfo } = useEditorContext();
+    
+    // Consume states globally from WorkspaceContext
+    const { sidePanel, setSidePanel, currentActivity, setCurrentActivity } = useWorkspaceContext();
 
-    const [currentActivity, setCurrentActivity] = useState<string | null>(
-        "file-ex",
-    ); // what is the current active button on side panel
     const handleActivityClickEvent = (name: string) => {
-        if (name === "Settings") {
-            setEditorState((prev) => {
-                const isSettingsOpen = prev.openTabs.includes("nice://settings");
-                return {
-                    ...prev,
-                    openFiles: {
-                        ...prev.openFiles,
-                        "nice://settings": {
-                            content: "",
-                            isDirty: false,
-                            fileInfo: {
-                                name: "Settings",
-                                path: "nice://settings",
-                                isDirectory: false,
-                                size: 0,
-                                modifiedAt: new Date(),
-                                extension: "",
-                            }
-                        }
-                    },
-                    openTabs: isSettingsOpen ? prev.openTabs : [...prev.openTabs, "nice://settings"],
-                    activeFile: "nice://settings"
-                };
-            });
-            setSidePanle(false);
-            return;
-        }
-
-        if (!name) setSidePanle(false);
-        if (currentActivity == name) {
-            console.log(
-                "frontend/home/handleActivityClickEvent/ to check its already active ",
-            );
-            setSidePanle((p) => !p);
+        if (!name) setSidePanel(false);
+        if (currentActivity === name) {
+            setSidePanel((p) => !p);
             return;
         }
         setCurrentActivity(name);
-        setSidePanle(true);
-        console.log("current active section in frontend home ", name);
+        setSidePanel(true);
     };
+
     const ActivityIcon = ({ name, icon }: any) => (
         <div
-            className={`activity-icon-btn ${currentActivity == name ? "active" : ""}`}
+            className={`activity-icon-btn ${currentActivity === name ? "active" : ""}`}
             onClick={() => handleActivityClickEvent(name)}>
             {icon}
         </div>
     );
-
 
     function getCorrectActivitybar() {
         switch (currentActivity) {
@@ -83,8 +51,12 @@ const ActivityBar = () => {
                 return <div> Github</div>;
             case "CodeAction":
                 return <div> CodeAction </div>;
+            case "CPH":
+                return <CphPanel />;
             case "User":
                 return <UserDetails />;
+            case "Settings":
+                return <div> Settings</div>;
             default:
                 return null;
         }
@@ -98,6 +70,7 @@ const ActivityBar = () => {
                     <ActivityIcon name={"Search"} icon={<Search size={22} />} />
                     <ActivityIcon name={"Github"} icon={<Github size={22} />} />
                     <ActivityIcon name={"CodeAction"} icon={<TERMLOGO size={22} />} />
+                    <ActivityIcon name={"CPH"} icon={<Trophy size={22} />} />
                 </div>
                 <div className="icon-stack">
                     <ActivityIcon name={"User"} icon={<User size={22} />} />
@@ -110,7 +83,7 @@ const ActivityBar = () => {
                 {getCorrectActivitybar()}
             </div>
         </>
-    )
-}
+    );
+};
 
-export default ActivityBar
+export default ActivityBar;
