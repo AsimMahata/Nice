@@ -27,8 +27,11 @@ const FileEx = ({ }: props) => {
     const [insideMainDir, setInsideMainDir] = useState<boolean>(false);
 
     const handleClick = async (file: FileInfo) => {
-        const result: HandleClickResult | null = await FileActions.handleClick(file)
-        if (!result) return;
+        try {
+            await FileActions.handleClick(file)
+        } catch (err) {
+            console.error('error occured inside fileex.tsx handleClick')
+        }
     }
 
     // init path

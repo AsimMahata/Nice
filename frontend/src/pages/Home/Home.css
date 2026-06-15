@@ -164,35 +164,68 @@
 .tab-bar {
     height: 40px;
     background-color: #181825;
+
     display: flex;
     align-items: center;
+    gap: 2px;
+
     padding: 0 8px;
-    gap: 8px;
+
     border-bottom: 1px solid #313244;
+
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.tab-bar::-webkit-scrollbar {
+    display: none;
 }
 
 .tab-item {
+    flex-shrink: 0;
+
     height: 32px;
-    padding: 0 16px;
+    padding: 0 14px;
+
     display: flex;
     align-items: center;
-    gap: 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 12px;
-    color: #6c7086;
-    margin-bottom: 1px;
-}
+    gap: 8px;
 
-.tab-item.active {
-    background-color: #1e1e2e;
-    color: #89b4fa;
-    border: 1px solid #313244;
+    border-radius: 6px;
+
+    color: #6c7086;
+
+    border: 1px solid transparent;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease;
 }
 
 .tab-item:hover:not(.active) {
     background-color: rgba(49, 50, 68, 0.5);
+    color: #cdd6f4;
+}
+
+.tab-item.active {
+    background-color: #1e1e2e;
+    border-color: #313244;
+    color: #89b4fa;
+}
+
+.close-icon {
+    opacity: 0;
+    transition:
+        opacity 0.15s ease,
+        color 0.15s ease;
+}
+
+.tab-item:hover .close-icon,
+.tab-item.active .close-icon {
+    opacity: 1;
 }
 
 .close-icon:hover {

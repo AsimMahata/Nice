@@ -6,8 +6,20 @@ type Props = {
     results: FileInfo[];
 };
 
+//BUG : after creating a new file the file list dont refresh for serach
+
 const SearchList = ({ results }: Props) => {
+
     const FileActions = useFileActions()
+
+    const handleClick = async (file: FileInfo) => {
+        try {
+            await FileActions.handleClick(file)
+        } catch (err) {
+            console.error('error occured inside fileex.tsx handleClick')
+        }
+    }
+
     return (
         <div className="search-results-container">
             {results.length === 0 ? (
@@ -19,7 +31,7 @@ const SearchList = ({ results }: Props) => {
                     <div
                         key={file.path}
                         className="search-result-item"
-                        onClick={() => FileActions.handleClick(file)} //FIX: its not working I want to open it in tab will fix later 
+                        onClick={() => handleClick(file)} //FIX: its not working I want to open it in tab will fix later 
                     >
                         <div className="search-result-name">
                             {file.name}

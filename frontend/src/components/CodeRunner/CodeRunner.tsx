@@ -7,6 +7,7 @@ type Props = {
     openTerminal: () => void
 }
 //FIX:duing running code if compilation failed it runs run code anyway fix 
+//FIX: after running cpp file or java files when clss or exe is generated the file explorer dont refresh
 
 const CodeRunner = ({ openTerminal }: Props) => {
     //constexts

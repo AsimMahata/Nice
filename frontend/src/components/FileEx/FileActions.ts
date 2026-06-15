@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { notify } from "../../utils/notification";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
-import { HandleClickResult } from "./FileEx";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 
 //FIX: here i am exporting it and many modules is recieving it where as it should be taken from fileactions.options.ts
@@ -65,9 +64,7 @@ export function useFileActions() {
      * Handles what to do when user clicks on a file or foler
      * */
 
-    async function handleClick(
-        file: FileInfo
-    ): Promise<HandleClickResult | null> {
+    async function handleClick(file: FileInfo): Promise<void> {
         console.log(
             'frontend file ex -> FileActions inside handle click CLICKED!!',
             file.path
@@ -75,29 +72,23 @@ export function useFileActions() {
 
         if (!window.fileSystem) {
             console.error('fileSystem is not available');
-            return null;
+            return;
         }
 
         if (!currentPath) {
             console.error('first set a working directory');
-            return null;
+            return;
         }
 
         try {
-            const child = await window.fileSystem.join(
-                currentPath,
-                file.name
-            );
-
             // Directory click
             if (file.isDirectory) {
-                setCurrentPath(child);
-                return null;
+                setCurrentPath(file.path);
+                return;
             }
 
             // Already open -> just switch tab
             const alreadyOpen = editorState.openFiles[file.path];
-            const fileContent = buffersRef.current[file.path]
 
             if (alreadyOpen) {
                 setEditorState((prev) => ({
@@ -105,14 +96,11 @@ export function useFileActions() {
                     activeFile: file.path,
                 }));
 
-                return {
-                    file,
-                    content: fileContent
-                };
+                return;
             }
 
             // First time opening file
-            const content = await window.fileSystem.readFile(child);
+            const content = await window.fileSystem.readFile(file.path);
 
             buffersRef.current[file.path] = content
 
@@ -135,14 +123,10 @@ export function useFileActions() {
                 activeFile: file.path,
             }));
 
-            return {
-                file,
-                content,
-            };
         } catch (err) {
             console.error('something error occurred', err);
             notify.error('File', String(err));
-            return null;
+            return;
         }
     }
 

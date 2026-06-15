@@ -12,13 +12,7 @@ interface TabProps {
     onClick: (path: string) => void;
 }
 
-const Tab = ({
-    path,
-    name,
-    active,
-    onClose,
-    onClick
-}: TabProps) => (
+const Tab = ({ path, name, active, onClose, onClick }: TabProps) => (
     <div className={`tab-item ${active ? "active" : ""}`}
         onClick={() => onClick(path)}
     >
@@ -34,6 +28,8 @@ const Tab = ({
         />
     </div>
 );
+
+//BUG: tab overflow fix
 
 const TabManager = () => {
     const { editorState, setEditorState, buffersRef } = useEditorContext();
