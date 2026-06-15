@@ -1,3 +1,4 @@
+import { paletteItem } from "../../components/Body/CommandPalette/CommandPaletteManager";
 import { FileInfo } from "../../Types/filesystem";
 
 export interface ScanResult {
@@ -31,6 +32,9 @@ export class FileSearchEngine implements SearchEngine {
     private previousQuery = "";
     private previousResults: FileInfo[] = [];
 
+    constructor() {
+        console.log("NEW SEARCH ENGINE CREATED");
+    }
     private async scanInBackend(directory: string): Promise<ScanResult> {
         console.log("backend file search requested for", directory);
         if (!window.search) {
@@ -77,14 +81,11 @@ export class FileSearchEngine implements SearchEngine {
         this.clear();
 
         this.previousWorkingDirectory = workingDirectory;
-
         void this.scanFolderRec(workingDirectory);
-
     }
 
     search(query: string): FileInfo[] {
         query = query.trim().toLowerCase();
-
         if (query === "") {
             this.previousQuery = "";
             this.previousResults = [...this.files];
@@ -106,7 +107,20 @@ export class FileSearchEngine implements SearchEngine {
         return results;
     }
 
+    async commandPaletteFileSearch(query: string): Promise<paletteItem[]> {
+        const localResult: FileInfo[] = this.search(query);
+        return localResult.map((file) => {
+            return {
+                title: file.name,
+                secondaryTitle: file.path,
+                type: "File",
+                payload: file
+            }
+        })
+    }
+
     clear(): void {
+        console.log('called ================================clear')
         this.files = [];
 
         this.previousQuery = "";
@@ -116,5 +130,4 @@ export class FileSearchEngine implements SearchEngine {
     }
 }
 
-export const searchEngine =
-    new FileSearchEngine();
+export const searchEngine = new FileSearchEngine();

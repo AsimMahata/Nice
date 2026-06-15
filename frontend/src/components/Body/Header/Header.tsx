@@ -5,7 +5,7 @@ import { useWorkspaceContext } from "../../../contexts/Workspace/WorkspaceProvid
 import PickDir from "../../FileEx/PickDir"
 import SaveButton from "../../Utility/SaveButton"
 import CodeRunner from "../../CodeRunner/CodeRunner"
-import SearchBox from "../Search/SearchBox"
+import CommandPalette from "../CommandPalette/CommandPalette"
 
 
 const Header = () => {
@@ -52,7 +52,7 @@ const Header = () => {
                         <span className="currentProgrammingLang">{codeLang}</span>
                     </nav>
                 </div>
-                <SearchBox />
+                <CommandPalette />
                 <div style={{ width: "80px" }} />
                 <SaveButton />
                 <CodeRunner openTerminal={() => setIsTerminalOpen(true)} />
