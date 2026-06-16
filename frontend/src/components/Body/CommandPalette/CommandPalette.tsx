@@ -1,11 +1,12 @@
 import { Command } from "lucide-react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import CommandPaletteResults from "./CommandPaletteResults";
-import { commandPaletteManager, paletteItem } from "./CommandPaletteManager";
+import { commandPaletteManager } from "./CommandPaletteManager";
+import { paletteItem } from "./palette.types";
 
 const CommandPalette = () => {
     console.log('Command Palette rendered')
-    const [results, setResults] = useState<paletteItem[]>([])
+    const [items, setItems] = useState<paletteItem[]>([])
     const [canShow, setCanShow] = useState<boolean>(false);
     const timeoutRef = useRef<number | null>(null);
 
@@ -18,10 +19,14 @@ const CommandPalette = () => {
         }
 
         timeoutRef.current = setTimeout(async () => {
-            const queryResults = await commandPaletteManager.processQuery(query);
-            setResults(queryResults);
+            const queryItems = await commandPaletteManager.processQuery(query);
+            setItems(queryItems);
         }, 200);
     };
+    useEffect(() => {
+        console.log('[tesing command-palette ] one time');
+        commandPaletteManager.register(setCanShow, setItems);
+    }, []);
 
     return (
         <div className="command-palette-wrapper">
@@ -35,7 +40,7 @@ const CommandPalette = () => {
                     setTimeout(() => setCanShow(false), 300);
                 }}
             />
-            {canShow && <CommandPaletteResults results={results} />}
+            {canShow && <CommandPaletteResults results={items} />}
         </div>
     )
 }

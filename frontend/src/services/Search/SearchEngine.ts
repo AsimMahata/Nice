@@ -1,5 +1,5 @@
-import { paletteItem } from "../../components/Body/CommandPalette/CommandPaletteManager";
-import { FileInfo } from "../../Types/filesystem";
+import { paletteItem } from "../../components/Body/CommandPalette/palette.types";
+import { FileInfo } from "../../components/FileEx/FileActions";
 
 export interface ScanResult {
     files: FileInfo[];

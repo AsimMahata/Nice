@@ -1,33 +1,60 @@
+import React from "react"
 import { searchEngine } from "../../../services/Search/SearchEngine"
+import { paletteItem } from "./palette.types"
 
 export interface paletteQuery {
     query: string,
     queryProcessor?: (query: string) => Promise<paletteItem[]>
 }
 
-export interface paletteItem {
-    title: string,
-    secondaryTitle?: string,
-    icon?: string,
-    type: "File" | "Command" | "Theme" | "Settings", // it can support many things
-    payload?: unknown
-}
 
 class CommandPaletteManager {
 
-    private paletteItems: paletteItem[] = []
-    private visible: boolean = false
+    private visible: boolean = false;
+    private setCanShow: React.Dispatch<React.SetStateAction<boolean>> | null = null;
+    private setItems: React.Dispatch<React.SetStateAction<paletteItem[]>> | null = null;
+
+    register(setCanShow: React.Dispatch<React.SetStateAction<boolean>>, setItems: React.Dispatch<React.SetStateAction<paletteItem[]>>) {
+        this.setCanShow = setCanShow;
+        this.setItems = setItems;
+    }
+
     // TODO: so many todo
-    showCommandPalette() {
-        console.log('showing command Palette', this.paletteItems)
+    showCommandPalette(items: paletteItem[]) {
+        if (!this.setCanShow || !this.setItems) {
+            console.error('setItems and setCanShow not set in commandPaletteManage')
+            return;
+        }
+        this.setItems(items);
+        this.setCanShow(true)
+        this.visible = true;
+        console.log('showing command Palette', items)
+    }
+
+    clearPaletteItems() {
+        if (!this.setCanShow || !this.setItems) {
+            console.error('setItems and setCanShow not set in commandPaletteManage')
+            return;
+        }
+        this.setItems([])
     }
 
     hideCommadPalette() {
-        console.log('hiding CommandPalette')
+        if (!this.setCanShow || !this.setItems) {
+            console.error('setItems and setCanShow not set in commandPaletteManage')
+            return;
+        }
+        this.setCanShow(false)
+        this.visible = false;
     }
 
     toggleVisibility() {
-        console.log('toggleVisibility of command palette', this.visible)
+        if (!this.setCanShow || !this.setItems) {
+            console.error('setItems and setCanShow not set in commandPaletteManage')
+            return;
+        }
+        this.setCanShow(!this.visible);
+        this.visible = !this.visible
     }
 
     queryParser(query: string): paletteQuery {

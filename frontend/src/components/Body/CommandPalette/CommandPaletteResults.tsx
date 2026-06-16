@@ -1,6 +1,7 @@
 import { FileInfo, useFileActions } from "../../FileEx/FileActions";
 import "./CommandPalette.css";
-import { paletteItem } from "./CommandPaletteManager";
+import { commandPaletteManager } from "./CommandPaletteManager";
+import { paletteItem } from "./palette.types";
 
 type Props = {
     results: paletteItem[];
@@ -14,7 +15,9 @@ const CommandPaletteResults = ({ results }: Props) => {
         console.log('clicked on item', item)
         if (item.type === "File") {
             if (!item.payload) return;
-            await FileActions.handleClick(item.payload as FileInfo)
+            await FileActions.handleClick(item.payload as FileInfo);
+        } else {
+            commandPaletteManager.hideCommadPalette();
         }
     }
 
