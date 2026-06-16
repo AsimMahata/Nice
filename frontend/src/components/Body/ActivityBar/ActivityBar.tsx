@@ -15,7 +15,8 @@ import UserDetails from "../../User/UserDetails";
 import CphPanel from "../../CphPanel/CphPanel.tsx";
 
 const ActivityBar = () => {
-    const { getCurrentFileInfo } = useEditorContext();
+    // Destructure setEditorState to manage opening the Settings tab in the editor
+    const { getCurrentFileInfo, setEditorState } = useEditorContext();
     const { sidePanel, setSidePanel, currentActivity, setCurrentActivity } = useWorkspaceContext();
 
     // Horizontal resizing state
@@ -54,6 +55,34 @@ const ActivityBar = () => {
     }, []);
 
     const handleActivityClickEvent = (name: string) => {
+        if (name === "Settings") {
+            setEditorState((prev) => {
+                const isSettingsOpen = prev.openTabs.includes("nice://settings");
+                return {
+                    ...prev,
+                    openFiles: {
+                        ...prev.openFiles,
+                        "nice://settings": {
+                            content: "",
+                            isDirty: false,
+                            fileInfo: {
+                                name: "Settings",
+                                path: "nice://settings",
+                                isDirectory: false,
+                                size: 0,
+                                modifiedAt: new Date(),
+                                extension: "",
+                            }
+                        }
+                    },
+                    openTabs: isSettingsOpen ? prev.openTabs : [...prev.openTabs, "nice://settings"],
+                    activeFile: "nice://settings"
+                };
+            });
+            setSidePanel(false); // Close the side panel when settings is selected
+            return;
+        }
+
         if (!name) setSidePanel(false);
         if (currentActivity === name) {
             setSidePanel((p) => !p);
@@ -85,8 +114,6 @@ const ActivityBar = () => {
                 return <CphPanel />;
             case "User":
                 return <UserDetails />;
-            case "Settings":
-                return <div> Settings</div>;
             default:
                 return null;
         }
@@ -119,7 +146,6 @@ const ActivityBar = () => {
                     }}
                 >
                     {getCorrectActivitybar()}
-                    {/* Vertical resize handle on the right edge */}
                     <div 
                         className="sidebar-resize-handle"
                         onMouseDown={handleMouseDown}
