@@ -99,7 +99,7 @@ passport.use(new GithubStrategy(
             if (!user) {
                 user = await User.create({
                     name: profile.displayName || profile.username,
-                    email: profile.emails?.[0]?.value,
+                    email: profile.emails?.[0]?.value || `${profile.username}@github.com`,
                     username: profile.username,
                     provider: 'Github',
                     providerId: profile.id,

@@ -24,6 +24,11 @@ contextBridge.exposeInMainWorld('notify', {
     send: (title: string, body: string) => ipcRenderer.invoke('notify', title, body),
 });
 
+// auth popup window
+contextBridge.exposeInMainWorld('auth', {
+    openAuthWindow: (url: string) => ipcRenderer.invoke('auth:open-window', url)
+});
+
 // SearchEngine service 
 contextBridge.exposeInMainWorld('search', {
     scanDirectory: (path: string) => ipcRenderer.invoke('scanDirectory', path),

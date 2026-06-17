@@ -11,8 +11,9 @@ import {
 import { useEditorContext } from "../../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../../contexts/Workspace/WorkspaceProvider";
 import FileEx from "../../FileEx/FileEx";
-import UserDetails from "../../User/UserDetails";
 import CphPanel from "../../CphPanel/CphPanel.tsx";
+import { useAuth } from "../../../utils/useAuth";
+import { useNavigate } from "react-router-dom";
 
 const ActivityBar = () => {
     // Destructure setEditorState to manage opening the Settings tab in the editor
@@ -54,6 +55,9 @@ const ActivityBar = () => {
         };
     }, []);
 
+    const { user, isAuthenticated } = useAuth();
+    const navigate = useNavigate();
+
     const handleActivityClickEvent = (name: string) => {
         if (name === "Settings") {
             setEditorState((prev) => {
@@ -80,6 +84,16 @@ const ActivityBar = () => {
                 };
             });
             setSidePanel(false); // Close the side panel when settings is selected
+            return;
+        }
+
+        if (name === "User") {
+            if (isAuthenticated && user) {
+                navigate(`/user/${user._id}`);
+            } else {
+                navigate('/login');
+            }
+            setSidePanel(false);
             return;
         }
 
@@ -112,8 +126,6 @@ const ActivityBar = () => {
                 return <div> CodeAction </div>;
             case "CPH":
                 return <CphPanel />;
-            case "User":
-                return <UserDetails />;
             default:
                 return null;
         }

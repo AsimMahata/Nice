@@ -5,6 +5,9 @@ import {
   registerGithub,
   loginLocal,
   logoutUser,
+  loginWithToken,
+  startDesktopGoogleAuth,
+  startDesktopGithubAuth
 } from "../controllers/auth.controller.js";
 import { isLoggedIn } from "../middlewares/isLoggedIn.js";
 import passport from "passport";
@@ -17,8 +20,16 @@ router.route("/logout").post(isLoggedIn, logoutUser);
 
 router.post("/register", registerLocal);
 
+router.post("/login-token", loginWithToken);
+
 router.get(
   "/register/google",
+  passport.authenticate("google", { scope: ["profile", "email"] }),
+);
+
+router.get(
+  "/desktop/google",
+  startDesktopGoogleAuth,
   passport.authenticate("google", { scope: ["profile", "email"] }),
 );
 
@@ -32,6 +43,12 @@ router.get(
 
 router.get(
   "/register/github",
+  passport.authenticate("github", { scope: ["user:email"] }),
+);
+
+router.get(
+  "/desktop/github",
+  startDesktopGithubAuth,
   passport.authenticate("github", { scope: ["user:email"] }),
 );
 

@@ -142,6 +142,39 @@ app.whenReady().then(() => {
         return scanDirectory(path)
     });
 
+    // auth window
+    ipcMain.handle('auth:open-window', async (_event, providerUrl: string) => {
+        return new Promise((resolve) => {
+            const server = require('http').createServer((req: any, res: any) => {
+                const url = new URL(req.url, `http://${req.headers.host}`);
+                if (url.pathname === '/callback') {
+                    const token = url.searchParams.get('token');
+                    res.writeHead(200, { 'Content-Type': 'text/html' });
+                    res.end('<html><body><h2>Authentication successful! You can close this window now.</h2><script>window.close();</script></body></html>');
+                    server.close();
+                    if (token) {
+                        resolve({ success: true, token });
+                    } else {
+                        resolve({ success: false, error: 'auth_failed' });
+                    }
+                }
+            });
+
+            server.listen(0, '127.0.0.1', () => {
+                const port = server.address().port;
+                
+                // providerUrl is like http://localhost:3000/api/auth/desktop/google
+                const authUrl = `${providerUrl}?port=${port}`;
+                require('electron').shell.openExternal(authUrl);
+            });
+
+            server.on('error', (err: any) => {
+                console.error('Local auth server error:', err);
+                resolve({ success: false, error: err.message });
+            });
+        });
+    });
+
     // join paths 
     ipcMain.handle('join', (_event, ...args: string[]) => {
         return join(...args);

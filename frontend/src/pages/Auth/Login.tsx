@@ -43,8 +43,27 @@ const Login: React.FC = () => {
         }
     };
 
-    const handleSocialAuth = (provider: 'google' | 'github') => {
-        window.location.href = `${API_BASE_URL}/auth/register/${provider}`;
+    const handleSocialAuth = async (provider: 'google' | 'github') => {
+        // @ts-ignore
+        if (window.auth && window.auth.openAuthWindow) {
+            // @ts-ignore
+            const result = await window.auth.openAuthWindow(`${API_BASE_URL}/auth/desktop/${provider}`);
+            if (result && result.success && result.token) {
+                try {
+                    await axios.post(
+                        `${API_BASE_URL}/auth/login-token`,
+                        { token: result.token },
+                        { withCredentials: true }
+                    );
+                    await refreshAuth();
+                    navigate('/');
+                } catch (err) {
+                    console.error('Failed to exchange token:', err);
+                }
+            }
+        } else {
+            window.location.href = `${API_BASE_URL}/auth/register/${provider}`;
+        }
     };
 
     return (
