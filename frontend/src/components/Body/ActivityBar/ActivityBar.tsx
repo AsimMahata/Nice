@@ -89,7 +89,29 @@ const ActivityBar = () => {
 
         if (name === "User") {
             if (isAuthenticated && user) {
-                navigate(`/user/${user._id}`);
+                setEditorState((prev) => {
+                    const isProfileOpen = prev.openTabs.includes("nice://profile");
+                    return {
+                        ...prev,
+                        openFiles: {
+                            ...prev.openFiles,
+                            "nice://profile": {
+                                content: "",
+                                isDirty: false,
+                                fileInfo: {
+                                    name: "Profile",
+                                    path: "nice://profile",
+                                    isDirectory: false,
+                                    size: 0,
+                                    modifiedAt: new Date(),
+                                    extension: "",
+                                }
+                            }
+                        },
+                        openTabs: isProfileOpen ? prev.openTabs : [...prev.openTabs, "nice://profile"],
+                        activeFile: "nice://profile"
+                    };
+                });
             } else {
                 navigate('/login');
             }

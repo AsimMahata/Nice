@@ -3,10 +3,12 @@ import { useAuth } from "../../utils/useAuth";
 import { User, Mail, Github, Linkedin, Code2, Link as LinkIcon, Edit2, Save, X, LogOut, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 
 export default function Profile() {
     const { user, refreshAuth } = useAuth();
     const navigate = useNavigate();
+    const { setEditorState } = useEditorContext();
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -35,6 +37,14 @@ export default function Profile() {
         try {
             await axios.post(`${import.meta.env.VITE_API_URL}/auth/logout`, {}, { withCredentials: true });
             await refreshAuth();
+            setEditorState((prev) => {
+                const newOpenTabs = prev.openTabs.filter(tab => tab !== "nice://profile");
+                return {
+                    ...prev,
+                    openTabs: newOpenTabs,
+                    activeFile: newOpenTabs.length > 0 ? newOpenTabs[0] : null
+                };
+            });
             navigate("/");
         } catch (error) {
             console.error("Logout failed:", error);
@@ -60,43 +70,23 @@ export default function Profile() {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-[#1e1e1e] text-white flex items-center justify-center">
+            <div className="h-full w-full bg-[#1e1e1e] text-white flex items-center justify-center">
                 <p>Loading profile...</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#1e1e1e] text-gray-200 p-8 font-sans overflow-y-auto">
-            <div className="max-w-4xl mx-auto">
-                <div className="flex items-center justify-between mb-8">
-                    <button 
-                        onClick={() => navigate("/")}
-                        className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
-                    >
-                        <ArrowLeft size={20} />
-                        <span>Back to Editor</span>
-                    </button>
-                    <button 
-                        onClick={handleLogout}
-                        className="flex items-center space-x-2 text-red-400 hover:text-red-300 transition-colors px-4 py-2 rounded-lg hover:bg-red-400/10"
-                    >
-                        <LogOut size={18} />
-                        <span>Logout</span>
-                    </button>
-                </div>
-
-                <div className="bg-[#252526] rounded-xl shadow-2xl border border-[#333333] overflow-hidden">
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 h-32 relative">
-                        <div className="absolute -bottom-12 left-8 w-24 h-24 bg-[#1e1e1e] rounded-full flex items-center justify-center border-4 border-[#252526]">
-                            <User size={48} className="text-gray-400" />
-                        </div>
-                    </div>
-                    
-                    <div className="pt-16 pb-8 px-8">
-                        <div className="flex justify-between items-start mb-6">
+        <div className="h-full w-full bg-[#1e1e1e] text-gray-200 p-8 font-sans overflow-y-auto custom-scrollbar">
+            <div className="max-w-5xl mx-auto">
+                <div className="bg-[#1e1e1e] border-b border-[#333333] pb-8 mb-8">
+                    <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                        <div className="flex items-center gap-6">
+                            <div className="w-24 h-24 bg-[#252526] rounded-full flex items-center justify-center border border-[#333333] flex-shrink-0">
+                                <User size={48} className="text-gray-400" />
+                            </div>
                             <div>
-                                <h1 className="text-3xl font-bold text-white mb-1">{user.name || 'Anonymous User'}</h1>
+                                <h1 className="text-3xl font-bold text-white mb-2">{user.name || 'Anonymous User'}</h1>
                                 <p className="text-gray-400 flex items-center gap-2">
                                     <Mail size={16} /> {user.email}
                                     <span className="px-2 py-0.5 rounded-full bg-[#333333] text-xs ml-2 border border-[#444444]">
@@ -104,11 +94,13 @@ export default function Profile() {
                                     </span>
                                 </p>
                             </div>
-                            
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
                             <button
                                 onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                                 disabled={isLoading}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                                     isEditing 
                                         ? "bg-green-600 hover:bg-green-700 text-white" 
                                         : "bg-blue-600 hover:bg-blue-700 text-white"
@@ -116,19 +108,29 @@ export default function Profile() {
                             >
                                 {isEditing ? (
                                     <>
-                                        <Save size={18} />
+                                        <Save size={16} />
                                         {isLoading ? 'Saving...' : 'Save Profile'}
                                     </>
                                 ) : (
                                     <>
-                                        <Edit2 size={18} />
+                                        <Edit2 size={16} />
                                         Edit Profile
                                     </>
                                 )}
                             </button>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <button 
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 text-red-400 border border-[#4a2a2a] hover:bg-red-400/10 hover:border-red-900 transition-colors px-4 py-2 rounded-lg text-sm font-medium"
+                            >
+                                <LogOut size={16} />
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                             {/* Personal Info Group */}
                             <div className="space-y-4">
                                 <h3 className="text-lg font-semibold text-gray-300 border-b border-[#333333] pb-2">Personal Information</h3>
@@ -276,8 +278,6 @@ export default function Profile() {
                                 </button>
                             </div>
                         )}
-                    </div>
-                </div>
             </div>
         </div>
     );

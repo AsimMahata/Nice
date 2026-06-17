@@ -8,6 +8,7 @@ import SettingsView from "../../Settings/SettingsView"
 import { TerminalPanel } from "../../Terminal/TerminalPanel"
 import Greeter from "../../Greeter/Greeter"
 
+import Profile from "../../../pages/User/Profile"
 
 const MainBody = () => {
     const { editorState, codeLang } = useEditorContext()
@@ -57,6 +58,8 @@ const MainBody = () => {
                         <Panel id="editor-panel">
                             {editorState.activeFile === "nice://settings" ? (
                                 <SettingsView />
+                            ) : editorState.activeFile === "nice://profile" ? (
+                                <Profile />
                             ) : (
                                 <CodeEditor key={codeLang} />
                             )}
