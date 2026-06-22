@@ -13,6 +13,8 @@ export interface User {
     leetcodeLink?: string;
     githubLink?: string;
     linkedinLink?: string;
+    avatar?: string;
+    coverImage?: string;
     createdAt?: string;
 }
 

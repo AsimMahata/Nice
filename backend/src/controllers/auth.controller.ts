@@ -39,21 +39,50 @@ const registerLocal = asyncHandler(async (req: Request, res: Response) => {
 });
 
 
+import crypto from 'crypto';
+
+export const desktopAuthTokens = new Map<string, string>();
+
+const getCookie = (req: Request, name: string) => {
+    if (!req.headers.cookie) return undefined;
+    const value = `; ${req.headers.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift();
+    return undefined;
+};
+
 const registerGoogle = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) {
     return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
   }
 
+  const desktopPort = getCookie(req, 'desktopPort') || (req.session as any).desktopPort;
+  if (desktopPort) {
+      res.setHeader('Set-Cookie', `desktopPort=; Max-Age=0; Path=/`);
+      const token = crypto.randomBytes(32).toString('hex');
+      // @ts-ignore
+      desktopAuthTokens.set(token, req.user._id.toString());
+      setTimeout(() => desktopAuthTokens.delete(token), 5 * 60 * 1000);
+      return res.redirect(`http://127.0.0.1:${desktopPort}/callback?token=${token}`);
+  }
 
   return res.redirect(`${process.env.CLIENT_URL}/`);
 });
-
 
 const registerGithub = asyncHandler(async (req: Request, res: Response)=>{
   if (!req.user) {
     return res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
   }
 
+  const desktopPort = getCookie(req, 'desktopPort') || (req.session as any).desktopPort;
+  if (desktopPort) {
+      res.setHeader('Set-Cookie', `desktopPort=; Max-Age=0; Path=/`);
+      const token = crypto.randomBytes(32).toString('hex');
+      // @ts-ignore
+      desktopAuthTokens.set(token, req.user._id.toString());
+      setTimeout(() => desktopAuthTokens.delete(token), 5 * 60 * 1000);
+      return res.redirect(`http://127.0.0.1:${desktopPort}/callback?token=${token}`);
+  }
   
   return res.redirect(`${process.env.CLIENT_URL}/`);
 })
@@ -100,6 +129,42 @@ const logoutUser = asyncHandler(async (req: Request, res: Response) => {
             .status(200)
             .json(new ApiResponse(200, {}, "User logged out successfully"));
     });
+});
+
+export const loginWithToken = asyncHandler(async (req: Request, res: Response) => {
+    const { token } = req.body;
+    if (!token) throw new ApiError(400, "Token required");
+
+    const userId = desktopAuthTokens.get(token);
+    if (!userId) throw new ApiError(401, "Invalid or expired token");
+
+    const user = await User.findById(userId);
+    if (!user) throw new ApiError(404, "User not found");
+
+    desktopAuthTokens.delete(token);
+
+    req.login(user, (err) => {
+        if (err) throw new ApiError(500, "Login failed");
+        const loggedInUser = user.toObject();
+        delete loggedInUser.password;
+        return res.status(200).json(new ApiResponse(200, loggedInUser, "Logged in successfully via desktop token"));
+    });
+});
+
+export const startDesktopGoogleAuth = asyncHandler(async (req: Request, res: Response, next) => {
+    const { port } = req.query;
+    if (port) {
+        res.setHeader('Set-Cookie', `desktopPort=${port}; Max-Age=300; Path=/; HttpOnly`);
+    }
+    next();
+});
+
+export const startDesktopGithubAuth = asyncHandler(async (req: Request, res: Response, next) => {
+    const { port } = req.query;
+    if (port) {
+        res.setHeader('Set-Cookie', `desktopPort=${port}; Max-Age=300; Path=/; HttpOnly`);
+    }
+    next();
 });
 
 export { 
