@@ -39,6 +39,15 @@ function createWindow() {
         mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
     }
 
+    // Force external links to open in the default browser
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (url.startsWith('http:') || url.startsWith('https:')) {
+            require('electron').shell.openExternal(url);
+            return { action: 'deny' };
+        }
+        return { action: 'allow' };
+    });
+
 
     // dispose all ptys
     mainWindow.on('closed', () => {
@@ -162,7 +171,7 @@ app.whenReady().then(() => {
 
             server.listen(0, '127.0.0.1', () => {
                 const port = server.address().port;
-                
+
                 // providerUrl is like http://localhost:3000/api/auth/desktop/google
                 const authUrl = `${providerUrl}?port=${port}`;
                 require('electron').shell.openExternal(authUrl);

@@ -22,7 +22,8 @@ const httpServer = createServer(app);
 
 connectDatabase();
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(
     cors({
         origin: process.env.CLIENT_URL,
@@ -57,4 +58,4 @@ io.on("connection", (socket) => {
 });
 
 
-export { app, httpServer, io};
+export { app, httpServer, io };

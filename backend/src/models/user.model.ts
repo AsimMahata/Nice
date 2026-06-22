@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { NextFunction } from "express";
-import mongoose, {Schema, Document} from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IUser extends Document {
     name: string;
@@ -14,6 +14,8 @@ export interface IUser extends Document {
     leetcodeLink?: string;
     githubLink?: string;
     linkedinLink?: string;
+    avatar?: string;
+    coverImage?: string;
 
     isPasswordCorrect(password: string): Promise<boolean>;
 }
@@ -21,22 +23,22 @@ export interface IUser extends Document {
 
 const userSchema: Schema<IUser> = new Schema(
     {
-        name : {
-            type : String,
+        name: {
+            type: String,
         },
-        username : {
-            type : String,
-            unique : true,
-            lowercase : true,
-        },
-        email : {
-            type : String,
+        username: {
+            type: String,
+            unique: true,
             lowercase: true,
-            required : true,
-            unique : true,
         },
-        password : {
-            type : String,
+        email: {
+            type: String,
+            lowercase: true,
+            required: true,
+            unique: true,
+        },
+        password: {
+            type: String,
         },
         provider: {
             type: String,
@@ -44,30 +46,36 @@ const userSchema: Schema<IUser> = new Schema(
             enum: ["Local", "Google", "Github"],
             default: "Local"
         },
-        codeforcesLink : { 
-            type : String,
+        codeforcesLink: {
+            type: String,
         },
-        leetcodeLink : { 
-            type : String,
+        leetcodeLink: {
+            type: String,
         },
-        githubLink : { 
-            type : String,
+        githubLink: {
+            type: String,
         },
-        linkedinLink : { 
-            type : String,
+        linkedinLink: {
+            type: String,
         },
-        providerId : {
-            type : String,
+        providerId: {
+            type: String,
+        },
+        avatar: {
+            type: String,
+        },
+        coverImage: {
+            type: String,
         }
-    }, 
+    },
     {
-        timestamps : true,
+        timestamps: true,
     }
 );
 
 userSchema.pre("save", async function () {
     if (!this.isModified("password") || !this.password) {
-        return; 
+        return;
     }
 
     try {
