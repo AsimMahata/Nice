@@ -22,7 +22,7 @@ const CodeRunner = ({ openTerminal }: Props) => {
             console.error('not implemened save and run wait/codeRunner ---------------------')
             return
         }
-        const openedFile = editorState.openFiles[editorState.activeFile]
+        const openedFile = editorState.openedFiles[editorState.activeFile]
         const codeRunnerParams: CodeRunnerParams = {
             codeFile: openedFile.fileInfo,
             codeLang,

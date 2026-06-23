@@ -2,16 +2,9 @@ import { useState } from "react";
 import { notify } from "../../utils/notification";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
+import { FileInfo } from "../../services/FileSystem/file.options";
 
 //FIX: here i am exporting it and many modules is recieving it where as it should be taken from fileactions.options.ts
-export interface FileInfo {
-    name: string;
-    path: string;
-    isDirectory: boolean;
-    size: number;
-    modifiedAt: Date;
-    extension: string;
-}
 export function useFileActions() {
     // context
     const { setEditorState, editorState, buffersRef } = useEditorContext()
@@ -51,7 +44,7 @@ export function useFileActions() {
         }
         setLoading(true)
         try {
-            const result = await window?.fileSystem.openFolderDialog();
+            const result = await window?.fileSystem.openFolderSelector();
             console.log('frontend resutl   in file action', result)
 
         } catch (err) {
@@ -88,7 +81,7 @@ export function useFileActions() {
             }
 
             // Already open -> just switch tab
-            const alreadyOpen = editorState.openFiles[file.path];
+            const alreadyOpen = editorState.openedFiles[file.path];
 
             if (alreadyOpen) {
                 setEditorState((prev) => ({
@@ -107,8 +100,8 @@ export function useFileActions() {
             setEditorState((prev) => ({
                 ...prev,
 
-                openFiles: {
-                    ...prev.openFiles,
+                openedFiles: {
+                    ...prev.openedFiles,
 
                     [file.path]: {
                         isDirty: false,
@@ -116,9 +109,9 @@ export function useFileActions() {
                     },
                 },
 
-                openTabs: prev.openTabs.includes(file.path)
-                    ? prev.openTabs
-                    : [...prev.openTabs, file.path],
+                openedTabs: prev.openedTabs.includes(file.path)
+                    ? prev.openedTabs
+                    : [...prev.openedTabs, file.path],
 
                 activeFile: file.path,
             }));
@@ -134,7 +127,6 @@ export function useFileActions() {
      * go to the parent directory of the current directory
      * */
     async function goParentDir() {
-        notify.info('clicked', 'go to par')
         try {
             if (!currentPath) {
                 throw new Error('current path not set')
@@ -161,7 +153,7 @@ export function useFileActions() {
         }
         try {
             const location = await window.fileSystem.join(currentPath, folderName)
-            const result = await window.fileSystem.createFolder(location)
+            const result = await window.fileSystem.createDirectory(location)
             if (result == 1) {
                 notify.success('done', 'success')
             } else if (result == -1) {
@@ -214,7 +206,6 @@ export function useFileActions() {
         }
     }
     // save Files
-
     async function saveFiles(path: string, overrideContent?: string) {
         console.log('file save was requested', path)
         if (!window.fileSystem) {
@@ -227,7 +218,7 @@ export function useFileActions() {
             return false;
         }
 
-        const file = editorState.openFiles[path];
+        const file = editorState.openedFiles[path];
         const content = buffersRef.current[path];
         console.log(content, '----------------------')
         if (!file) return false;
@@ -246,6 +237,29 @@ export function useFileActions() {
         }
     }
 
+    async function saveActiveFile() {
+        const path = editorState.activeFile;
+
+        if (!path) return false;
+
+        const success = await saveFiles(path);
+
+        if (success) {
+            setEditorState(prev => ({
+                ...prev,
+                openedFiles: {
+                    ...prev.openedFiles,
+                    [path]: {
+                        ...prev.openedFiles[path],
+                        isDirty: false,
+                    },
+                },
+            }));
+        }
+
+        return success;
+    }
+
     return {
         selectProjectDirectory,
         loadFiles,
@@ -257,6 +271,7 @@ export function useFileActions() {
         setNewFile,
         newFolder,
         setNewFolder,
-        saveFiles
+        saveFiles,
+        saveActiveFile
     };
 }

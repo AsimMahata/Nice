@@ -61,11 +61,11 @@ const ActivityBar = () => {
     const handleActivityClickEvent = (name: string) => {
         if (name === "Settings") {
             setEditorState((prev) => {
-                const isSettingsOpen = prev.openTabs.includes("nice://settings");
+                const isSettingsOpen = prev.openedTabs.includes("nice://settings");
                 return {
                     ...prev,
-                    openFiles: {
-                        ...prev.openFiles,
+                    openedFiles: {
+                        ...prev.openedFiles,
                         "nice://settings": {
                             content: "",
                             isDirty: false,
@@ -79,7 +79,7 @@ const ActivityBar = () => {
                             }
                         }
                     },
-                    openTabs: isSettingsOpen ? prev.openTabs : [...prev.openTabs, "nice://settings"],
+                    openedTabs: isSettingsOpen ? prev.openedTabs : [...prev.openedTabs, "nice://settings"],
                     activeFile: "nice://settings"
                 };
             });
@@ -173,14 +173,14 @@ const ActivityBar = () => {
                 <div
                     ref={containerRef}
                     className="current-activity"
-                    style={{ 
-                        width: `${width}px`, 
+                    style={{
+                        width: `${width}px`,
                         position: "relative",
                         flexShrink: 0
                     }}
                 >
                     {getCorrectActivitybar()}
-                    <div 
+                    <div
                         className="sidebar-resize-handle"
                         onMouseDown={handleMouseDown}
                     />

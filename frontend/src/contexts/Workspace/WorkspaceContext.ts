@@ -1,5 +1,5 @@
 import React, { createContext } from "react";
-import { FileInfo } from "../../components/FileEx/FileActions";
+import { FileInfo } from "../../services/FileSystem/file.options";
 
 interface WorkspaceContextType {
     cwd: string | null,
@@ -17,6 +17,8 @@ interface WorkspaceContextType {
     setSidePanel: React.Dispatch<React.SetStateAction<boolean>>,
     currentActivity: string | null,
     setCurrentActivity: React.Dispatch<React.SetStateAction<string | null>>,
+
+    toggleRefresh: () => void,
 }
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined)
 

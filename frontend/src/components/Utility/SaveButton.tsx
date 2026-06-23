@@ -1,38 +1,46 @@
 import { useEditorContext } from "../../contexts/Editor/EditorProvider"
-import { useFileActions } from "../FileEx/FileActions";
+import { fileSystem } from "../../services/FileSystem/FileSystem";
 
 
 const SaveButton = () => {
-    const { editorState, setEditorState } = useEditorContext()
-    const getDirtyStatus = () => {
-        return editorState.activeFile
-            ? editorState.openFiles[editorState.activeFile]?.isDirty ?? false
-            : false;
-    }
-    const FileActions = useFileActions()
+    const { editorState, setEditorState, getDirtyStatus, buffersRef } = useEditorContext()
+
+
     const handleSaveFile = async () => {
         const path = editorState.activeFile;
 
-        if (!path) return;
+        if (!path) {
+            console.error('SAVEBUTTON: No activeFile currently');
+            return;
+        }
 
-        const success = await FileActions.saveFiles(path);
+        try {
+            const overrideContent = buffersRef.current[path];
 
-        if (success) {
+            await fileSystem.saveFile(path, overrideContent);
+
             setEditorState(prev => ({
                 ...prev,
-                openFiles: {
-                    ...prev.openFiles,
+                openedFiles: {
+                    ...prev.openedFiles,
                     [path]: {
-                        ...prev.openFiles[path],
+                        ...prev.openedFiles[path],
                         isDirty: false,
                     },
                 },
             }));
-            console.log('saving file was success')
+
+            console.log("SAVEFILE: Success");
+
+        } catch (err) {
+            console.error(
+                "SAVEFILE:SAVEBUTTON: Failed to save file",
+                path,
+                err
+            );
         }
-        else
-            console.error('saving file was unsuccess')
     };
+
     return (
         <button
             onClick={handleSaveFile}

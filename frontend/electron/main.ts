@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path, { join } from 'path';
-import { createNewFile, createNewFolder, FileInfo, getParentDirectory, isChildOf, openDirectory, readDirectory, readFileContent, writeFileContent } from './Modules/FileSystem/FileActions';
+import { createNewFile, createNewFolder, FileInfo, getFileInfo, getParentDirectory, isChildOf, openDirectory, readDirectory, readFileContent, writeFileContent } from './Modules/FileSystem/FileActions';
 import { showNotification } from './Modules/Notificaiton/Notification'
 import { runCode } from './Modules/CodeRunner/CodeRunner'
 import * as pty from 'node-pty'
@@ -226,6 +226,10 @@ app.whenReady().then(() => {
         return isChildOf(parent, child);
     });
 
+    // IPC readFiles
+    ipcMain.handle('get-file-info', (_event, path: string) => {
+        return getFileInfo(path);
+    })
     ipcMain.handle('save-file-dialog', async () => {
         const result = await dialog.showSaveDialog({
             filters: [{ name: 'Text Files', extensions: ['txt'] }]

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import "./FileEx.css";
-import { FileInfo, useFileActions } from "./FileActions";
 import FileItem from "./FileItem";
 import PickDir from "./PickDir";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 import { searchEngine } from "../../services/Search/SearchEngine";
+import { FileInfo } from "../../services/FileSystem/file.options";
+import { useEditorContext } from "../../contexts/Editor/EditorProvider";
+import { fileSystem } from "../../services/FileSystem/FileSystem";
 
 type props = {
     codeFile: FileInfo | null;
@@ -17,22 +19,41 @@ export type HandleClickResult = {
 
 const FileEx = ({ }: props) => {
     //useWorkspaceContext
-    const { cwd, setCurrentPath, currentPath, files, refresh } = useWorkspaceContext();
+    const { cwd, setCurrentPath, currentPath, files, setFiles, refresh, toggleRefresh } = useWorkspaceContext();
+    const { openFile } = useEditorContext();
 
-    const FileActions = useFileActions()
 
 
     const [creatingFolder, setCreatingFolder] = useState(false);
     const [creatingFile, setCreatingFile] = useState(false);
     const [insideMainDir, setInsideMainDir] = useState<boolean>(false);
+    const [newFolder, setNewFolder] = useState<string>("")
+    const [newFile, setNewFile] = useState<string>("")
 
-    const handleClick = async (file: FileInfo) => {
+    async function handleClick(file: FileInfo): Promise<void> {
+        console.log(
+            'frontend file ex ->  handle click CLICKED!!',
+            file.path
+        );
+
+        if (!currentPath) {
+            console.error('first set a working directory');
+            return;
+        }
+
         try {
-            await FileActions.handleClick(file)
+            // Directory click
+            if (file.isDirectory) {
+                setCurrentPath(file.path);
+                return;
+            }
+            await openFile(file);
         } catch (err) {
-            console.error('error occured inside fileex.tsx handleClick')
+            console.error('something error occurred', err);
+            return;
         }
     }
+
 
     // init path
     useEffect(() => {
@@ -57,6 +78,7 @@ const FileEx = ({ }: props) => {
     // reload on path / refresh
     useEffect(() => {
         console.log('files list refreshed')
+
         async function checkIfInsideMainDir() {
             if (!currentPath) {
                 console.log('please have a valid path first')
@@ -80,17 +102,47 @@ const FileEx = ({ }: props) => {
             }
         }
 
+        async function loadFiles() {
+            try {
+                // if current path is null we should exit
+                if (!currentPath) {
+                    throw new Error('you must assign a path first');
+                }
+                // fetch from Electron backend 
+                const result: FileInfo[] = await fileSystem.readDirectory(currentPath);
+                setFiles(result)
+
+            } catch (err) {
+                console.error('something went wrong', err)
+            }
+        }
+
         // when path changes or refresh is triggered load all files again and checkIfInsideMainDir
-        FileActions.loadFiles();
+
+        loadFiles();
         checkIfInsideMainDir()
 
     }, [currentPath, refresh]);
 
+    async function goToParentDir() {
+        if (!currentPath) {
+            throw new Error('FILEEX: current path not set');
+        }
+        try {
+            const parent = await fileSystem.getParentDir(currentPath)
+            console.log('parent path ', parent)
+            if (parent) setCurrentPath(parent);
+            else throw new Error('parent not found ')
+        } catch (err) {
+            console.error('inside go to parent directory some error occured', err)
+        }
+    }
 
     if (!cwd)
         return (
             <PickDir text={"Change"} />
         );
+
     return (
         <div className="file-ex-root">
 
@@ -104,7 +156,7 @@ const FileEx = ({ }: props) => {
             {/* actions */}
             <div className="file-ex-actions">
                 {insideMainDir && <button>Main</button>}
-                {!insideMainDir && <button onClick={FileActions.goParentDir}>↩</button>}
+                {!insideMainDir && <button onClick={goToParentDir}>↩</button>}
                 <button onClick={() => setCreatingFolder(true)}>+📁</button>
                 <button onClick={() => setCreatingFile(true)}>+📄</button>
                 <PickDir text="change" />
@@ -115,17 +167,18 @@ const FileEx = ({ }: props) => {
                 <input
                     autoFocus
                     className="folder-input"
-                    value={FileActions.newFolder}
+                    value={newFolder}
                     placeholder="New folder"
-                    onChange={(e) => FileActions.setNewFolder(e.target.value)}
-                    onKeyDown={(e) => {
+                    onChange={(e) => setNewFolder(e.target.value)}
+                    onKeyDown={async (e) => {
                         if (e.key === "Enter") {
-                            FileActions.createNewFolder(FileActions.newFolder);
-                            FileActions.setNewFolder("");
+                            await fileSystem.createDirectory(currentPath, newFolder);
+                            setNewFolder("");
                             setCreatingFolder(false);
+                            toggleRefresh();
                         }
                         if (e.key === "Escape") {
-                            FileActions.setNewFolder("");
+                            setNewFolder("");
                             setCreatingFolder(false);
                         }
                     }}
@@ -138,17 +191,18 @@ const FileEx = ({ }: props) => {
                 <input
                     autoFocus
                     className="file-input"
-                    value={FileActions.newFile}
+                    value={newFile}
                     placeholder="New file"
-                    onChange={(e) => FileActions.setNewFile(e.target.value)}
-                    onKeyDown={(e) => {
+                    onChange={(e) => setNewFile(e.target.value)}
+                    onKeyDown={async (e) => {
                         if (e.key === "Enter") {
-                            FileActions.createNewFiles(FileActions.newFile);
-                            FileActions.setNewFile("");
+                            await fileSystem.createNewFile(currentPath, newFile);
+                            setNewFile("");
                             setCreatingFile(false);
+                            toggleRefresh();
                         }
                         if (e.key === "Escape") {
-                            FileActions.setNewFile("");
+                            setNewFile("");
                             setCreatingFile(false);
                         }
                     }}

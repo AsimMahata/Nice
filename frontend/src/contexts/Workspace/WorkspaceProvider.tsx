@@ -1,6 +1,6 @@
 import { ReactNode, useContext, useState } from "react"
 import WorkspaceContext from "./WorkspaceContext";
-import { FileInfo } from "../../components/FileEx/FileActions";
+import { FileInfo } from "../../services/FileSystem/file.options";
 
 
 const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
@@ -11,6 +11,11 @@ const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     const [isTerminalOpen, setIsTerminalOpen] = useState<boolean>(false); // this tells if terminal is available or active
     const [sidePanel, setSidePanel] = useState<boolean>(false);
     const [currentActivity, setCurrentActivity] = useState<string | null>("FileEx");
+
+    function toggleRefresh() {
+        setRefresh(p => !p);
+    }
+
     return (
         <WorkspaceContext.Provider value={{
             cwd,
@@ -26,7 +31,8 @@ const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
             sidePanel,
             setSidePanel,
             currentActivity,
-            setCurrentActivity
+            setCurrentActivity,
+            toggleRefresh
         }}>
             {children}
         </WorkspaceContext.Provider>

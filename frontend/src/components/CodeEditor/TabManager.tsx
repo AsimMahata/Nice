@@ -1,8 +1,8 @@
 import { X } from "lucide-react";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
-import { useFileActions } from "../FileEx/FileActions";
 import { notify } from "../../utils/notification";
+import { fileSystem } from "../../services/FileSystem/FileSystem";
 
 interface TabProps {
     path: string;
@@ -34,7 +34,6 @@ const Tab = ({ path, name, active, onClose, onClick }: TabProps) => (
 const TabManager = () => {
     const { editorState, setEditorState, buffersRef } = useEditorContext();
     const { settings } = useSettingsContext();
-    const FileActions = useFileActions();
 
     const changeActiveFile = (path: string) => {
         setEditorState((prev) => {
@@ -47,10 +46,21 @@ const TabManager = () => {
     };
 
     const closeTab = async (path: string) => {
-        const closedFile = editorState.openFiles[path];
+        const closedFile = editorState.openedFiles[path];
         if (closedFile?.isDirty) {
             if (settings.files.autoSave === "afterDelay") {
-                await FileActions.saveFiles(path, buffersRef.current[path]);
+                try {
+                    await fileSystem.saveFile(
+                        path,
+                        buffersRef.current[path]
+                    );
+                } catch (err) {
+                    console.error(
+                        "AUTOSAVE: Failed to save file",
+                        path,
+                        err
+                    );
+                }
             } else {
                 console.error('file is not saved are your sure you want to close');
                 notify.error('File Not Saved!', 'You closed a file with unsaved changes.');
@@ -58,10 +68,10 @@ const TabManager = () => {
         }
 
         setEditorState((prev) => {
-            const newOpenFiles = { ...prev.openFiles };
+            const newOpenFiles = { ...prev.openedFiles };
             delete newOpenFiles[path];
 
-            const newOpenTabs = prev.openTabs.filter(
+            const newOpenTabs = prev.openedTabs.filter(
                 (tab) => tab !== path
             );
 
@@ -76,8 +86,8 @@ const TabManager = () => {
             console.log('new tab is ..........', newActiveFile)
             return {
                 ...prev,
-                openFiles: newOpenFiles,
-                openTabs: newOpenTabs,
+                openedFiles: newOpenFiles,
+                openedTabs: newOpenTabs,
                 activeFile: newActiveFile,
             };
         });
@@ -85,8 +95,8 @@ const TabManager = () => {
 
     return (
         <div className="tab-bar">
-            {editorState.openTabs.map((path) => {
-                const file = editorState.openFiles[path];
+            {editorState.openedTabs.map((path) => {
+                const file = editorState.openedFiles[path];
 
                 if (!file) return null;
 

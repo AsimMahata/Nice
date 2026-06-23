@@ -1,6 +1,8 @@
 import { useEffect } from "react";
-import { useFileActions } from "../components/FileEx/FileActions";
 import { useWorkspaceContext } from "../contexts/Workspace/WorkspaceProvider";
+import { fileSystem } from "../services/FileSystem/FileSystem";
+import { FileInfo } from "../services/FileSystem/file.options";
+import { useEditorContext } from "../contexts/Editor/EditorProvider";
 
 declare global {
     interface Window {
@@ -20,9 +22,8 @@ declare global {
 }
 
 export function useCphProblemListener() {
-    const FileActions = useFileActions();
     const { currentPath, setCurrentActivity, setSidePanel } = useWorkspaceContext();
-
+    const { openFile } = useEditorContext();
     useEffect(() => {
         if (!window.cph) return;
 
@@ -32,18 +33,26 @@ export function useCphProblemListener() {
                 .replace(/_+/g, "_")       // Collapses consecutive '_' into one
                 .replace(/^_|_$/g, "");    // Removes leading/trailing underscores
 
+            if (!currentPath) {
+                throw new Error('Please Be inside A folder First To use CPH');
+            }
             const filename = `${formattedName}.cpp`;
             try {
-                const fileInfo = await FileActions.createNewFiles(filename);
+                const path = await fileSystem.join(currentPath, filename);
+
+                await fileSystem.createNewFile(currentPath, filename);
+
+                const fileInfo: FileInfo = await fileSystem.getFileInfo(path);
+
                 if (fileInfo) {
-                    await FileActions.handleClick(fileInfo);
-                    
-                    if (currentPath && window.fileSystem) {
-                        const cphFolder = await window.fileSystem.join(currentPath, ".cph");
-                        await window.fileSystem.createFolder(cphFolder);
-                        
+
+                    await openFile(fileInfo);
+
+                    if (currentPath) {
+                        await fileSystem.createDirectory(currentPath, ".cph");
+                        const cphFolder = await fileSystem.join(currentPath, ".cph");
                         // Create test case JSON structure
-                        const cphJsonPath = await window.fileSystem.join(cphFolder, `${filename}.json`);
+                        const cphJsonPath = await fileSystem.join(cphFolder, `${filename}.json`);
                         const cphData = {
                             name: data.name,
                             timeLimit: data.timeLimit || 2000,
@@ -53,8 +62,8 @@ export function useCphProblemListener() {
                                 expectedOutput: test.output
                             }))
                         };
-                        
-                        await window.fileSystem.writeFileContent(cphJsonPath, JSON.stringify(cphData, null, 2));
+
+                        await fileSystem.writeFile(cphJsonPath, JSON.stringify(cphData, null, 2));
                     }
                 }
 
@@ -73,5 +82,5 @@ export function useCphProblemListener() {
         return () => {
             unsubscribe();
         };
-    }, [FileActions, currentPath, setCurrentActivity, setSidePanel]);
+    }, [currentPath, setCurrentActivity, setSidePanel]);
 }

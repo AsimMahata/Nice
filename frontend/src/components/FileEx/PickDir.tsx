@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider"
+import { fileSystem } from "../../services/FileSystem/FileSystem"
 
 
 type Props = {
@@ -16,6 +17,7 @@ const PickDir = ({ text: name }: Props) => {
 
 
     const [_loading, setLoading] = useState(false)
+
     async function selectProjectDirectory() {
         if (!window.fileSystem) {
             console.log('Electron fileSystem API not available. Are you running in Electron?');
@@ -23,7 +25,7 @@ const PickDir = ({ text: name }: Props) => {
         }
         setLoading(true)
         try {
-            const result = await window.fileSystem.openFolderDialog();
+            const result = await fileSystem.openFolderSelector();
             const gotDirectory = result?.filePaths[0] || result?.folderPath || ""
             if (!gotDirectory) {
                 throw new Error('could not find a main directory')
@@ -36,6 +38,7 @@ const PickDir = ({ text: name }: Props) => {
             setLoading(false)
         }
     }
+
     return (
         <div className='dir-picker'>
             {!cwd &&

@@ -1,4 +1,4 @@
-import { FileInfo } from "../FileEx/FileActions";
+import { FileInfo } from "../../services/FileSystem/file.options";
 import { CodeRunnerParams } from "./code.options";
 
 

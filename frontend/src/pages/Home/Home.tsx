@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
-import "./Home.css"; 
+import "./Home.css";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 import ActivityBar from "../../components/Body/ActivityBar/ActivityBar";
 import MainBody from "../../components/Body/MainBody/MainBody";
 import Header from "../../components/Body/Header/Header";
 import { useCphProblemListener } from "../../utils/useCphProblemListener";
-
+import { useKeyboardEventListener } from "../../core/Keybindings/keyboardEventListerner";
 
 function Home() {
 
@@ -19,7 +19,7 @@ function Home() {
     }, []);
 
     useCphProblemListener();
-
+    useKeyboardEventListener();
     return (
         <div className="ide-container">
             <Header />

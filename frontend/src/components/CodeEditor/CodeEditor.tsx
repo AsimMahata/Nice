@@ -11,7 +11,7 @@ import { createMessageConnection } from "vscode-jsonrpc/browser";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
-import { useFileActions } from "../FileEx/FileActions";
+import { fileSystem } from "../../services/FileSystem/FileSystem";
 
 const DEBUG = true;
 const log = (...args: any[]) => {
@@ -25,7 +25,6 @@ export default function CodeEditor() {
     const { cwd } = useWorkspaceContext()
     const [editorContent, setEditorContent] = useState<string>("");
     const { settings } = useSettingsContext()
-    const FileActions = useFileActions()
 
     const editorRef = useRef<any>(null);
     const snippetsRef = useRef<any>({});
@@ -109,13 +108,13 @@ export default function CodeEditor() {
 
         buffersRef.current[path] = value ?? "";
 
-        if (!editorState.openFiles[path].isDirty) {
+        if (!editorState.openedFiles[path].isDirty) {
             setEditorState(prev => ({
                 ...prev,
-                openFiles: {
-                    ...prev.openFiles,
+                openedFiles: {
+                    ...prev.openedFiles,
                     [path]: {
-                        ...prev.openFiles[path],
+                        ...prev.openedFiles[path],
                         isDirty: true,
                     },
                 },
@@ -128,14 +127,14 @@ export default function CodeEditor() {
                 clearTimeout(autoSaveTimeoutRef.current);
             }
             autoSaveTimeoutRef.current = setTimeout(async () => {
-                const success = await FileActions.saveFiles(path, value);
+                const success = await fileSystem.saveFile(path, value);
                 if (success) {
                     setEditorState(prev => ({
                         ...prev,
-                        openFiles: {
-                            ...prev.openFiles,
+                        openedFiles: {
+                            ...prev.openedFiles,
                             [path]: {
-                                ...prev.openFiles[path],
+                                ...prev.openedFiles[path],
                                 isDirty: false,
                             },
                         },
@@ -305,31 +304,31 @@ export default function CodeEditor() {
             });
             disposables.current.push(snippetProvider);
 
-            const diagDisposable = conn.onNotification(
-                "textDocument/publishDiagnostics",
-                (p: any) => {
-
-                    const markers = p.diagnostics.map((d: any) => ({
-                        startLineNumber: d.range.start.line + 1,
-                        startColumn: d.range.start.character + 1,
-                        endLineNumber: d.range.end.line + 1,
-                        endColumn: d.range.end.character + 1,
-                        message: d.message,
-                        severity:
-                            d.severity === 1
-                                ? monaco.MarkerSeverity.Error
-                                : d.severity === 2
-                                    ? monaco.MarkerSeverity.Warning
-                                    : monaco.MarkerSeverity.Info,
-                    }));
-
-                    monaco.editor.setModelMarkers(
-                        editor.getModel(),
-                        codeLang,
-                        markers
-                    );
-                }
-            );
+            // const diagDisposable = conn.onNotification(
+            //     "textDocument/publishDiagnostics",
+            //     (p: any) => {
+            //
+            //         const markers = p.diagnostics.map((d: any) => ({
+            //             startLineNumber: d.range.start.line + 1,
+            //             startColumn: d.range.start.character + 1,
+            //             endLineNumber: d.range.end.line + 1,
+            //             endColumn: d.range.end.character + 1,
+            //             message: d.message,
+            //             severity:
+            //                 d.severity === 1
+            //                     ? monaco.MarkerSeverity.Error
+            //                     : d.severity === 2
+            //                         ? monaco.MarkerSeverity.Warning
+            //                         : monaco.MarkerSeverity.Info,
+            //         }));
+            //
+            //         monaco.editor.setModelMarkers(
+            //             editor.getModel(),
+            //             codeLang,
+            //             markers
+            //         );
+            //     }
+            // );
         };
     };
 

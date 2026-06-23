@@ -1,6 +1,4 @@
 
-//NOTE: FileInfo
-
 export interface FileInfo {
     name: string;
     path: string;
@@ -9,4 +7,3 @@ export interface FileInfo {
     modifiedAt: Date;
     extension: string;
 }
-export { }

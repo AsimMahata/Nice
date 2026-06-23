@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { TerminalOptions } from './types/terminal.types'
-import { FileInfo } from './Modules/FileSystem/FileActions';
+import { FileInfo, getFileInfo } from './Modules/FileSystem/FileActions';
 // Expose APIs to renderer process if needed
 contextBridge.exposeInMainWorld('electron', {
     // Add your electron APIs here
@@ -41,7 +41,7 @@ contextBridge.exposeInMainWorld('cph', {
             callback(data);
         };
         ipcRenderer.on('cph:problem', listener);
-        
+
         // Return an unsubscribe/cleanup function
         return () => {
             ipcRenderer.removeListener('cph:problem', listener);
@@ -65,16 +65,19 @@ contextBridge.exposeInMainWorld('runner', {
 
 // File system APIs for directory reading
 contextBridge.exposeInMainWorld('fileSystem', {
-    readDirectory: (path: string) => ipcRenderer.invoke('read-directory', path),
-    openFolderDialog: () => ipcRenderer.invoke('open-folder-dialog'),
+    // general
+    join: (...args: string[]) => ipcRenderer.invoke('join', ...args),
+    isChildOf: (parent: string, child: string) => ipcRenderer.invoke('is-child-of', parent, child),
+    openFolderSelector: () => ipcRenderer.invoke('open-folder-dialog'),
+    getParDir: (path: string) => ipcRenderer.invoke('get-par-dir', path),
+    // file
+    createFile: (path: string) => ipcRenderer.invoke('create-file', path),
     readFile: (path: string) => ipcRenderer.invoke('read-file', path),
     writeFileContent: (path: string, content: string) => ipcRenderer.invoke('write-file-content', path, content),
-    getParDir: (path: string) => ipcRenderer.invoke('get-par-dir', path),
-    join: (...args: string[]) => ipcRenderer.invoke('join', ...args),
-    createFolder: (path: string) => ipcRenderer.invoke('create-folder', path),
-    createFile: (path: string) => ipcRenderer.invoke('create-file', path),
-    isChildOf: (parent: string, child: string) =>
-        ipcRenderer.invoke('is-child-of', parent, child),
+    getFileInfo: (path: string) => ipcRenderer.invoke('get-file-info', path),
+    // directory
+    createDirectory: (path: string) => ipcRenderer.invoke('create-folder', path),
+    readDirectory: (path: string) => ipcRenderer.invoke('read-directory', path),
 });
 
 

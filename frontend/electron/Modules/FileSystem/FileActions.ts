@@ -144,3 +144,15 @@ export async function writeFileContent(
         return false;
     }
 }
+export async function getFileInfo(filePath: string): Promise<FileInfo> {
+    const stats = await fs.stat(filePath);
+    const name = path.basename(filePath);
+    return {
+        name,
+        path: filePath,
+        isDirectory: stats.isDirectory(),
+        size: stats.size,
+        modifiedAt: stats.mtime,
+        extension: path.extname(name).toLowerCase(),
+    }
+}

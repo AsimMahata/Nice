@@ -1,4 +1,4 @@
-import { FileInfo } from "../FileEx/FileActions";
+import { FileInfo } from "../../services/FileSystem/file.options";
 
 export interface CodeRunnerParams {
     codeFile: FileInfo,

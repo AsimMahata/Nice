@@ -1,4 +1,4 @@
-import { FileInfo } from "./FileActions";
+import { FileInfo } from "../../services/FileSystem/file.options";
 
 type Props = {
     handleClick: (value: FileInfo) => void;

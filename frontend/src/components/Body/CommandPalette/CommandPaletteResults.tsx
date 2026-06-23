@@ -1,4 +1,5 @@
-import { FileInfo, useFileActions } from "../../FileEx/FileActions";
+import { useEditorContext } from "../../../contexts/Editor/EditorProvider";
+import { FileInfo } from "../../../services/FileSystem/file.options";
 import "./CommandPalette.css";
 import { commandPaletteManager } from "./CommandPaletteManager";
 import { paletteItem } from "./palette.types";
@@ -9,13 +10,13 @@ type Props = {
 
 //TODO: after the file is clicked the query should disspear fix it 
 const CommandPaletteResults = ({ results }: Props) => {
-    const FileActions = useFileActions()
+    const { openFile } = useEditorContext();
 
     const handleClick = async (item: paletteItem) => {
         console.log('clicked on item', item)
         if (item.type === "File") {
             if (!item.payload) return;
-            await FileActions.handleClick(item.payload as FileInfo);
+            await openFile(item.payload as FileInfo);
         } else {
             commandPaletteManager.hideCommadPalette();
         }
