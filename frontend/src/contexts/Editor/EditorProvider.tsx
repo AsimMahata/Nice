@@ -81,8 +81,8 @@ const EditorProvider = ({ children }: { children: ReactNode }) => {
         }));
     }
 
+    //BUG:: There is some bug with dirty status of the file
     async function saveActiveFile() {
-        if (!getDirtyStatus()) return true;
         const path = editorStateRef.current.activeFile;
         if (!path) return false;
 
