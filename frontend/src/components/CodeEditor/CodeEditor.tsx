@@ -1,5 +1,5 @@
 import Editor from "@monaco-editor/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import {
     WebSocketMessageReader,
@@ -23,7 +23,6 @@ export default function CodeEditor() {
     console.log("CodeEditor");
     const { codeLang, setEditorState, editorState, buffersRef } = useEditorContext()
     const { cwd } = useWorkspaceContext()
-    const [editorContent, setEditorContent] = useState<string>("");
     const { settings } = useSettingsContext()
 
     const editorRef = useRef<any>(null);
@@ -87,8 +86,10 @@ export default function CodeEditor() {
     }, []);
 
     useEffect(() => {
+        if (!editorRef.current) return;
+
         const code = editorState.activeFile ? buffersRef.current[editorState.activeFile] ?? "" : "";
-        setEditorContent(code);
+        editorRef.current.setValue(code);
     }, [editorState.activeFile]);
     const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -102,7 +103,6 @@ export default function CodeEditor() {
         if (value === undefined) return;
 
         const path = editorState.activeFile;
-        setEditorContent(value ?? "");
 
         if (!path) return;
 
@@ -146,6 +146,9 @@ export default function CodeEditor() {
 
     const handleMount = (editor: any, monaco: any) => {
         editorRef.current = editor;
+
+        const initialCode = editorState.activeFile ? buffersRef.current[editorState.activeFile] ?? "" : "";
+        editorRef.current.setValue(initialCode);
 
         // Initial sync of model options
         const model = editor.getModel();
@@ -337,7 +340,7 @@ export default function CodeEditor() {
             height="100%"
             language={codeLang || "PlainText"}
             theme={settings.appearance.theme}
-            value={editorContent}
+            defaultValue=""
             options={{
                 fontFamily: settings.editor.fontFamily,
                 fontWeight: settings.editor.fontWeight,
