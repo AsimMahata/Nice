@@ -1,4 +1,5 @@
 import { FileInfo } from "./file.options";
+import { logger } from "../Logger/Logger";
 //TODO: After calling them refresh if you want to refresh
 export class FileSystem {
 
@@ -120,7 +121,7 @@ export class FileSystem {
     exists() { }
 
     async saveFile(path: string, overrideContent: string): Promise<boolean> {
-        console.log('file save was requested', path)
+        logger.info("FileSystem", "File save requested", path);
         if (!window.fileSystem) {
             throw new Error('SAVEFILE: Electron fileSystem API not available.Are you running in Electron ? ');
         }

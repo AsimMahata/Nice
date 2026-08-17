@@ -1,5 +1,6 @@
 import { FileInfo } from "../../services/FileSystem/file.options";
 import { CodeRunnerParams } from "./code.options";
+import { logger } from "../../services/Logger/Logger";
 
 declare global {
     interface Window {
@@ -17,18 +18,18 @@ class CodeManager {
     onBackendResult: ((result: any) => void) | null = null;
 
     constructor() {
-        console.log("CodeManager constructor called");
+        logger.info("CodeManager", "CodeManager constructor initialized");
     }
 
     async runCode({ codeFile, codeLang, cwd }: CodeRunnerParams) {
-        console.log('----------called run code for ', codeFile, codeLang, cwd);
+        logger.info("CodeManager", "Run code invoked for", codeFile, codeLang, cwd);
 
         if (!window.runner) {
-            console.error('window.runner is not defined')
+            logger.error("CodeManager", "window.runner is not defined");
             return;
         }
         if (!cwd) {
-            console.error('please open a Directory first to run code');
+            logger.error("CodeManager", "Please open a Directory first to run code");
             return;
         }
 
@@ -36,11 +37,11 @@ class CodeManager {
             const response = await window.runner.runCode(codeFile);
 
             if (response?.usedBackend && response?.result) {
-                console.log('[CodeManager] Backend fallback result received:', response.result);
+                logger.info("CodeManager", "Backend fallback result received:", response.result);
                 this.onBackendResult?.(response.result);
             }
         } catch (err) {
-            console.error('[CodeManager] Error running code:', err);
+            logger.error("CodeManager", "Error running code:", err);
             throw err;
         }
     }

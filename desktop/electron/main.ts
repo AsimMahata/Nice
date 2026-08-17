@@ -10,6 +10,7 @@ import { setupCPHServer } from './Modules/CPH/cph';
 import { settingsManager } from './Modules/Settings/SettingsManager';
 import { snippetManager } from './Modules/Snippets/SnippetManager';
 import { executionService } from './Modules/Execution/ExecutionService';
+import { logger } from './Modules/Logger/Logger';
 let mainWindow: BrowserWindow | null = null;
 
 import { scanDirectory } from "./Modules/SearchEngine/SearchEngine"
@@ -81,10 +82,28 @@ function createPty(options: TerminalOptions) {
 }
 
 app.whenReady().then(() => {
+    logger.info('Main', 'Nice Desktop application starting up...');
     createWindow();
-    setupLSPWebSocket()
+    setupLSPWebSocket();
 
     setupCPHServer(() => mainWindow);
+
+    // Logger IPC handlers
+    ipcMain.handle('logger:log', (_event, { level, scope, message, details }: any) => {
+        logger.log(level || 'info', scope || 'Renderer', message || '', ...(details || []));
+    });
+
+    ipcMain.handle('logger:get-log-dir', () => {
+        return logger.getLogDir();
+    });
+
+    ipcMain.handle('logger:get-log-path', (_event, backupIndex?: number) => {
+        return logger.getLogFilePath(backupIndex);
+    });
+
+    ipcMain.handle('logger:read-logs', (_event, backupIndex?: number) => {
+        return logger.readLogs(backupIndex);
+    });
 
     ipcMain.handle('runner:run', async (_event, codeFile: FileInfo) => {
         const fs = await import('fs');

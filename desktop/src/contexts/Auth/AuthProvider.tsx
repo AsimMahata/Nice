@@ -1,5 +1,6 @@
 import { useState, useEffect, ReactNode } from "react";
 import { AuthContext } from "./AuthContext";
+import { logger } from "../../services/Logger/Logger";
 // import { useNavigate } from "react-router-dom";
 
 
@@ -31,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             });
 
             const result = await response.json();
-            console.log(result);
+            logger.info("AuthProvider", "CheckAuth response received", result);
 
             if (response.ok && result.success && result.data) {
                 setUser(result.data);
@@ -39,12 +40,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(null);
             }
         } catch (error) {
-            console.error("Auth check failed", error);
+            logger.error("AuthProvider", "Auth check failed", error);
             setUser(null);
-
-            // if (window.location.pathname.startsWith('/dashboard')) {
-            //   navigate('/login');
-            // }
         } finally {
             setLoading(false);
         }

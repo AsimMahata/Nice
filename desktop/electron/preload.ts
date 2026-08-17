@@ -8,6 +8,20 @@ contextBridge.exposeInMainWorld('electron', {
     // openFile: () => ipcRenderer.invoke('dialog:openFile'),
 });
 
+contextBridge.exposeInMainWorld('logger', {
+    info: (scope: string, message: string, ...details: any[]) =>
+        ipcRenderer.invoke('logger:log', { level: 'info', scope, message, details }),
+    warn: (scope: string, message: string, ...details: any[]) =>
+        ipcRenderer.invoke('logger:log', { level: 'warn', scope, message, details }),
+    error: (scope: string, message: string, ...details: any[]) =>
+        ipcRenderer.invoke('logger:log', { level: 'error', scope, message, details }),
+    debug: (scope: string, message: string, ...details: any[]) =>
+        ipcRenderer.invoke('logger:log', { level: 'debug', scope, message, details }),
+    getLogDir: () => ipcRenderer.invoke('logger:get-log-dir'),
+    getLogPath: (backupIndex?: number) => ipcRenderer.invoke('logger:get-log-path', backupIndex),
+    readLogs: (backupIndex?: number) => ipcRenderer.invoke('logger:read-logs', backupIndex),
+});
+
 contextBridge.exposeInMainWorld('settings', {
     getSettings: () => ipcRenderer.invoke('get-settings'),
     saveSettings: (settings: any) => ipcRenderer.invoke('save-settings', settings),

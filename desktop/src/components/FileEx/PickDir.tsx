@@ -1,21 +1,15 @@
 import { useState } from "react"
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider"
 import { fileSystem } from "../../services/FileSystem/FileSystem"
-
+import { FolderOpen } from "lucide-react"
 
 type Props = {
-    text: string
+    text?: string;
+    className?: string;
 }
 
-
-const PickDir = ({ text: name }: Props) => {
-    //useWorkspaceContext
+const PickDir = ({ text = "Open Folder", className }: Props) => {
     const { cwd, setCwd } = useWorkspaceContext()
-
-    // console.log('cwd', cwd)
-
-
-
     const [_loading, setLoading] = useState(false)
 
     async function selectProjectDirectory() {
@@ -28,10 +22,9 @@ const PickDir = ({ text: name }: Props) => {
             const result = await fileSystem.openFolderSelector();
             const gotDirectory = result?.filePaths[0] || result?.folderPath || ""
             if (!gotDirectory) {
-                throw new Error('could not find a main directory')
+                return;
             }
             setCwd(gotDirectory)
-            console.log('frontend main dir set result', result, gotDirectory)
         } catch (err) {
             console.log('some error occured when try to open directory', err)
         } finally {
@@ -39,26 +32,20 @@ const PickDir = ({ text: name }: Props) => {
         }
     }
 
-    return (
-        <div className='dir-picker'>
-            {!cwd &&
-                <button
-                    className='open-dir-button'
-                    onClick={selectProjectDirectory}
-                >
-                    Open A Folder {cwd}
-                </button>
-            }
-            {cwd &&
-                <button
-                    className='change-dir-button nav-link'
-                    onClick={selectProjectDirectory}
-                >
-                    {name}
-                </button>
-            }
-        </div>
+    const buttonLabel = cwd ? (text === "Open Folder" ? "Change Folder" : text) : "Open Folder";
 
+    return (
+        <div className={className || 'dir-picker'}>
+            <button
+                className="nav-link open-dir-button flex items-center gap-1.5"
+                onClick={selectProjectDirectory}
+                title="Open or Change Working Directory"
+                style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            >
+                <FolderOpen size={14} />
+                <span>{buttonLabel}</span>
+            </button>
+        </div>
     )
 }
 

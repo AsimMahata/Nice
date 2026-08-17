@@ -1,6 +1,7 @@
 import { dialog } from 'electron';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { logger } from '../Logger/Logger';
 
 export interface FileInfo {
     name: string;
@@ -20,12 +21,12 @@ export async function saveExistingFile(filePath: string) {
         return 1;
     } catch (err: any) {
         if (err?.code === "EEXIST") return 0;
-        console.error("something wrong happened while making new file", err);
+        logger.error("FileActions", "Something wrong happened while making existing file", err);
         return -1;
     }
 }
 
-// create a new file (actually folder — keeping your intent)
+// create a new file
 //  1 -> success
 //  0 -> already exists
 // -1 -> unsuccessful
@@ -35,7 +36,7 @@ export async function createNewFile(filePath: string) {
         return 1;
     } catch (err: any) {
         if (err?.code === "EEXIST") return 0;
-        console.error("something wrong happened while making new file", err);
+        logger.error("FileActions", "Something wrong happened while making new file", err);
         return -1;
     }
 }
@@ -61,7 +62,7 @@ export async function createNewFolder(folderName: string) {
         return 1;
     } catch (err: any) {
         if (err?.code === "EEXIST") return 0;
-        console.error('something wrong happened while making new folder', err);
+        logger.error("FileActions", "Something wrong happened while making new folder", err);
         return -1;
     }
 }
@@ -84,7 +85,7 @@ export async function openDirectory() {
         });
         return result;
     } catch (err) {
-        console.error('err opening folder selector');
+        logger.error("FileActions", "Error opening folder selector", err);
         throw err;
     }
 }
@@ -93,7 +94,7 @@ export async function openDirectory() {
 export async function readDirectory(directoryPath: string): Promise<FileInfo[]> {
     const results: FileInfo[] = [];
 
-    console.log('in backend path readDirectory function got this path ', directoryPath)
+    logger.debug("FileActions", `Reading directory: ${directoryPath}`);
     try {
         const items = await fs.readdir(directoryPath);
         for (const item of items) {
@@ -111,11 +112,11 @@ export async function readDirectory(directoryPath: string): Promise<FileInfo[]> 
                     extension: path.extname(item).toLowerCase(),
                 });
             } catch {
-                console.warn(`Could not read: ${fullPath}`);
+                logger.warn("FileActions", `Could not read stats for: ${fullPath}`);
             }
         }
     } catch (error) {
-        console.error('Error reading directory:', error);
+        logger.error("FileActions", "Error reading directory:", error);
         throw error;
     }
 
@@ -127,7 +128,7 @@ export async function readFileContent(filePath: string): Promise<string> {
     try {
         return await fs.readFile(filePath, 'utf-8');
     } catch (error) {
-        console.error('Error reading file:', error);
+        logger.error("FileActions", "Error reading file:", error);
         throw error;
     }
 }
@@ -140,7 +141,7 @@ export async function writeFileContent(
         await fs.writeFile(filePath, content, 'utf8');
         return true;
     } catch (error) {
-        console.error('Error writing file:', error);
+        logger.error("FileActions", "Error writing file:", error);
         return false;
     }
 }

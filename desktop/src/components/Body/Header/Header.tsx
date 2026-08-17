@@ -5,6 +5,7 @@ import { useWorkspaceContext } from "../../../contexts/Workspace/WorkspaceProvid
 import SaveButton from "../../Utility/SaveButton";
 import CodeRunner from "../../CodeRunner/CodeRunner";
 import CommandPalette from "../CommandPalette/CommandPalette";
+import PickDir from "../../FileEx/PickDir";
 
 const Header = () => {
     console.log('rendered Header');
@@ -52,6 +53,7 @@ const Header = () => {
                         <SquareTerminal size={14} />
                         <span>Terminal</span>
                     </button>
+                    <PickDir />
                     {codeLang && codeLang !== "PlainText" && (
                         <span className="currentProgrammingLang">{codeLang}</span>
                     )}

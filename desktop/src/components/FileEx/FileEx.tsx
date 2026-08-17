@@ -19,7 +19,7 @@ export type HandleClickResult = {
 };
 
 const FileEx = ({ }: props) => {
-    const { cwd, setCurrentPath, currentPath, files, setFiles, refresh, toggleRefresh } = useWorkspaceContext();
+    const { cwd, setCwd, setCurrentPath, currentPath, files, setFiles, refresh, toggleRefresh } = useWorkspaceContext();
     const { openFile } = useEditorContext();
 
     const [creatingFolder, setCreatingFolder] = useState(false);
@@ -27,6 +27,19 @@ const FileEx = ({ }: props) => {
     const [insideMainDir, setInsideMainDir] = useState<boolean>(false);
     const [newFolder, setNewFolder] = useState<string>("");
     const [newFile, setNewFile] = useState<string>("");
+
+    async function selectProjectDirectory() {
+        if (!window.fileSystem) return;
+        try {
+            const result = await fileSystem.openFolderSelector();
+            const gotDirectory = result?.filePaths[0] || result?.folderPath || "";
+            if (gotDirectory) {
+                setCwd(gotDirectory);
+            }
+        } catch (err) {
+            console.error("Error opening directory", err);
+        }
+    }
 
     async function handleClick(file: FileInfo): Promise<void> {
         console.log('frontend file ex -> handle click CLICKED!!', file.path);
@@ -149,6 +162,13 @@ const FileEx = ({ }: props) => {
                         title="New Folder"
                     >
                         <FolderPlus size={14} />
+                    </button>
+                    <button
+                        className="file-ex-action-btn"
+                        onClick={selectProjectDirectory}
+                        title="Open / Change Folder"
+                    >
+                        <FolderOpen size={14} />
                     </button>
                     <button
                         className="file-ex-action-btn"

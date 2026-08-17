@@ -10,9 +10,10 @@ import CodeforcesStats from './pages/Codeforces/CodeforcesStats';
 import WorkspaceProvider from './contexts/Workspace/WorkspaceProvider';
 import EditorProvider from './contexts/Editor/EditorProvider';
 import CommandProvider from './contexts/Commands/CommandProvider';
+import { logger } from './services/Logger/Logger';
 
 function App() {
-    console.log('render app')
+    logger.info('App', 'Rendering App component');
     return (
         <WorkspaceProvider>
             <EditorProvider>

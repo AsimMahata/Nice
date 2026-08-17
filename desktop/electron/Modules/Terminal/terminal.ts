@@ -1,5 +1,6 @@
 import * as pty from 'node-pty'
 import { ShellType, TerminalOptions } from '../../types/terminal.types';
+import { logger } from '../Logger/Logger';
 
 
 class PtyManager {
@@ -19,9 +20,10 @@ class PtyManager {
                 process.platform === "win32"
                     ? "powershell"
                     : "bash";
+            logger.info('PtyManager', `Spawned terminal shell: ${this.shellType}`);
             return;
         } catch (err) {
-            console.error('error while creating terminal ??', err)
+            logger.error('PtyManager', 'Error while creating terminal', err);
             this.destroy()
         }
     }
@@ -32,7 +34,7 @@ class PtyManager {
 
     async write(data: string) {
         if (!this.pty) return;
-        console.log('data-in-backend-pty:', data)
+        logger.debug('PtyManager', 'Terminal write data:', data);
         this.pty?.write(data);
     }
 
@@ -46,7 +48,7 @@ class PtyManager {
     destroy() {
         if (!this.pty) return;
         this.pending = []
-        console.log('pty in backend destroyed')
+        logger.info('PtyManager', 'PTY terminal destroyed');
         this.pty.kill();
         this.pty = null;
     }
