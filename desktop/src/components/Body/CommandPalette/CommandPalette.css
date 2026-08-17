@@ -76,7 +76,8 @@
   border-bottom: none;
 }
 
-.command-palette-result-item:hover {
+.command-palette-result-item:hover,
+.command-palette-result-item.selected {
   background: var(--bg-hover);
 }
 

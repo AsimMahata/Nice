@@ -15,7 +15,7 @@ export function useKeyboardEventListener() {
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && keyLower === "p") {
                 e.preventDefault();
                 e.stopPropagation();
-                commandPaletteManager.openCommandMode();
+                commandPaletteManager.toggleCommandMode();
                 return;
             }
 

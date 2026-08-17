@@ -8,8 +8,14 @@ const CommandPalette = () => {
     console.log('Command Palette rendered');
     const [items, setItems] = useState<paletteItem[]>([]);
     const [canShow, setCanShow] = useState<boolean>(false);
+    const [placeholder, setPlaceholder] = useState<string>("Search files or commands...");
+    const [selectedIndex, setSelectedIndex] = useState<number>(0);
     const timeoutRef = useRef<number | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        setSelectedIndex(0);
+    }, [items]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const query = e.target.value;
@@ -22,6 +28,34 @@ const CommandPalette = () => {
             const queryItems = await commandPaletteManager.processQuery(query);
             setItems(queryItems);
         }, 75);
+    };
+
+    const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setSelectedIndex((prev) => (items.length > 0 ? (prev + 1) % items.length : 0));
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setSelectedIndex((prev) => (items.length > 0 ? (prev - 1 + items.length) % items.length : 0));
+        } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (items.length > 0) {
+                const item = items[selectedIndex] || items[0];
+                if (item) {
+                    commandPaletteManager.hideCommadPalette();
+                    try {
+                        if (item.onSelect) {
+                            await item.onSelect();
+                        }
+                    } catch (err) {
+                        console.error("Error executing item onSelect:", err);
+                    }
+                }
+            }
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            commandPaletteManager.hideCommadPalette();
+        }
     };
 
     useEffect(() => {
@@ -49,7 +83,14 @@ const CommandPalette = () => {
                 if (inputRef.current) {
                     inputRef.current.value = val;
                 }
-                void commandPaletteManager.processQuery(val).then((newItems) => setItems(newItems));
+                if (val === "") {
+                    setItems([]);
+                } else {
+                    void commandPaletteManager.processQuery(val).then((newItems) => setItems(newItems));
+                }
+            },
+            (ph: string) => {
+                setPlaceholder(ph);
             }
         );
     }, []);
@@ -63,8 +104,9 @@ const CommandPalette = () => {
             <input
                 ref={inputRef}
                 className="command-palette-input"
-                placeholder="Search files or commands..."
+                placeholder={placeholder}
                 onChange={handleChange}
+                onKeyDown={handleKeyDown}
                 onFocus={async () => {
                     setCanShow(true);
                     const val = inputRef.current?.value || "";
@@ -74,11 +116,11 @@ const CommandPalette = () => {
                     }
                 }}
                 onBlur={() => {
-                    setTimeout(() => setCanShow(false), 250);
+                    commandPaletteManager.hideCommadPalette();
                 }}
             />
             <span className="command-palette-shortcut">⌘P</span>
-            {canShow && <CommandPaletteResults results={items} />}
+            {canShow && <CommandPaletteResults results={items} selectedIndex={selectedIndex} />}
         </div>
     );
 };

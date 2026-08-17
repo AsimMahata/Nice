@@ -71,19 +71,31 @@ class CommandPaletteManager {
     private focusInputCallback: (() => void) | null = null;
     private blurInputCallback: (() => void) | null = null;
     private setInputValueCallback: ((val: string) => void) | null = null;
+    private setPlaceholderCallback: ((val: string) => void) | null = null;
+    private customOptions: paletteItem[] | null = null;
 
     register(
         setCanShow: React.Dispatch<React.SetStateAction<boolean>>,
         setItems: React.Dispatch<React.SetStateAction<paletteItem[]>>,
         focusInput?: () => void,
         blurInput?: () => void,
-        setInputValue?: (val: string) => void
+        setInputValue?: (val: string) => void,
+        setPlaceholder?: (val: string) => void
     ) {
         this.setCanShow = setCanShow;
         this.setItems = setItems;
         if (focusInput) this.focusInputCallback = focusInput;
         if (blurInput) this.blurInputCallback = blurInput;
         if (setInputValue) this.setInputValueCallback = setInputValue;
+        if (setPlaceholder) this.setPlaceholderCallback = setPlaceholder;
+    }
+
+    async showCustomOptions(options: paletteItem[], placeholder: string = "Select option...") {
+        this.customOptions = options;
+        await this.openCommandPalette("");
+        if (this.setPlaceholderCallback) {
+            this.setPlaceholderCallback(placeholder);
+        }
     }
 
     async toggleCommandPalette() {
@@ -114,8 +126,19 @@ class CommandPaletteManager {
         }
     }
 
+    async toggleCommandMode() {
+        if (this.visible) {
+            this.hideCommadPalette();
+            if (this.blurInputCallback) {
+                this.blurInputCallback();
+            }
+        } else {
+            await this.openCommandPalette(">");
+        }
+    }
+
     async openCommandMode() {
-        await this.openCommandPalette(">");
+        await this.toggleCommandMode();
     }
 
     clearPaletteItems() {
@@ -126,10 +149,21 @@ class CommandPaletteManager {
     }
 
     hideCommadPalette() {
+        this.visible = false;
         if (this.setCanShow) {
             this.setCanShow(false);
         }
-        this.visible = false;
+        if (this.blurInputCallback) {
+            this.blurInputCallback();
+        }
+        if (this.setInputValueCallback) {
+            this.setInputValueCallback("");
+        }
+        if (this.setPlaceholderCallback) {
+            this.setPlaceholderCallback("Search files or commands...");
+        }
+        this.customOptions = null;
+        this.clearPaletteItems();
     }
 
     toggleVisibility() {
@@ -137,6 +171,22 @@ class CommandPaletteManager {
     }
 
     queryParser(query: string): paletteQuery {
+        if (this.customOptions) {
+            const opts = this.customOptions;
+            return {
+                query: query,
+                queryProcessor: async (q) => {
+                    const filterTerm = q.trim().toLowerCase();
+                    if (!filterTerm) return opts;
+                    return opts.filter(
+                        (item) =>
+                            item.title.toLowerCase().includes(filterTerm) ||
+                            (item.secondaryTitle && item.secondaryTitle.toLowerCase().includes(filterTerm))
+                    );
+                },
+            };
+        }
+
         if (query.startsWith(">")) {
             return {
                 query: query,

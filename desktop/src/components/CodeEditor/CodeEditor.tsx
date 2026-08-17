@@ -161,7 +161,7 @@ export default function CodeEditor() {
 
         // Bind Ctrl+K, Ctrl+P, and Ctrl+Shift+P inside Monaco editor to toggle Command Palette / Command Mode
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {
-            commandPaletteManager.openCommandMode();
+            commandPaletteManager.toggleCommandMode();
         });
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
             commandPaletteManager.toggleCommandPalette();

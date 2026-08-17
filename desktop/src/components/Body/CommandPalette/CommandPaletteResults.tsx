@@ -9,31 +9,38 @@ import { paletteItem } from "./palette.types";
 
 type Props = {
     results: paletteItem[];
+    selectedIndex?: number;
 };
 
-const CommandPaletteResults = ({ results }: Props) => {
+const CommandPaletteResults = ({ results, selectedIndex = 0 }: Props) => {
     const { openFile, saveActiveFile } = useEditorContext();
     const { updateAppearanceSettings } = useSettingsContext();
     const { setIsTerminalOpen } = useWorkspaceContext();
 
     const handleClick = async (item: paletteItem) => {
         console.log('clicked on item', item);
-        if (item.type === "File") {
-            if (item.payload) {
-                await openFile(item.payload as FileInfo);
-            }
-        } else if (item.type === "Theme") {
-            if (item.payload) {
-                updateAppearanceSettings({ theme: item.payload as string });
-            }
-        } else if (item.type === "Command") {
-            if (item.payload === "terminal.toggle") {
-                setIsTerminalOpen((prev) => !prev);
-            } else if (item.payload === "file.save") {
-                await saveActiveFile();
-            }
-        }
         commandPaletteManager.hideCommadPalette();
+        try {
+            if (item.onSelect) {
+                await item.onSelect();
+            } else if (item.type === "File") {
+                if (item.payload) {
+                    await openFile(item.payload as FileInfo);
+                }
+            } else if (item.type === "Theme") {
+                if (item.payload) {
+                    updateAppearanceSettings({ theme: item.payload as string });
+                }
+            } else if (item.type === "Command") {
+                if (item.payload === "terminal.toggle") {
+                    setIsTerminalOpen((prev) => !prev);
+                } else if (item.payload === "file.save") {
+                    await saveActiveFile();
+                }
+            }
+        } catch (err) {
+            console.error("Error executing command palette action:", err);
+        }
     };
 
     return (
@@ -46,10 +53,13 @@ const CommandPaletteResults = ({ results }: Props) => {
                 results.map((item, index) => (
                     <div
                         key={`${item.title}-${index}`}
-                        className="command-palette-result-item"
-                        onClick={() => handleClick(item)}
+                        className={`command-palette-result-item ${index === selectedIndex ? "selected" : ""}`}
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleClick(item);
+                        }}
                     >
-                        {item.type === "File" ? (
+                        {item.type === "File" || item.type === "Language" ? (
                             <FileCode2 size={16} style={{ color: "var(--accent-light)", flexShrink: 0 }} />
                         ) : item.type === "Theme" ? (
                             <Palette size={16} style={{ color: "var(--accent-light)", flexShrink: 0 }} />
