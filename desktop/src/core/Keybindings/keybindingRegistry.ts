@@ -2,18 +2,22 @@
 
 export function getKeysFromEvent(e: KeyboardEvent) {
     const keys: string[] = [];
-    if (e.ctrlKey) {
+    if (e.ctrlKey || e.metaKey) {
         keys.push("Control");
     }
     if (e.shiftKey) {
-        keys.push("Shift")
+        keys.push("Shift");
     }
     if (e.altKey) {
-        keys.push("ALt")
+        keys.push("Alt");
     }
-    if (!keys.includes(e.key)) keys.push(e.key);
+    const key = e.key.toLowerCase();
+    if (!["control", "shift", "alt", "meta"].includes(key)) {
+        keys.push(key);
+    }
     return keys;
 }
+
 export const keybindingRegistry: Record<string, string> = {
     // File
     "Control+n": "file.new",
@@ -38,6 +42,8 @@ export const keybindingRegistry: Record<string, string> = {
     "Control+Shift+Tab": "tab.previous",
 
     // Command Palette
+    "Control+k": "commandPalette.open",
+    "Control+p": "commandPalette.open",
     "Control+Shift+p": "commandPalette.open",
 
     // Explorer

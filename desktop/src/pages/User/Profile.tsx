@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuth";
-import { User, Mail, Github, Linkedin, Code2, Edit2, Save, LogOut, Globe, ExternalLink, AtSign, Fingerprint } from "lucide-react";
+import { User, Mail, Github, Linkedin, Code2, Edit2, LogOut, Globe, ExternalLink, AtSign, Fingerprint } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
@@ -42,10 +42,10 @@ export default function Profile() {
             await axios.post(`${import.meta.env.VITE_API_URL}/auth/logout`, {}, { withCredentials: true });
             await refreshAuth();
             setEditorState((prev) => {
-                const newOpenTabs = prev.openTabs.filter(tab => tab !== "nice://profile");
+                const newOpenTabs = prev.openedTabs.filter((tab: string) => tab !== "nice://profile");
                 return {
                     ...prev,
-                    openTabs: newOpenTabs,
+                    openedTabs: newOpenTabs,
                     activeFile: newOpenTabs.length > 0 ? newOpenTabs[0] : null
                 };
             });

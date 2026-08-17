@@ -39,9 +39,7 @@ export const terminalTheme = {
 // terminal.constants.ts
 
 export const terminalFontFamily =
-    '"Cascadia Code","AnonymicePro Nerd Font","Fira Code",Consolas,"Courier New",monospace'
-
-
+    ' "JetBrainsMono Nerd Font", "JetBrains Mono Nerd Font", "JetBrainsMonoNF", "CaskaydiaCove Nerd Font", "CascadiaCode Nerd Font", "Cascadia Code", "FiraCode Nerd Font", "Fira Code Nerd Font", "Fira Code", "AnonymicePro Nerd Font", "Anonymice Pro Nerd Font", "Hack Nerd Font", "MesloLGS NF", "MesloLGS Nerd Font", "SauceCodePro Nerd Font", "UbuntuMono Nerd Font", "Inconsolata Nerd Font", "Symbols Nerd Font", Consolas, "Courier New", monospace';
 
 export const xtermOptions: ITerminalOptions = {
     theme: terminalTheme,
@@ -52,5 +50,6 @@ export const xtermOptions: ITerminalOptions = {
     cursorBlink: true,
     cursorStyle: 'block',
     scrollback: 10000,
-    allowProposedApi: true
-}
+    allowProposedApi: true,
+    drawBoldTextInBrightColors: true
+};

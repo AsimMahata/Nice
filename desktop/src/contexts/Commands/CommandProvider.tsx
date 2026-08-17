@@ -3,6 +3,8 @@ import CommandContext from "./CommandContext";
 import { CommandManager } from "./CommandManager";
 import { useEditorContext } from "../Editor/EditorProvider";
 
+import { commandPaletteManager } from "../../components/Body/CommandPalette/CommandPaletteManager";
+
 function todo(command: string) {
     return async () => {
         console.error(`TODO: ${command}`);
@@ -16,6 +18,14 @@ const CommandProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const commandManager = commandManagerRef.current;
+
+        commandManager.register({
+            id: "commandPalette.open",
+            execute: async () => {
+                await commandPaletteManager.toggleCommandPalette();
+                return true;
+            },
+        });
 
         commandManager.register({
             id: "file.new",
@@ -97,10 +107,7 @@ const CommandProvider = ({ children }: { children: ReactNode }) => {
             execute: todo("tab.previous"),
         });
 
-        commandManager.register({
-            id: "commandPalette.open",
-            execute: todo("commandPalette.open"),
-        });
+
 
         commandManager.register({
             id: "explorer.toggle",

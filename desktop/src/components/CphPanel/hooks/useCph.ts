@@ -70,7 +70,7 @@ export function useCph() {
             const activeFileName = activeFile.split(/[/\\]/).pop() || '';
             const cphFolder = await window.fileSystem.join(parentDir, ".cph");
 
-            await window.fileSystem.createFolder(cphFolder);
+            await window.fileSystem.createDirectory(cphFolder);
             const cphJsonPath = await window.fileSystem.join(cphFolder, `${activeFileName}.json`);
 
             const data = {

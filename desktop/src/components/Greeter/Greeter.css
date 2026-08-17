@@ -1,24 +1,120 @@
-.Greeter-main-component {
-    height: 100%;
-    width: 100%;
-
-    display: flex;
-    align-items: center;
-
-    text-align: center;
-    white-space: pre-line;
-
-    font-size: 1.1rem;
-    color: #9aa0a6;
-    background: #0f1115;
-
-    user-select: none;
-    display: flex;
-    flex-direction: column;
+.greeter-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, var(--bg-surface) 0%, var(--bg-app) 100%);
+  color: var(--text-primary);
+  padding: 40px 20px;
+  overflow-y: auto;
 }
 
-.Greeter-Header {
-    font-size: 25px;
-    margin: 20px;
-    color: teal;
+.greeter-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  max-width: 540px;
+  margin-bottom: 36px;
 }
+
+.greeter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--accent-light);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.greeter-title {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.highlight-letter {
+  color: #facc15;
+  -webkit-text-fill-color: #facc15;
+  font-weight: 900;
+  font-size: 1.12em;
+  display: inline-block;
+  text-shadow: 0 0 16px rgba(250, 204, 21, 0.8), 0 0 30px rgba(250, 204, 21, 0.4);
+}
+
+.greeter-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.greeter-grid {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 440px;
+}
+
+.greeter-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.greeter-card:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.greeter-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent-light);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.greeter-card-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.greeter-shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--bg-app);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+.greeter-footer-note {
+  margin-top: 28px;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+  opacity: 0.75;
+}
+

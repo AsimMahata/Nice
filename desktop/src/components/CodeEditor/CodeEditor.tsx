@@ -12,6 +12,7 @@ import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
 import { fileSystem } from "../../services/FileSystem/FileSystem";
+import { commandPaletteManager } from "../Body/CommandPalette/CommandPaletteManager";
 
 const DEBUG = true;
 const log = (...args: any[]) => {
@@ -149,6 +150,14 @@ export default function CodeEditor() {
 
         const initialCode = editorState.activeFile ? buffersRef.current[editorState.activeFile] ?? "" : "";
         editorRef.current.setValue(initialCode);
+
+        // Bind Ctrl+K and Ctrl+P inside Monaco editor to toggle Command Palette
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
+            commandPaletteManager.toggleCommandPalette();
+        });
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyP, () => {
+            commandPaletteManager.toggleCommandPalette();
+        });
 
         // Initial sync of model options
         const model = editor.getModel();

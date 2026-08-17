@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { FolderPlus, FilePlus, CornerUpLeft, Home, RefreshCw, FolderOpen } from "lucide-react";
 import "./FileEx.css";
 import FileItem from "./FileItem";
 import PickDir from "./PickDir";
@@ -18,23 +19,17 @@ export type HandleClickResult = {
 };
 
 const FileEx = ({ }: props) => {
-    //useWorkspaceContext
     const { cwd, setCurrentPath, currentPath, files, setFiles, refresh, toggleRefresh } = useWorkspaceContext();
     const { openFile } = useEditorContext();
-
-
 
     const [creatingFolder, setCreatingFolder] = useState(false);
     const [creatingFile, setCreatingFile] = useState(false);
     const [insideMainDir, setInsideMainDir] = useState<boolean>(false);
-    const [newFolder, setNewFolder] = useState<string>("")
-    const [newFile, setNewFile] = useState<string>("")
+    const [newFolder, setNewFolder] = useState<string>("");
+    const [newFile, setNewFile] = useState<string>("");
 
     async function handleClick(file: FileInfo): Promise<void> {
-        console.log(
-            'frontend file ex ->  handle click CLICKED!!',
-            file.path
-        );
+        console.log('frontend file ex -> handle click CLICKED!!', file.path);
 
         if (!currentPath) {
             console.error('first set a working directory');
@@ -42,7 +37,6 @@ const FileEx = ({ }: props) => {
         }
 
         try {
-            // Directory click
             if (file.isDirectory) {
                 setCurrentPath(file.path);
                 return;
@@ -54,17 +48,13 @@ const FileEx = ({ }: props) => {
         }
     }
 
-
-    // init path
     useEffect(() => {
         async function init() {
             if (!cwd) {
-                console.error('please set a working directory first')
+                console.error('please set a working directory first');
                 return;
             }
             const dir = cwd;
-            //setCwd(dir)
-            console.log('cwd is selcted so change the currentpath to main dir', cwd)
             setCurrentPath(dir);
             setInsideMainDir(true);
         }
@@ -75,100 +65,113 @@ const FileEx = ({ }: props) => {
         }
     }, [cwd]);
 
-    // reload on path / refresh
     useEffect(() => {
-        console.log('files list refreshed')
-
         async function checkIfInsideMainDir() {
-            if (!currentPath) {
-                console.log('please have a valid path first')
-                return;
-            }
-            if (!cwd) {
-                console.error('first define a project directory first 404', cwd)
-                return;
-            }
-            if (!window.fileSystem) {
-                console.error('file system is not defined or laoded')
-                return;
-            }
+            if (!currentPath || !cwd || !window.fileSystem) return;
             try {
                 const result = await window.fileSystem.isChildOf(cwd, currentPath);
                 if (result.isExactMatch) {
-                    setInsideMainDir(true)
-                } else setInsideMainDir(false)
+                    setInsideMainDir(true);
+                } else setInsideMainDir(false);
             } catch (err) {
-                console.error('while calling isChildOf inside fileex component some error occured ', err)
+                console.error('while calling isChildOf inside fileex component some error occured ', err);
             }
         }
 
         async function loadFiles() {
             try {
-                // if current path is null we should exit
-                if (!currentPath) {
-                    throw new Error('you must assign a path first');
-                }
-                // fetch from Electron backend 
+                if (!currentPath) return;
                 const result: FileInfo[] = await fileSystem.readDirectory(currentPath);
-                setFiles(result)
-
+                setFiles(result);
             } catch (err) {
-                console.error('something went wrong', err)
+                console.error('something went wrong loading files', err);
             }
         }
 
-        // when path changes or refresh is triggered load all files again and checkIfInsideMainDir
-
         loadFiles();
-        checkIfInsideMainDir()
-
+        checkIfInsideMainDir();
     }, [currentPath, refresh]);
 
     async function goToParentDir() {
-        if (!currentPath) {
-            throw new Error('FILEEX: current path not set');
-        }
+        if (!currentPath) return;
         try {
-            const parent = await fileSystem.getParentDir(currentPath)
-            console.log('parent path ', parent)
+            const parent = await fileSystem.getParentDir(currentPath);
             if (parent) setCurrentPath(parent);
-            else throw new Error('parent not found ')
         } catch (err) {
-            console.error('inside go to parent directory some error occured', err)
+            console.error('inside go to parent directory some error occured', err);
         }
     }
 
-    if (!cwd)
+    if (!cwd) {
         return (
-            <PickDir text={"Change"} />
+            <div className="dir-picker-placeholder">
+                <FolderOpen size={40} style={{ color: "var(--accent-light)" }} />
+                <p>No Folder Opened</p>
+                <PickDir text="Open Folder" />
+            </div>
         );
+    }
 
     return (
         <div className="file-ex-root">
-
-            {/* header */}
+            {/* Header */}
             <div className="file-ex-header">
-                <span className="path" title={currentPath || "NotAllowed"}>
-                    {currentPath}
-                </span>
+                <span className="file-ex-title">Explorer</span>
+                <div className="file-ex-actions">
+                    {!insideMainDir && (
+                        <button
+                            className="file-ex-action-btn"
+                            onClick={() => cwd && setCurrentPath(cwd)}
+                            title="Go to Project Root"
+                        >
+                            <Home size={14} />
+                        </button>
+                    )}
+                    {!insideMainDir && (
+                        <button
+                            className="file-ex-action-btn"
+                            onClick={goToParentDir}
+                            title="Go Up"
+                        >
+                            <CornerUpLeft size={14} />
+                        </button>
+                    )}
+                    <button
+                        className="file-ex-action-btn"
+                        onClick={() => setCreatingFile(true)}
+                        title="New File"
+                    >
+                        <FilePlus size={14} />
+                    </button>
+                    <button
+                        className="file-ex-action-btn"
+                        onClick={() => setCreatingFolder(true)}
+                        title="New Folder"
+                    >
+                        <FolderPlus size={14} />
+                    </button>
+                    <button
+                        className="file-ex-action-btn"
+                        onClick={toggleRefresh}
+                        title="Refresh Explorer"
+                    >
+                        <RefreshCw size={13} />
+                    </button>
+                </div>
             </div>
 
-            {/* actions */}
-            <div className="file-ex-actions">
-                {insideMainDir && <button>Main</button>}
-                {!insideMainDir && <button onClick={goToParentDir}>↩</button>}
-                <button onClick={() => setCreatingFolder(true)}>+📁</button>
-                <button onClick={() => setCreatingFile(true)}>+📄</button>
-                <PickDir text="change" />
+            {/* Path Breadcrumb */}
+            <div className="path-breadcrumb" title={currentPath || ""}>
+                {currentPath}
             </div>
 
-            {/* create folder */}
+            {/* Create Folder Input */}
             {creatingFolder && (
                 <input
                     autoFocus
                     className="folder-input"
                     value={newFolder}
-                    placeholder="New folder"
+                    placeholder="New folder name..."
                     onChange={(e) => setNewFolder(e.target.value)}
                     onKeyDown={async (e) => {
                         if (e.key === "Enter") {
@@ -186,13 +189,13 @@ const FileEx = ({ }: props) => {
                 />
             )}
 
-            {/* create file */}
+            {/* Create File Input */}
             {creatingFile && (
                 <input
                     autoFocus
                     className="file-input"
                     value={newFile}
-                    placeholder="New file"
+                    placeholder="New file name..."
                     onChange={(e) => setNewFile(e.target.value)}
                     onKeyDown={async (e) => {
                         if (e.key === "Enter") {
@@ -210,17 +213,17 @@ const FileEx = ({ }: props) => {
                 />
             )}
 
-            {/* file list */}
+            {/* File List */}
             <div className="filelist">
                 {files.map((file: FileInfo) => (
                     file && <FileItem
-                        key={file.name}
+                        key={file.path || file.name}
                         file={file}
                         handleClick={() => handleClick(file)}
                     />
                 ))}
             </div>
-        </div >
+        </div>
     );
 };
 

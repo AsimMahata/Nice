@@ -1,3 +1,4 @@
+import { FileCode2, Terminal } from "lucide-react";
 import { useEditorContext } from "../../../contexts/Editor/EditorProvider";
 import { FileInfo } from "../../../services/FileSystem/file.options";
 import "./CommandPalette.css";
@@ -8,25 +9,23 @@ type Props = {
     results: paletteItem[];
 };
 
-//TODO: after the file is clicked the query should disspear fix it 
 const CommandPaletteResults = ({ results }: Props) => {
     const { openFile } = useEditorContext();
 
     const handleClick = async (item: paletteItem) => {
-        console.log('clicked on item', item)
+        console.log('clicked on item', item);
         if (item.type === "File") {
             if (!item.payload) return;
             await openFile(item.payload as FileInfo);
-        } else {
-            commandPaletteManager.hideCommadPalette();
         }
-    }
+        commandPaletteManager.hideCommadPalette();
+    };
 
     return (
         <div className="command-palette-results-container">
             {results.length === 0 ? (
                 <div className="command-palette-results-empty">
-                    No matching results
+                    No matching files or commands found
                 </div>
             ) : (
                 results.map((item, index) => (
@@ -35,21 +34,25 @@ const CommandPaletteResults = ({ results }: Props) => {
                         className="command-palette-result-item"
                         onClick={() => handleClick(item)}
                     >
-                        <div className="command-palette-result-name" >
-                            {item.title}
-                        </div>
-
-                        {
-                            item.secondaryTitle && (
+                        {item.type === "File" ? (
+                            <FileCode2 size={16} style={{ color: "var(--accent-light)", flexShrink: 0 }} />
+                        ) : (
+                            <Terminal size={16} style={{ color: "var(--status-info)", flexShrink: 0 }} />
+                        )}
+                        <div className="command-palette-result-info">
+                            <div className="command-palette-result-name">
+                                {item.title}
+                            </div>
+                            {item.secondaryTitle && (
                                 <div className="command-palette-result-path">
                                     {item.secondaryTitle}
                                 </div>
-                            )
-                        }
+                            )}
+                        </div>
                     </div>
                 ))
             )}
-        </div >
+        </div>
     );
 };
 

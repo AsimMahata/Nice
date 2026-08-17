@@ -13,22 +13,44 @@ class CommandPaletteManager {
     private visible: boolean = false;
     private setCanShow: React.Dispatch<React.SetStateAction<boolean>> | null = null;
     private setItems: React.Dispatch<React.SetStateAction<paletteItem[]>> | null = null;
+    private focusInputCallback: (() => void) | null = null;
+    private blurInputCallback: (() => void) | null = null;
 
-    register(setCanShow: React.Dispatch<React.SetStateAction<boolean>>, setItems: React.Dispatch<React.SetStateAction<paletteItem[]>>) {
+    register(
+        setCanShow: React.Dispatch<React.SetStateAction<boolean>>,
+        setItems: React.Dispatch<React.SetStateAction<paletteItem[]>>,
+        focusInput?: () => void,
+        blurInput?: () => void
+    ) {
         this.setCanShow = setCanShow;
         this.setItems = setItems;
+        if (focusInput) this.focusInputCallback = focusInput;
+        if (blurInput) this.blurInputCallback = blurInput;
     }
 
-    // TODO: so many todo
-    showCommandPalette(items: paletteItem[]) {
-        if (!this.setCanShow || !this.setItems) {
-            console.error('setItems and setCanShow not set in commandPaletteManage')
-            return;
+    async toggleCommandPalette() {
+        if (this.visible) {
+            this.hideCommadPalette();
+            if (this.blurInputCallback) {
+                this.blurInputCallback();
+            }
+        } else {
+            await this.openCommandPalette();
         }
-        this.setItems(items);
-        this.setCanShow(true)
-        this.visible = true;
-        console.log('showing command Palette', items)
+    }
+
+    async openCommandPalette() {
+        if (this.setCanShow) {
+            this.setCanShow(true);
+            this.visible = true;
+        }
+        if (this.setItems) {
+            const items = await this.processQuery("");
+            this.setItems(items);
+        }
+        if (this.focusInputCallback) {
+            this.focusInputCallback();
+        }
     }
 
     clearPaletteItems() {
@@ -40,21 +62,14 @@ class CommandPaletteManager {
     }
 
     hideCommadPalette() {
-        if (!this.setCanShow || !this.setItems) {
-            console.error('setItems and setCanShow not set in commandPaletteManage')
-            return;
+        if (this.setCanShow) {
+            this.setCanShow(false);
         }
-        this.setCanShow(false)
         this.visible = false;
     }
 
     toggleVisibility() {
-        if (!this.setCanShow || !this.setItems) {
-            console.error('setItems and setCanShow not set in commandPaletteManage')
-            return;
-        }
-        this.setCanShow(!this.visible);
-        this.visible = !this.visible
+        this.toggleCommandPalette();
     }
 
     queryParser(query: string): paletteQuery {

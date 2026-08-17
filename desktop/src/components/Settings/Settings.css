@@ -1,131 +1,146 @@
 .settings-container {
-    display: flex;
-    height: 100%;
-    width: 100%;
-    background-color: var(--bg-color, #1e1e1e);
-    color: var(--text-color, #d4d4d4);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden;
+  display: flex;
+  height: 100%;
+  width: 100%;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  overflow: hidden;
 }
 
 .settings-sidebar {
-    width: 250px;
-    background-color: var(--sidebar-bg, #252526);
-    border-right: 1px solid var(--border-color, #333);
-    padding: 20px 0;
-    flex-shrink: 0;
+  width: 220px;
+  background-color: var(--bg-app);
+  border-right: 1px solid var(--border-subtle);
+  padding: 16px 0;
+  flex-shrink: 0;
 }
 
 .settings-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    margin: 0 0 20px 20px;
-    color: var(--title-color, #fff);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0 0 16px 16px;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
 .settings-nav {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0 8px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .settings-nav li {
-    padding: 10px 20px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+  font-size: 12.5px;
+  color: var(--text-secondary);
 }
 
 .settings-nav li:hover {
-    background-color: var(--hover-bg, #2a2d2e);
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
 }
 
 .settings-nav li.active {
-    background-color: var(--active-bg, #37373d);
-    color: var(--active-color, #fff);
-    border-left: 3px solid var(--accent-color, #007acc);
+  background-color: var(--bg-surface);
+  color: var(--accent-light);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
 }
 
 .settings-content {
-    flex-grow: 1;
-    padding: 30px 40px;
-    overflow-y: auto;
+  flex-grow: 1;
+  padding: 24px 36px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .settings-section h3 {
-    font-size: 1.5rem;
-    font-weight: 400;
-    margin-bottom: 30px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color, #333);
-    color: var(--title-color, #fff);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
 }
 
 .setting-item {
-    margin-bottom: 25px;
-    display: flex;
-    flex-direction: column;
-    max-width: 400px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  max-width: 440px;
 }
 
 .setting-item.checkbox {
-    flex-direction: row;
-    align-items: center;
+  flex-direction: row;
+  align-items: center;
 }
 
 .setting-item label {
-    font-size: 0.9rem;
-    margin-bottom: 8px;
-    color: var(--label-color, #cccccc);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
 }
 
 .setting-item.checkbox label {
-    margin-bottom: 0;
-    margin-left: 10px;
-    cursor: pointer;
+  margin-bottom: 0;
+  margin-left: 10px;
+  cursor: pointer;
 }
 
 .setting-item input[type="number"],
 .setting-item select {
-    background-color: var(--input-bg, #3c3c3c);
-    color: var(--input-text, #cccccc);
-    border: 1px solid var(--border-color, #3c3c3c);
-    padding: 6px 10px;
-    border-radius: 3px;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.2s;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  outline: none;
+  transition: var(--transition-fast);
 }
 
 .setting-item input[type="number"]:focus,
 .setting-item select:focus {
-    border-color: var(--accent-color, #007acc);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-glow);
 }
 
 .setting-item input[type="checkbox"] {
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    background-color: var(--input-bg, #3c3c3c);
-    border: 1px solid var(--border-color, #3c3c3c);
-    border-radius: 3px;
-    cursor: pointer;
-    display: grid;
-    place-content: center;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  cursor: pointer;
+  display: grid;
+  place-content: center;
 }
 
 .setting-item input[type="checkbox"]::before {
-    content: "";
-    width: 10px;
-    height: 10px;
-    transform: scale(0);
-    transition: 120ms transform ease-in-out;
-    box-shadow: inset 1em 1em var(--accent-color, #007acc);
-    background-color: transform;
-    transform-origin: center;
-    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  content: "";
+  width: 9px;
+  height: 9px;
+  transform: scale(0);
+  transition: 120ms transform ease-in-out;
+  background-color: var(--accent-primary);
+  transform-origin: center;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
 }
 
 .setting-item input[type="checkbox"]:checked::before {
-    transform: scale(1);
+  transform: scale(1);
 }
+

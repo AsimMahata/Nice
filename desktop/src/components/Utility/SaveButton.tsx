@@ -1,10 +1,10 @@
-import { useEditorContext } from "../../contexts/Editor/EditorProvider"
+import { Save, CheckCircle2 } from "lucide-react";
+import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { fileSystem } from "../../services/FileSystem/FileSystem";
 
-
 const SaveButton = () => {
-    const { editorState, setEditorState, getDirtyStatus, buffersRef } = useEditorContext()
-
+    const { editorState, setEditorState, getDirtyStatus, buffersRef } = useEditorContext();
+    const isDirty = getDirtyStatus();
 
     const handleSaveFile = async () => {
         const path = editorState.activeFile;
@@ -41,36 +41,40 @@ const SaveButton = () => {
         }
     };
 
+    if (!editorState.activeFile) return null;
+
     return (
         <button
             onClick={handleSaveFile}
+            title={isDirty ? "Save File (Unsaved changes)" : "File Saved"}
             style={{
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                background: "#111",
-                color: getDirtyStatus() ? "goldenrod" : "green",
-                border: "1px solid #333",
-                borderRadius: "4px",
+                background: isDirty ? "rgba(245, 158, 11, 0.15)" : "var(--bg-elevated)",
+                color: isDirty ? "var(--status-warning)" : "var(--text-secondary)",
+                border: `1px solid ${isDirty ? "rgba(245, 158, 11, 0.3)" : "var(--border-subtle)"}`,
+                borderRadius: "var(--radius-sm)",
                 padding: "4px 10px",
                 cursor: "pointer",
                 fontSize: "12px",
-                fontFamily: "inherit",
-                transition: "transform 0.08s ease, background 0.08s ease",
-            }}
-            onMouseDown={(e) => {
-                e.currentTarget.style.transform = "translateY(1px)";
-            }}
-            onMouseUp={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
+                fontWeight: 500,
+                transition: "all 0.15s ease",
             }}
         >
-            {getDirtyStatus() ? "NotSaved" : "Saved"}
+            {isDirty ? (
+                <>
+                    <Save size={14} className="animate-pulse" />
+                    <span>Save</span>
+                </>
+            ) : (
+                <>
+                    <CheckCircle2 size={14} style={{ color: "var(--status-success)" }} />
+                    <span>Saved</span>
+                </>
+            )}
         </button>
-    )
-}
+    );
+};
 
-export default SaveButton
+export default SaveButton;

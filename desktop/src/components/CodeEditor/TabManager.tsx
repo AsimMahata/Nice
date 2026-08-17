@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X, Settings, User, FileCode, FileText } from "lucide-react";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
 import { notify } from "../../utils/notification";
@@ -8,18 +8,31 @@ interface TabProps {
     path: string;
     name: string;
     active: boolean;
+    isDirty: boolean;
     onClose: (path: string) => void;
     onClick: (path: string) => void;
 }
 
-const Tab = ({ path, name, active, onClose, onClick }: TabProps) => (
-    <div className={`tab-item ${active ? "active" : ""}`}
-        onClick={() => onClick(path)}
-    >
-        <span>{name}</span>
+const getTabIcon = (path: string) => {
+    if (path === "nice://settings") return <Settings size={13} style={{ color: "var(--accent-light)", flexShrink: 0 }} />;
+    if (path === "nice://profile") return <User size={13} style={{ color: "var(--status-info)", flexShrink: 0 }} />;
+    if (path.endsWith(".json") || path.endsWith(".md") || path.endsWith(".txt")) {
+        return <FileText size={13} style={{ color: "var(--text-muted)", flexShrink: 0 }} />;
+    }
+    return <FileCode size={13} style={{ color: "var(--accent-light)", flexShrink: 0 }} />;
+};
 
+const Tab = ({ path, name, active, isDirty, onClose, onClick }: TabProps) => (
+    <div
+        className={`tab-item ${active ? "active" : ""}`}
+        onClick={() => onClick(path)}
+        title={path}
+    >
+        {getTabIcon(path)}
+        <span>{name}</span>
+        {isDirty && <span className="tab-dirty-dot" title="Unsaved changes" />}
         <X
-            size={14}
+            size={13}
             className="close-icon"
             onClick={(e) => {
                 e.stopPropagation();
@@ -29,18 +42,15 @@ const Tab = ({ path, name, active, onClose, onClick }: TabProps) => (
     </div>
 );
 
-//BUG: tab overflow fix
-
 const TabManager = () => {
     const { editorState, setEditorState, buffersRef } = useEditorContext();
     const { settings } = useSettingsContext();
 
     const changeActiveFile = (path: string) => {
         setEditorState((prev) => {
-            const newActiveFile = path;
             return {
                 ...prev,
-                activeFile: newActiveFile,
+                activeFile: path,
             };
         });
     };
@@ -83,7 +93,6 @@ const TabManager = () => {
                         ? newOpenTabs[newOpenTabs.length - 1]
                         : null;
             }
-            console.log('new tab is ..........', newActiveFile)
             return {
                 ...prev,
                 openedFiles: newOpenFiles,
@@ -97,7 +106,6 @@ const TabManager = () => {
         <div className="tab-bar">
             {editorState.openedTabs.map((path) => {
                 const file = editorState.openedFiles[path];
-
                 if (!file) return null;
 
                 return (
@@ -106,6 +114,7 @@ const TabManager = () => {
                         path={path}
                         name={file.fileInfo.name}
                         active={path === editorState.activeFile}
+                        isDirty={file.isDirty}
                         onClose={closeTab}
                         onClick={changeActiveFile}
                     />

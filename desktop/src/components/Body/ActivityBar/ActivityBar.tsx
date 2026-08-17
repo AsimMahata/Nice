@@ -89,11 +89,11 @@ const ActivityBar = () => {
         if (name === "User") {
             if (isAuthenticated && user) {
                 setEditorState((prev) => {
-                    const isProfileOpen = prev.openTabs.includes("nice://profile");
+                    const isProfileOpen = prev.openedTabs.includes("nice://profile");
                     return {
                         ...prev,
-                        openFiles: {
-                            ...prev.openFiles,
+                        openedFiles: {
+                            ...prev.openedFiles,
                             "nice://profile": {
                                 content: "",
                                 isDirty: false,
@@ -107,7 +107,7 @@ const ActivityBar = () => {
                                 }
                             }
                         },
-                        openTabs: isProfileOpen ? prev.openTabs : [...prev.openTabs, "nice://profile"],
+                        openedTabs: isProfileOpen ? prev.openedTabs : [...prev.openedTabs, "nice://profile"],
                         activeFile: "nice://profile"
                     };
                 });
@@ -127,9 +127,10 @@ const ActivityBar = () => {
         setSidePanel(true);
     };
 
-    const ActivityIcon = ({ name, icon }: any) => (
+    const ActivityIcon = ({ name, title, icon }: { name: string; title: string; icon: React.ReactNode }) => (
         <div
-            className={`activity-icon-btn ${currentActivity === name ? "active" : ""}`}
+            className={`activity-icon-btn ${currentActivity === name && sidePanel ? "active" : ""}`}
+            title={title}
             onClick={() => handleActivityClickEvent(name)}>
             {icon}
         </div>
@@ -152,13 +153,13 @@ const ActivityBar = () => {
         <>
             <aside className="activity-bar">
                 <div className="icon-stack">
-                    <ActivityIcon name={"FileEx"} icon={<FolderIcon size={22} />} />
-                    <ActivityIcon name={"CodeAction"} icon={<TERMLOGO size={22} />} />
-                    <ActivityIcon name={"CPH"} icon={<Trophy size={22} />} />
+                    <ActivityIcon name={"FileEx"} title="Explorer (Files & Folders)" icon={<FolderIcon size={20} />} />
+                    <ActivityIcon name={"CodeAction"} title="Code Action & Execution" icon={<TERMLOGO size={20} />} />
+                    <ActivityIcon name={"CPH"} title="Competitive Programming Helper" icon={<Trophy size={20} />} />
                 </div>
                 <div className="icon-stack">
-                    <ActivityIcon name={"User"} icon={<User size={22} />} />
-                    <ActivityIcon name={"Settings"} icon={<Settings size={22} />} />
+                    <ActivityIcon name={"User"} title="User Profile" icon={<User size={20} />} />
+                    <ActivityIcon name={"Settings"} title="Settings" icon={<Settings size={20} />} />
                 </div>
             </aside>
 

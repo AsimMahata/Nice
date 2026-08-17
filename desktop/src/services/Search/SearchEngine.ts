@@ -86,21 +86,25 @@ export class FileSearchEngine implements SearchEngine {
 
     search(query: string): FileInfo[] {
         query = query.trim().toLowerCase();
+
         if (query === "") {
             this.previousQuery = "";
             this.previousResults = [...this.files];
-            return [];
+            return this.files.slice(0, 50);
         }
+
         if (query === this.previousQuery) {
             return this.previousResults;
         }
 
-        const source = query.startsWith(this.previousQuery) ? this.previousResults : this.files;
+        const source = (this.previousQuery !== "" && query.startsWith(this.previousQuery))
+            ? this.previousResults
+            : this.files;
 
         const results = source.filter((file) => {
-            return file.name.toLowerCase().includes(query)
-        }
-        );
+            return file.name.toLowerCase().includes(query);
+        });
+
         this.previousQuery = query;
         this.previousResults = [...results];
 

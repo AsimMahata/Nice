@@ -1,18 +1,19 @@
-import { useEffect } from "react"
-import { useEditorContext } from "../../contexts/Editor/EditorProvider"
-import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider"
-import { useSettingsContext } from "../../contexts/Settings/SettingsProvider"
-import { codeManager } from "./code.manager"
-import { CodeRunnerParams } from "./code.options"
+import { useEffect } from "react";
+import { Play, Loader2 } from "lucide-react";
+import { useEditorContext } from "../../contexts/Editor/EditorProvider";
+import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
+import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
+import { codeManager } from "./code.manager";
+import { CodeRunnerParams } from "./code.options";
 
 type Props = {
-    openTerminal: () => void
-}
+    openTerminal: () => void;
+};
 
 const CodeRunner = ({ openTerminal }: Props) => {
-    const { cwd, setRefresh, setCurrentActivity, setSidePanel, setCodeActionResult, setIsCodeActionRunning } = useWorkspaceContext()
-    const { editorState, getDirtyStatus, codeLang } = useEditorContext()
-    const { settings } = useSettingsContext()
+    const { cwd, setRefresh, setCurrentActivity, setSidePanel, setCodeActionResult, setIsCodeActionRunning, isCodeActionRunning } = useWorkspaceContext();
+    const { editorState, getDirtyStatus, codeLang } = useEditorContext();
+    const { settings } = useSettingsContext();
 
     useEffect(() => {
         codeManager.onBackendResult = (result) => {
@@ -28,20 +29,20 @@ const CodeRunner = ({ openTerminal }: Props) => {
 
     const handleRunCode = async () => {
         if (!editorState.activeFile) {
-            console.error('please open some files to run')
-            return
+            console.error('please open some files to run');
+            return;
         }
         if (getDirtyStatus()) {
-            console.error('save the file before running')
-            return
+            console.error('save the file before running');
+            return;
         }
-        const openedFile = editorState.openedFiles[editorState.activeFile]
+        const openedFile = editorState.openedFiles[editorState.activeFile];
         const codeRunnerParams: CodeRunnerParams = {
             codeFile: openedFile.fileInfo,
             codeLang,
             cwd
-        }
-        console.log('------------codeManager time', codeRunnerParams, codeManager.time)
+        };
+        console.log('------------codeManager time', codeRunnerParams, codeManager.time);
         try {
             const executionMode = settings.execution?.executionMode ?? 'auto';
 
@@ -63,51 +64,57 @@ const CodeRunner = ({ openTerminal }: Props) => {
                 setCurrentActivity("CodeAction");
                 setSidePanel(true);
             } else {
-                openTerminal()
+                openTerminal();
             }
 
             setTimeout(async () => {
                 await codeManager.runCode(codeRunnerParams);
-            }, 30)
+            }, 30);
 
         } catch (err) {
             setIsCodeActionRunning(false);
-            console.error('some error occurred while calling run code in code manager', err)
+            console.error('some error occurred while calling run code in code manager', err);
         } finally {
             setRefresh(p => !p);
         }
-    }
+    };
+
     return (
         <button
             id="code-runner-btn"
             onClick={handleRunCode}
+            disabled={isCodeActionRunning}
+            title="Run Code"
             style={{
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                background: "#111",
-                color: "#d1d5db",
-                border: "1px solid #333",
-                borderRadius: "4px",
-                padding: "4px 10px",
-                cursor: "pointer",
+                background: "linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover))",
+                color: "#ffffff",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                borderRadius: "var(--radius-sm)",
+                padding: "5px 12px",
+                cursor: isCodeActionRunning ? "not-allowed" : "pointer",
                 fontSize: "12px",
-                fontFamily: "inherit",
-                transition: "transform 0.08s ease, background 0.08s ease",
-            }}
-            onMouseDown={(e) => {
-                e.currentTarget.style.transform = "translateY(1px)";
-            }}
-            onMouseUp={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
+                fontWeight: 600,
+                boxShadow: "0 2px 8px var(--accent-glow)",
+                transition: "all 0.15s ease",
+                opacity: isCodeActionRunning ? 0.7 : 1,
             }}
         >
-            ▶ Run
+            {isCodeActionRunning ? (
+                <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Running…</span>
+                </>
+            ) : (
+                <>
+                    <Play size={13} fill="currentColor" />
+                    <span>Run</span>
+                </>
+            )}
         </button>
-    )
-}
+    );
+};
 
-export default CodeRunner
+export default CodeRunner;
