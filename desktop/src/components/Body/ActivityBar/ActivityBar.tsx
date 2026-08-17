@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
     FolderIcon,
-    Search,
-    Github,
     Terminal as TERMLOGO,
     Settings,
     User,
@@ -12,6 +10,7 @@ import { useEditorContext } from "../../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../../contexts/Workspace/WorkspaceProvider";
 import FileEx from "../../FileEx/FileEx";
 import CphPanel from "../../CphPanel/CphPanel.tsx";
+import CodeActionPanel from "../../CodeActionPanels/CodeActionPanel";
 import { useAuth } from "../../../utils/useAuth";
 import { useNavigate } from "react-router-dom";
 
@@ -140,12 +139,8 @@ const ActivityBar = () => {
         switch (currentActivity) {
             case "FileEx":
                 return <FileEx codeFile={getCurrentFileInfo()} />;
-            case "Search":
-                return <div> Search</div>;
-            case "Github":
-                return <div> Github</div>;
             case "CodeAction":
-                return <div> CodeAction </div>;
+                return <CodeActionPanel />;
             case "CPH":
                 return <CphPanel />;
             default:
@@ -158,8 +153,6 @@ const ActivityBar = () => {
             <aside className="activity-bar">
                 <div className="icon-stack">
                     <ActivityIcon name={"FileEx"} icon={<FolderIcon size={22} />} />
-                    <ActivityIcon name={"Search"} icon={<Search size={22} />} />
-                    <ActivityIcon name={"Github"} icon={<Github size={22} />} />
                     <ActivityIcon name={"CodeAction"} icon={<TERMLOGO size={22} />} />
                     <ActivityIcon name={"CPH"} icon={<Trophy size={22} />} />
                 </div>

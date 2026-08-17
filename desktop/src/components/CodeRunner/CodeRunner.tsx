@@ -1,25 +1,38 @@
+import { useEffect } from "react"
 import { useEditorContext } from "../../contexts/Editor/EditorProvider"
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider"
+import { useSettingsContext } from "../../contexts/Settings/SettingsProvider"
 import { codeManager } from "./code.manager"
 import { CodeRunnerParams } from "./code.options"
 
 type Props = {
     openTerminal: () => void
 }
-//FIX:duing running code if compilation failed it runs run code anyway fix 
-//FIX: after running cpp file or java files when clss or exe is generated the file explorer dont refresh
 
 const CodeRunner = ({ openTerminal }: Props) => {
-    //constexts
-    const { cwd, setRefresh } = useWorkspaceContext()
+    const { cwd, setRefresh, setCurrentActivity, setSidePanel, setCodeActionResult, setIsCodeActionRunning } = useWorkspaceContext()
     const { editorState, getDirtyStatus, codeLang } = useEditorContext()
+    const { settings } = useSettingsContext()
+
+    useEffect(() => {
+        codeManager.onBackendResult = (result) => {
+            setCodeActionResult(result);
+            setIsCodeActionRunning(false);
+            setCurrentActivity("CodeAction");
+            setSidePanel(true);
+        };
+        return () => {
+            codeManager.onBackendResult = null;
+        };
+    }, [setCodeActionResult, setIsCodeActionRunning, setCurrentActivity, setSidePanel]);
+
     const handleRunCode = async () => {
         if (!editorState.activeFile) {
             console.error('please open some files to run')
             return
         }
         if (getDirtyStatus()) {
-            console.error('not implemened save and run wait/codeRunner ---------------------')
+            console.error('save the file before running')
             return
         }
         const openedFile = editorState.openedFiles[editorState.activeFile]
@@ -30,19 +43,43 @@ const CodeRunner = ({ openTerminal }: Props) => {
         }
         console.log('------------codeManager time', codeRunnerParams, codeManager.time)
         try {
-            openTerminal()
+            const executionMode = settings.execution?.executionMode ?? 'auto';
+
+            let useBackend = false;
+            if (executionMode === 'online') {
+                useBackend = true;
+            } else if (executionMode === 'local') {
+                useBackend = false;
+            } else {
+                const hasLocal = typeof window.runner?.probeCompiler === 'function'
+                    ? await window.runner.probeCompiler(codeLang ?? '')
+                    : true;
+                useBackend = !hasLocal;
+            }
+
+            if (useBackend) {
+                setIsCodeActionRunning(true);
+                setCodeActionResult(null);
+                setCurrentActivity("CodeAction");
+                setSidePanel(true);
+            } else {
+                openTerminal()
+            }
+
             setTimeout(async () => {
                 await codeManager.runCode(codeRunnerParams);
             }, 30)
 
         } catch (err) {
-            console.error('some error occured while calling run code in code manager', err)
+            setIsCodeActionRunning(false);
+            console.error('some error occurred while calling run code in code manager', err)
         } finally {
             setRefresh(p => !p);
         }
     }
     return (
         <button
+            id="code-runner-btn"
             onClick={handleRunCode}
             style={{
                 display: "flex",

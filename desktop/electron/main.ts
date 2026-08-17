@@ -2,7 +2,6 @@ import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path, { join } from 'path';
 import { createNewFile, createNewFolder, FileInfo, getFileInfo, getParentDirectory, isChildOf, openDirectory, readDirectory, readFileContent, writeFileContent } from './Modules/FileSystem/FileActions';
 import { showNotification } from './Modules/Notificaiton/Notification'
-import { runCode } from './Modules/CodeRunner/CodeRunner'
 import * as pty from 'node-pty'
 import { TerminalOptions } from './types/terminal.types';
 import { setupLSPWebSocket } from "./Modules/WebSocket/ws.lsp"
@@ -10,7 +9,7 @@ import { ptyManager } from "./Modules/Terminal/terminal"
 import { setupCPHServer } from './Modules/CPH/cph';
 import { settingsManager } from './Modules/Settings/SettingsManager';
 import { snippetManager } from './Modules/Snippets/SnippetManager';
-import { compileCPH, runTestcaseCPH } from './Modules/CPH/cphJudge';
+import { executionService } from './Modules/Execution/ExecutionService';
 let mainWindow: BrowserWindow | null = null;
 
 import { scanDirectory } from "./Modules/SearchEngine/SearchEngine"
@@ -87,10 +86,44 @@ app.whenReady().then(() => {
 
     setupCPHServer(() => mainWindow);
 
-    // code runner
     ipcMain.handle('runner:run', async (_event, codeFile: FileInfo) => {
-        await runCode(codeFile)
-    })
+        const fs = await import('fs');
+        let code: string | undefined;
+        try {
+            code = fs.default.readFileSync(codeFile.path, 'utf8');
+        } catch { code = undefined; }
+
+        const extToLang: Record<string, string> = {
+            '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
+            '.c': 'c',
+            '.py': 'python',
+            '.java': 'java',
+        };
+        const language = extToLang[codeFile.extension ?? ''] ?? '';
+
+        const settings = settingsManager.getSettings();
+        const executionMode = settings.execution?.executionMode ?? 'auto';
+
+        const { result, usedBackend } = await executionService.runCode({
+            language,
+            filePath: codeFile.path,
+            code,
+            input: '',
+        }, executionMode);
+
+        if (usedBackend) {
+            return { usedBackend: true, result };
+        }
+        return { usedBackend: false, result: null };
+    });
+
+    ipcMain.handle('runner:probe-compiler', async (_event, language: string) => {
+        return executionService.probeCompiler(language);
+    });
+
+    ipcMain.handle('runner:run-backend', async (_event, { filePath, language, code, input }: any) => {
+        return executionService.runCode({ filePath, language, code, input: input ?? '' });
+    });
 
     // // terminal create
     // ipcMain.handle("pty:create", (_e, options: termOpts) => {
@@ -259,12 +292,14 @@ app.whenReady().then(() => {
         return snippetManager.getSnippetsParsed(language);
     });
 
-    ipcMain.handle('cph:compile', async (_event, filePath: string) => {
-        return await compileCPH(filePath);
+    ipcMain.handle('cph:compile', async (_event, { filePath, language }: { filePath: string; language: string }) => {
+        const settings = settingsManager.getSettings();
+        const executionMode = settings.execution?.executionMode ?? 'auto';
+        return executionService.compileCph(filePath, language, executionMode);
     });
 
-    ipcMain.handle('cph:run-testcase', async (_event, { binaryPath, input, timeLimit }) => {
-        return await runTestcaseCPH(binaryPath, input, timeLimit);
+    ipcMain.handle('cph:run-testcase', async (_event, { binaryPath, input, timeLimit, language, code }: any) => {
+        return executionService.runCphTestcase(binaryPath ?? '', input, timeLimit ?? 4000, language, code);
     });
 
 

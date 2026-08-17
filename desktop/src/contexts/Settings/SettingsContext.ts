@@ -30,10 +30,15 @@ export interface FileSettings {
     autoSaveDelay: number;
 }
 
+export interface ExecutionSettings {
+    executionMode: "auto" | "local" | "online";
+}
+
 export interface SettingsState {
     editor: EditorSettings;
     appearance: AppearanceSettings;
     files: FileSettings;
+    execution: ExecutionSettings;
 }
 
 export interface SettingsContextType {
@@ -42,6 +47,7 @@ export interface SettingsContextType {
     updateEditorSettings: (newEditorSettings: Partial<EditorSettings>) => void;
     updateAppearanceSettings: (newAppearanceSettings: Partial<AppearanceSettings>) => void;
     updateFilesSettings: (newFilesSettings: Partial<FileSettings>) => void;
+    updateExecutionSettings: (newExecutionSettings: Partial<ExecutionSettings>) => void;
 }
 
 export const DEFAULT_SETTINGS: SettingsState = {
@@ -71,6 +77,9 @@ export const DEFAULT_SETTINGS: SettingsState = {
     files: {
         autoSave: "off",
         autoSaveDelay: 1000,
+    },
+    execution: {
+        executionMode: "auto",
     }
 };
 

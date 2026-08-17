@@ -29,6 +29,9 @@ export const DEFAULT_SETTINGS = {
     files: {
         autoSave: "off",
         autoSaveDelay: 1000,
+    },
+    execution: {
+        executionMode: "auto", // "auto" | "local" | "online"
     }
 };
 
@@ -44,8 +47,16 @@ class SettingsManager {
         try {
             if (fs.existsSync(this.settingsPath)) {
                 const data = fs.readFileSync(this.settingsPath, 'utf8');
+                const parsed = JSON.parse(data);
                 // merge user settings with default settings
-                return { ...DEFAULT_SETTINGS, ...JSON.parse(data) };
+                return {
+                    ...DEFAULT_SETTINGS,
+                    ...parsed,
+                    execution: {
+                        ...DEFAULT_SETTINGS.execution,
+                        ...(parsed.execution || {})
+                    }
+                };
             }
         } catch (e) {
             console.error('Failed to read settings', e);

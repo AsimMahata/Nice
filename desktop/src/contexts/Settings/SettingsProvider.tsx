@@ -9,7 +9,14 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
         if (window.settings) {
             window.settings.getSettings().then((loadedSettings) => {
                 if (loadedSettings) {
-                    setSettings(loadedSettings);
+                    setSettings({
+                        ...DEFAULT_SETTINGS,
+                        ...loadedSettings,
+                        execution: {
+                            ...DEFAULT_SETTINGS.execution,
+                            ...(loadedSettings.execution || {})
+                        }
+                    });
                 }
             });
         }
@@ -55,6 +62,17 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
         updateSettings(updated);
     };
 
+    const updateExecutionSettings = (newExecutionSettings: Partial<SettingsState["execution"]>) => {
+        const updated = {
+            ...settings,
+            execution: {
+                ...settings.execution,
+                ...newExecutionSettings
+            }
+        };
+        updateSettings(updated);
+    };
+
     return (
         <SettingsContext.Provider
             value={{
@@ -62,7 +80,8 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
                 updateSettings,
                 updateEditorSettings,
                 updateAppearanceSettings,
-                updateFilesSettings
+                updateFilesSettings,
+                updateExecutionSettings
             }}
         >
             {children}

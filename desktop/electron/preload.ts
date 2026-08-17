@@ -47,20 +47,32 @@ contextBridge.exposeInMainWorld('cph', {
             ipcRenderer.removeListener('cph:problem', listener);
         };
     },
-    compile: (filePath: string) => ipcRenderer.invoke('cph:compile', filePath),
-    runTestcase: (binaryPath: string, input: string, timeLimit: number) =>
-        ipcRenderer.invoke('cph:run-testcase', { binaryPath, input, timeLimit })
+    // compile: pass both filePath and language so ExecutionService can probe locally or fall back
+    compile: (filePath: string, language: string) =>
+        ipcRenderer.invoke('cph:compile', { filePath, language }),
+    // runTestcase: pass language and code for backend fallback mode
+    runTestcase: (binaryPath: string, input: string, timeLimit: number, language?: string, code?: string) =>
+        ipcRenderer.invoke('cph:run-testcase', { binaryPath, input, timeLimit, language, code })
 });
 
 
 
 // CodeRunner services
 contextBridge.exposeInMainWorld('runner', {
-    runCode: (codeFile: FileInfo) => {
-        console.log('invoke =================================')
+    // Primary run: opens terminal if local, returns { usedBackend, result } if backend
+    runCode: (codeFile: FileInfo): Promise<{ usedBackend: boolean; result: any | null }> => {
+        console.log('invoke runner:run =================================')
         console.log('----------called run code for ', codeFile);
-        ipcRenderer.invoke('runner:run', codeFile)
-    }
+        return ipcRenderer.invoke('runner:run', codeFile)
+    },
+    // Check if local compiler is available
+    probeCompiler: (language: string): Promise<boolean> => {
+        return ipcRenderer.invoke('runner:probe-compiler', language);
+    },
+    // Structured backend run — always returns ExecutionResult
+    runCodeBackend: (params: { filePath: string; language: string; code: string; input: string }) => {
+        return ipcRenderer.invoke('runner:run-backend', params);
+    },
 });
 
 // File system APIs for directory reading

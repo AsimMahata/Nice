@@ -5,16 +5,14 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-<<<<<<< HEAD
     volumes:
       - .:/app
       - /app/node_modules
+
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - PORT=3000
       - NODE_ENV=development
-=======
-      - "10043:10043"
-    volumes:
-      - .:/app
-      - /app/node_modules
->>>>>>> electron
+      
+      # If set and on Linux, Isolyx will be tried before Docker for sandboxing
+      # - ISOLYX_BIN=/usr/local/bin/isolyx
