@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuth";
-import { User, Mail, Github, Linkedin, Code2, Edit2, LogOut, Globe, ExternalLink, AtSign, Fingerprint } from "lucide-react";
+import { User as UserIcon, Mail, Github, Linkedin, Code2, Edit2, LogOut, Globe, ExternalLink, AtSign, Fingerprint, Camera, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
+import "./Profile.css";
 
 export default function Profile() {
     const { user, refreshAuth } = useAuth();
@@ -85,145 +86,169 @@ export default function Profile() {
 
     if (!user) {
         return (
-            <div className="h-full w-full bg-[#1e1e1e] text-zinc-400 flex flex-col items-center justify-center font-sans">
-                <div className="w-8 h-8 border-2 border-[#333333] border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                <p className="text-sm tracking-widest uppercase">Loading Profile</p>
+            <div className="profile-page flex flex-col items-center justify-center">
+                <div className="btn-spinner mb-4" style={{ width: 32, height: 32, borderWidth: 3 }} />
+                <p className="text-sm font-medium tracking-widest uppercase text-muted">Loading Profile…</p>
             </div>
         );
     }
 
     const currentAvatar = isEditing ? formData.avatar : user.avatar;
     const currentCover = isEditing ? formData.coverImage : user.coverImage;
+    const userInitial = (user.name || user.username || 'U').charAt(0).toUpperCase();
+
+    const openCodeforcesTab = (e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setEditorState((prev) => {
+            const isOpen = prev.openedTabs.includes("nice://codeforces");
+            return {
+                ...prev,
+                openedFiles: {
+                    ...prev.openedFiles,
+                    "nice://codeforces": {
+                        content: "",
+                        isDirty: false,
+                        fileInfo: {
+                            name: "Codeforces Stats",
+                            path: "nice://codeforces",
+                            isDirectory: false,
+                            size: 0,
+                            modifiedAt: new Date(),
+                            extension: "",
+                        }
+                    }
+                },
+                openedTabs: isOpen ? prev.openedTabs : [...prev.openedTabs, "nice://codeforces"],
+                activeFile: "nice://codeforces"
+            };
+        });
+    };
 
     return (
-        <div className="h-full w-full bg-[#1e1e1e] text-zinc-300 font-sans overflow-y-auto custom-scrollbar selection:bg-blue-500/30">
+        <div className="profile-page">
             {/* Header Section */}
-            <div className="w-full border-b border-[#333333] bg-[#252526] relative">
-                {/* Cover Image Area */}
-                <div className="w-full h-48 bg-[#1a1a1a] relative overflow-hidden group">
+            <div className="profile-header-container">
+                {/* Cover Area */}
+                <div className="profile-cover">
                     {currentCover ? (
-                        <img src={currentCover} alt="Cover" className="w-full h-full object-cover" />
+                        <img src={currentCover} alt="Cover" className="profile-cover-img" />
                     ) : (
-                        <div className="w-full h-full bg-gradient-to-r from-blue-900/20 to-purple-900/20"></div>
+                        <div className="profile-cover-gradient" />
                     )}
+
                     {isEditing && (
-                        <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                            <Edit2 className="text-white mb-2" size={24} />
-                            <span className="text-white text-sm font-medium">Change Cover Image</span>
+                        <label className="cover-upload-overlay">
+                            <Camera size={24} className="mb-1" />
+                            <span className="text-xs font-semibold">Change Cover Image</span>
                             <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'coverImage')} />
                         </label>
                     )}
                 </div>
 
-                {/* Profile Controls (Edit / Logout) - Now absolutely positioned at the top right of the cover image */}
-                <div className="absolute top-4 right-8 flex items-center gap-3 z-20">
+                {/* Top Action Controls */}
+                <div className="profile-top-actions">
                     {!isEditing && (
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="flex items-center gap-2 px-4 py-2 rounded-md transition-all duration-200 text-sm font-medium shadow-lg backdrop-blur-md bg-black/50 hover:bg-black/70 text-white border border-white/10"
+                            className="profile-action-btn profile-btn-edit"
                         >
                             <Edit2 size={14} />
-                            Edit Profile
+                            <span>Edit Profile</span>
                         </button>
                     )}
 
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-red-400 bg-black/50 border border-white/10 hover:bg-red-500/20 hover:border-red-500/50 transition-all duration-200 shadow-lg backdrop-blur-md"
+                        className="profile-action-btn profile-btn-logout"
                     >
                         <LogOut size={14} />
                         <span>Logout</span>
                     </button>
                 </div>
 
-                <div className="w-full px-12 pb-8 flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
-                    <div className="flex flex-col md:flex-row items-center md:items-start gap-8 -mt-16 z-10">
-                        {/* Avatar */}
-                        <div className="relative group">
-                            <div className="relative w-32 h-32 rounded-full bg-[#1e1e1e] border-4 border-[#252526] flex items-center justify-center overflow-hidden shadow-xl">
-                                {currentAvatar ? (
-                                    <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
-                                ) : (
-                                    <User size={56} className="text-zinc-500" />
-                                )}
-                                {isEditing && (
-                                    <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
-                                        <Edit2 className="text-white mb-1" size={20} />
-                                        <span className="text-white text-xs font-medium">Avatar</span>
-                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'avatar')} />
-                                    </label>
-                                )}
-                            </div>
+                {/* User Info Banner */}
+                <div className="profile-info-banner">
+                    <div className="profile-avatar-wrapper">
+                        {currentAvatar ? (
+                            <img src={currentAvatar} alt="Avatar" className="profile-avatar-img" />
+                        ) : (
+                            <div className="profile-avatar-initial">{userInitial}</div>
+                        )}
+
+                        {isEditing && (
+                            <label className="avatar-upload-overlay">
+                                <Camera size={20} />
+                                <span className="text-[10px] font-semibold mt-0.5">Avatar</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageUpload(e, 'avatar')} />
+                            </label>
+                        )}
+                    </div>
+
+                    <div className="profile-user-details">
+                        <div className="profile-name-row">
+                            <h1 className="profile-user-name">
+                                {user.name || 'Anonymous User'}
+                            </h1>
+                            <span className="profile-provider-badge">
+                                {user.provider}
+                            </span>
                         </div>
 
-                        {/* Info */}
-                        <div className="text-center md:text-left pt-2 md:pt-16">
-                            <div className="flex items-center justify-center md:justify-start gap-4 mb-2">
-                                <h1 className="text-3xl font-bold text-white tracking-wide drop-shadow-sm">
-                                    {user.name || 'Anonymous User'}
-                                </h1>
-                                <span className="px-3 py-1 rounded bg-[#333333] text-zinc-300 text-xs font-semibold tracking-wider uppercase border border-[#444444]">
-                                    {user.provider}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-center md:justify-start gap-3 text-zinc-400 text-sm mt-3">
-                                <span className="flex items-center gap-1.5 bg-[#1e1e1e] px-3 py-1.5 rounded border border-[#333333]">
-                                    <Mail size={14} className="text-zinc-500" />
-                                    {user.email}
-                                </span>
-                                <span className="flex items-center gap-1.5 bg-[#1e1e1e] px-3 py-1.5 rounded border border-[#333333]">
-                                    <AtSign size={14} className="text-zinc-500" />
-                                    {user.username || 'No username'}
-                                </span>
-                            </div>
+                        <div className="profile-meta-row">
+                            <span className="profile-tag-pill">
+                                <Mail size={13} />
+                                <span>{user.email}</span>
+                            </span>
+                            <span className="profile-tag-pill">
+                                <AtSign size={13} />
+                                <span>{user.username ? `@${user.username}` : 'No username'}</span>
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Content Section */}
-            <div className="w-full px-12 py-12 space-y-16">
+            {/* Main Content Sections */}
+            <div className="profile-content">
 
                 {/* Identity Settings */}
                 <section>
-                    <h2 className="text-lg font-medium text-white flex items-center gap-2 mb-6 pb-2 border-b border-[#333333]">
-                        <Fingerprint size={18} className="text-blue-500" />
-                        Identity Settings
+                    <h2 className="profile-section-title">
+                        <Fingerprint size={18} className="text-indigo-400" />
+                        <span>Identity Settings</span>
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8 max-w-5xl">
-                        {/* Name Field */}
-                        <div className="space-y-2 relative group">
-                            <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Display Name</label>
+                    <div className="profile-grid-2">
+                        <div className="profile-field-group">
+                            <label className="profile-field-label">Display Name</label>
                             {isEditing ? (
                                 <input
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className="w-full bg-[#252526] border border-[#333333] rounded-md px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                    className="profile-input"
                                     placeholder="Your display name"
                                 />
                             ) : (
-                                <div className="w-full border-b border-transparent group-hover:border-[#333333] py-2 flex items-center gap-3 transition-colors">
-                                    <span className="text-zinc-200 text-lg">{user.name || <span className="text-zinc-600 italic">Not configured</span>}</span>
+                                <div className="profile-field-value">
+                                    {user.name || <span className="text-dim italic">Not configured</span>}
                                 </div>
                             )}
                         </div>
 
-                        {/* Username Field */}
-                        <div className="space-y-2 relative group">
-                            <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Username</label>
+                        <div className="profile-field-group">
+                            <label className="profile-field-label">Username</label>
                             {isEditing ? (
                                 <input
                                     name="username"
                                     value={formData.username}
                                     onChange={handleChange}
-                                    className="w-full bg-[#252526] border border-[#333333] rounded-md px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                                    className="profile-input"
                                     placeholder="username"
                                 />
                             ) : (
-                                <div className="w-full border-b border-transparent group-hover:border-[#333333] py-2 flex items-center gap-3 transition-colors">
-                                    <span className="text-zinc-200 text-lg">{user.username ? `@${user.username}` : <span className="text-zinc-600 italic">Not configured</span>}</span>
+                                <div className="profile-field-value">
+                                    {user.username ? `@${user.username}` : <span className="text-dim italic">Not configured</span>}
                                 </div>
                             )}
                         </div>
@@ -232,124 +257,174 @@ export default function Profile() {
 
                 {/* Developer Connections */}
                 <section>
-                    <h2 className="text-lg font-medium text-white flex items-center gap-2 mb-6 pb-2 border-b border-[#333333]">
-                        <Globe size={18} className="text-purple-500" />
-                        Developer Connections
+                    <h2 className="profile-section-title">
+                        <Globe size={18} className="text-purple-400" />
+                        <span>Developer Connections</span>
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="dev-connections-grid">
                         {/* GitHub */}
-                        <div className="flex flex-col gap-3">
-                            <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold flex items-center gap-2">
-                                <Github size={16} className="text-zinc-300" />
-                                GitHub
-                            </label>
+                        <div className="profile-field-group">
+                            <label className="profile-field-label">GitHub</label>
                             {isEditing ? (
                                 <input
                                     name="githubLink"
                                     value={formData.githubLink}
                                     onChange={handleChange}
-                                    className="w-full bg-[#252526] border border-[#333333] rounded-md px-4 py-3 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-blue-500 transition-all"
-                                    placeholder="https://github.com/..."
+                                    className="profile-input"
+                                    placeholder="https://github.com/username"
                                 />
                             ) : (
                                 <a
                                     href={user.githubLink || '#'}
-                                    target="_blank"
+                                    target={user.githubLink ? "_blank" : "_self"}
                                     rel="noreferrer"
-                                    className={`w-full bg-[#252526] border border-[#333333] rounded-md px-5 py-4 flex items-center justify-between group transition-all duration-200 ${user.githubLink ? 'hover:border-zinc-400 hover:bg-[#2a2a2b] cursor-pointer' : 'opacity-50 cursor-default'}`}
+                                    className={`dev-card ${user.githubLink ? 'is-linked' : ''}`}
                                 >
-                                    <span className="text-zinc-300 font-medium text-sm truncate pr-2">
-                                        {user.githubLink ? user.githubLink : 'Not linked'}
-                                    </span>
-                                    {user.githubLink && <ExternalLink size={14} className="text-zinc-500 group-hover:text-zinc-300" />}
+                                    <div className="dev-card-header">
+                                        <div className="dev-card-title">
+                                            <Github size={16} />
+                                            <span>GitHub</span>
+                                        </div>
+                                        {user.githubLink ? (
+                                            <span className="dev-badge-connected">Connected</span>
+                                        ) : (
+                                            <span className="dev-badge-unlinked">Not linked</span>
+                                        )}
+                                    </div>
+                                    <div className="dev-card-body">
+                                        <span className="dev-card-link-text">
+                                            {user.githubLink || 'Connect your GitHub profile'}
+                                        </span>
+                                        {user.githubLink && <ExternalLink size={14} />}
+                                    </div>
                                 </a>
                             )}
                         </div>
 
                         {/* LinkedIn */}
-                        <div className="flex flex-col gap-3">
-                            <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold flex items-center gap-2">
-                                <Linkedin size={16} className="text-[#0a66c2]" />
-                                LinkedIn
-                            </label>
+                        <div className="profile-field-group">
+                            <label className="profile-field-label">LinkedIn</label>
                             {isEditing ? (
                                 <input
                                     name="linkedinLink"
                                     value={formData.linkedinLink}
                                     onChange={handleChange}
-                                    className="w-full bg-[#252526] border border-[#333333] rounded-md px-4 py-3 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-[#0a66c2] transition-all"
-                                    placeholder="https://linkedin.com/in/..."
+                                    className="profile-input"
+                                    placeholder="https://linkedin.com/in/username"
                                 />
                             ) : (
                                 <a
                                     href={user.linkedinLink || '#'}
-                                    target="_blank"
+                                    target={user.linkedinLink ? "_blank" : "_self"}
                                     rel="noreferrer"
-                                    className={`w-full bg-[#252526] border border-[#333333] rounded-md px-5 py-4 flex items-center justify-between group transition-all duration-200 ${user.linkedinLink ? 'hover:border-[#0a66c2] hover:bg-[#2a2a2b] cursor-pointer' : 'opacity-50 cursor-default'}`}
+                                    className={`dev-card ${user.linkedinLink ? 'is-linked' : ''}`}
                                 >
-                                    <span className="text-zinc-300 font-medium text-sm truncate pr-2">
-                                        {user.linkedinLink ? user.linkedinLink : 'Not linked'}
-                                    </span>
-                                    {user.linkedinLink && <ExternalLink size={14} className="text-zinc-500 group-hover:text-zinc-300" />}
+                                    <div className="dev-card-header">
+                                        <div className="dev-card-title">
+                                            <Linkedin size={16} className="text-sky-400" />
+                                            <span>LinkedIn</span>
+                                        </div>
+                                        {user.linkedinLink ? (
+                                            <span className="dev-badge-connected">Connected</span>
+                                        ) : (
+                                            <span className="dev-badge-unlinked">Not linked</span>
+                                        )}
+                                    </div>
+                                    <div className="dev-card-body">
+                                        <span className="dev-card-link-text">
+                                            {user.linkedinLink || 'Connect your LinkedIn profile'}
+                                        </span>
+                                        {user.linkedinLink && <ExternalLink size={14} />}
+                                    </div>
                                 </a>
                             )}
                         </div>
 
                         {/* Codeforces */}
-                        <div className="flex flex-col gap-3">
-                            <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold flex items-center gap-2">
-                                <Code2 size={16} className="text-red-500" />
-                                Codeforces
-                            </label>
+                        <div className="profile-field-group">
+                            <div className="flex items-center justify-between">
+                                <label className="profile-field-label">Codeforces</label>
+                                <button
+                                    type="button"
+                                    onClick={openCodeforcesTab}
+                                    className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+                                >
+                                    <span>View Analytics</span>
+                                    <ExternalLink size={11} />
+                                </button>
+                            </div>
                             {isEditing ? (
                                 <input
                                     name="codeforcesLink"
                                     value={formData.codeforcesLink}
                                     onChange={handleChange}
-                                    className="w-full bg-[#252526] border border-[#333333] rounded-md px-4 py-3 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-red-500 transition-all"
-                                    placeholder="Handle or URL"
+                                    className="profile-input"
+                                    placeholder="Handle or profile URL"
                                 />
                             ) : (
                                 <a
                                     href={user.codeforcesLink ? (user.codeforcesLink.includes('http') ? user.codeforcesLink : `https://codeforces.com/profile/${user.codeforcesLink}`) : '#'}
-                                    target="_blank"
+                                    target={user.codeforcesLink ? "_blank" : "_self"}
                                     rel="noreferrer"
-                                    className={`w-full bg-[#252526] border border-[#333333] rounded-md px-5 py-4 flex items-center justify-between group transition-all duration-200 ${user.codeforcesLink ? 'hover:border-red-500 hover:bg-[#2a2a2b] cursor-pointer' : 'opacity-50 cursor-default'}`}
+                                    className={`dev-card ${user.codeforcesLink ? 'is-linked' : ''}`}
                                 >
-                                    <span className="text-zinc-300 font-medium text-sm truncate pr-2">
-                                        {user.codeforcesLink ? (user.codeforcesLink.includes('http') ? user.codeforcesLink : `https://codeforces.com/profile/${user.codeforcesLink}`) : 'Not linked'}
-                                    </span>
-                                    {user.codeforcesLink && <ExternalLink size={14} className="text-zinc-500 group-hover:text-zinc-300" />}
+                                    <div className="dev-card-header">
+                                        <div className="dev-card-title">
+                                            <Code2 size={16} className="text-rose-400" />
+                                            <span>Codeforces</span>
+                                        </div>
+                                        {user.codeforcesLink ? (
+                                            <span className="dev-badge-connected">Connected</span>
+                                        ) : (
+                                            <span className="dev-badge-unlinked">Not linked</span>
+                                        )}
+                                    </div>
+                                    <div className="dev-card-body">
+                                        <span className="dev-card-link-text">
+                                            {user.codeforcesLink || 'Connect your Codeforces handle'}
+                                        </span>
+                                        {user.codeforcesLink && <ExternalLink size={14} />}
+                                    </div>
                                 </a>
                             )}
                         </div>
 
                         {/* LeetCode */}
-                        <div className="flex flex-col gap-3">
-                            <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold flex items-center gap-2">
-                                <Globe size={16} className="text-amber-500" />
-                                LeetCode
-                            </label>
+                        <div className="profile-field-group">
+                            <label className="profile-field-label">LeetCode</label>
                             {isEditing ? (
                                 <input
                                     name="leetcodeLink"
                                     value={formData.leetcodeLink}
                                     onChange={handleChange}
-                                    className="w-full bg-[#252526] border border-[#333333] rounded-md px-4 py-3 text-white text-sm placeholder-zinc-600 focus:outline-none focus:border-amber-500 transition-all"
-                                    placeholder="Handle or URL"
+                                    className="profile-input"
+                                    placeholder="Handle or profile URL"
                                 />
                             ) : (
                                 <a
                                     href={user.leetcodeLink ? (user.leetcodeLink.includes('http') ? user.leetcodeLink : `https://leetcode.com/${user.leetcodeLink}`) : '#'}
-                                    target="_blank"
+                                    target={user.leetcodeLink ? "_blank" : "_self"}
                                     rel="noreferrer"
-                                    className={`w-full bg-[#252526] border border-[#333333] rounded-md px-5 py-4 flex items-center justify-between group transition-all duration-200 ${user.leetcodeLink ? 'hover:border-amber-500 hover:bg-[#2a2a2b] cursor-pointer' : 'opacity-50 cursor-default'}`}
+                                    className={`dev-card ${user.leetcodeLink ? 'is-linked' : ''}`}
                                 >
-                                    <span className="text-zinc-300 font-medium text-sm truncate pr-2">
-                                        {user.leetcodeLink ? (user.leetcodeLink.includes('http') ? user.leetcodeLink : `https://leetcode.com/${user.leetcodeLink}`) : 'Not linked'}
-                                    </span>
-                                    {user.leetcodeLink && <ExternalLink size={14} className="text-zinc-500 group-hover:text-zinc-300" />}
+                                    <div className="dev-card-header">
+                                        <div className="dev-card-title">
+                                            <Globe size={16} className="text-amber-400" />
+                                            <span>LeetCode</span>
+                                        </div>
+                                        {user.leetcodeLink ? (
+                                            <span className="dev-badge-connected">Connected</span>
+                                        ) : (
+                                            <span className="dev-badge-unlinked">Not linked</span>
+                                        )}
+                                    </div>
+                                    <div className="dev-card-body">
+                                        <span className="dev-card-link-text">
+                                            {user.leetcodeLink || 'Connect your LeetCode profile'}
+                                        </span>
+                                        {user.leetcodeLink && <ExternalLink size={14} />}
+                                    </div>
                                 </a>
                             )}
                         </div>
@@ -359,9 +434,9 @@ export default function Profile() {
 
             {/* Bottom Floating Save Bar */}
             {isEditing && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#252526] border border-[#333333] rounded-full px-6 py-4 flex items-center gap-6 shadow-2xl z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
-                    <span className="text-sm font-medium text-zinc-400">Unsaved changes</span>
-                    <div className="flex items-center gap-3">
+                <div className="profile-floating-bar">
+                    <span className="text-xs font-medium text-secondary">Unsaved profile changes</span>
+                    <div className="flex items-center gap-2">
                         <button
                             onClick={() => {
                                 setIsEditing(false);
@@ -376,16 +451,16 @@ export default function Profile() {
                                     coverImage: user.coverImage || "",
                                 });
                             }}
-                            className="px-4 py-2 rounded-full text-sm font-medium text-zinc-300 hover:text-white hover:bg-[#333333] transition-colors"
+                            className="profile-discard-btn"
                         >
                             Discard
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={isLoading}
-                            className="flex items-center gap-2 px-6 py-2 rounded-full bg-green-600 hover:bg-green-500 text-white text-sm font-medium transition-colors shadow-lg shadow-green-900/20"
+                            className="profile-save-btn"
                         >
-                            {isLoading ? 'Saving...' : 'Save Changes'}
+                            {isLoading ? 'Saving…' : 'Save Changes'}
                         </button>
                     </div>
                 </div>

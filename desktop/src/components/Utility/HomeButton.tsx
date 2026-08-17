@@ -1,34 +1,34 @@
 import { useNavigate } from "react-router-dom";
-import { Home } from "lucide-react";
+import { X, Home } from "lucide-react";
 
-const HomeButton = () => {
+interface HomeButtonProps {
+    onClose?: () => void;
+}
+
+const HomeButton: React.FC<HomeButtonProps> = ({ onClose }) => {
     const navigate = useNavigate();
+
+    const handleClick = () => {
+        if (onClose) {
+            onClose();
+        } else {
+            navigate("/");
+        }
+    };
 
     return (
         <button
-            onClick={() => navigate("/")}
-            className="
-        fixed top-4 right-4 z-50
-        flex items-center gap-2
-        rounded-full
-        bg-white/90 backdrop-blur
-        px-4 py-2
-        text-gray-800
-        shadow-lg shadow-black/10
-        border border-gray-200
-
-        hover:bg-gray-100
-        hover:shadow-xl
-        active:scale-95
-
-        transition-all duration-200
-      "
-            aria-label="Go to home"
+            onClick={handleClick}
+            className="auth-close-floating-btn"
+            aria-label="Close and return to editor"
+            title="Close (Esc)"
         >
-            <Home size={18} className="text-gray-700" />
-            <span className="text-sm font-semibold">Home</span>
+            <X size={18} />
+            <span className="auth-close-text">Close</span>
+            <kbd className="auth-esc-kbd">Esc</kbd>
         </button>
     );
 };
 
 export default HomeButton;
+

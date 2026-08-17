@@ -1,157 +1,76 @@
-/* page */
+/* Register page shares the base auth card layout with additional form grid styles */
+@import './Login.css';
+
+/* Alias class names for Register page consistency */
 .auth-page {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
     min-height: 100vh;
     display: flex;
-    align-items: center;
     justify-content: center;
-    background: #f3f4f6;
-    padding: 16px;
+    align-items: center;
+    background: var(--bg-app);
+    padding: 24px;
+    overflow-y: auto;
+    box-sizing: border-box;
 }
 
-/* card */
+.auth-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    z-index: 1;
+}
+
 .auth-card {
+    position: relative;
+    z-index: 10;
     width: 100%;
-    max-width: 460px;
-    background: #ffffff;
+    max-width: 480px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg, 16px);
     padding: 32px;
-    border-radius: 12px;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-subtle);
+    color: var(--text-primary);
+    backdrop-filter: blur(16px);
+    animation: authCardFadeIn 0.25s ease-out;
 }
 
-/* title */
-.auth-title {
-    text-align: center;
-    font-size: 24px;
-    font-weight: 700;
+.auth-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     margin-bottom: 24px;
-    color: #1f2937;
 }
 
-/* form */
+.auth-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.auth-subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
 .auth-form {
     display: flex;
     flex-direction: column;
     gap: 16px;
 }
 
-/* fields */
-.form-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group label {
-    font-size: 14px;
-    font-weight: 500;
-    color: #1f2937;
-    margin-bottom: 4px;
-}
-
-/* inputs */
-.input {
-    width: 100%;
-    box-sizing: border-box;
-    /* 🔑 prevents overflow */
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-}
-
-.input:focus {
-    outline: none;
-    border-color: #16a34a;
-}
-
-.input.error {
-    border-color: #ef4444;
-}
-
-/* error text */
-.error-text {
-    font-size: 12px;
-    color: #ef4444;
-    margin-top: 4px;
-}
-
-/* password + confirm grid */
 .two-col {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 12px;
 }
 
-/* submit button */
-.primary-btn {
-    margin-top: 8px;
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    background: #16a34a;
-    color: #ffffff;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.primary-btn:disabled {
-    background: #86efac;
-    cursor: not-allowed;
-}
-
-/* divider */
-.divider {
-    margin: 24px 0;
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    color: #374151;
-}
-
-/* social buttons */
-.social-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.google-btn {
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.google-btn:hover {
-    border-color: #4285f4;
-    color: #4285f4;
-}
-
-.github-btn {
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #111827;
-    background: #111827;
-    color: #ffffff;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-/* footer */
-.footer-text {
-    margin-top: 20px;
-    text-align: center;
-    font-size: 14px;
-    color: #374151;
-}
-
-.footer-text a {
-    color: #16a34a;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-/* mobile safety */
 @media (max-width: 520px) {
     .two-col {
         grid-template-columns: 1fr;

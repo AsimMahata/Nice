@@ -9,6 +9,7 @@ import { TerminalPanel } from "../../Terminal/TerminalPanel"
 import Greeter from "../../Greeter/Greeter"
 
 import Profile from "../../../pages/User/Profile"
+import CodeforcesStats from "../../../pages/Codeforces/CodeforcesStats"
 
 const MainBody = () => {
     const { editorState, codeLang } = useEditorContext()
@@ -60,6 +61,8 @@ const MainBody = () => {
                                 <SettingsView />
                             ) : editorState.activeFile === "nice://profile" ? (
                                 <Profile />
+                            ) : editorState.activeFile === "nice://codeforces" ? (
+                                <CodeforcesStats />
                             ) : (
                                 <CodeEditor key={codeLang} />
                             )}

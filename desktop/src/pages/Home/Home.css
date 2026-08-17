@@ -285,3 +285,60 @@
   background-color: var(--accent-primary);
 }
 
+/* Tab Context Menu */
+.tab-context-menu {
+  position: fixed;
+  z-index: 1000;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md, 8px);
+  padding: 4px;
+  box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.5));
+  min-width: 170px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  backdrop-filter: blur(12px);
+  animation: contextMenuFadeIn 0.12s ease-out;
+}
+
+@keyframes contextMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.tab-context-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.tab-context-item:hover {
+  background-color: var(--bg-hover);
+  color: var(--accent-light, var(--text-primary));
+}
+
+.tab-context-divider {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin: 3px 0;
+}
+
+

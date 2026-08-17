@@ -71,6 +71,56 @@ const renderMaterialIcon = (file: FileInfo, isOpen: boolean) => {
         );
     }
 
+    // C
+    if (ext === ".c") {
+        return (
+            <span
+                style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 16,
+                    height: 16,
+                    borderRadius: 3,
+                    background: "rgba(59, 130, 246, 0.2)",
+                    border: "1px solid rgba(59, 130, 246, 0.4)",
+                    color: "#3b82f6",
+                    fontSize: "9px",
+                    fontWeight: 800,
+                    fontFamily: "monospace",
+                    flexShrink: 0,
+                }}
+            >
+                C
+            </span>
+        );
+    }
+
+    // Java
+    if (ext === ".java" || ext === ".class" || ext === ".jar") {
+        return (
+            <span
+                style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 16,
+                    height: 16,
+                    borderRadius: 3,
+                    background: "rgba(234, 88, 12, 0.2)",
+                    border: "1px solid rgba(234, 88, 12, 0.4)",
+                    color: "#ea580c",
+                    fontSize: "9px",
+                    fontWeight: 800,
+                    fontFamily: "monospace",
+                    flexShrink: 0,
+                }}
+            >
+                JV
+            </span>
+        );
+    }
+
     // Python
     if (ext === ".py" || ext === ".ipynb" || ext === ".pyw") {
         return (
@@ -201,6 +251,9 @@ const renderSetiIcon = (file: FileInfo, isOpen: boolean) => {
     }
     if ([".py"].includes(ext)) {
         return <FileCode size={16} style={{ color: "#fde047", flexShrink: 0 }} />;
+    }
+    if ([".java", ".class", ".jar"].includes(ext)) {
+        return <FileCode size={16} style={{ color: "#ea580c", flexShrink: 0 }} />;
     }
     if ([".ts", ".tsx"].includes(ext)) {
         return <FileCode size={16} style={{ color: "#38bdf8", flexShrink: 0 }} />;
