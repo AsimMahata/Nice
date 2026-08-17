@@ -292,10 +292,19 @@ app.whenReady().then(() => {
         return snippetManager.getSnippetsParsed(language);
     });
 
-    ipcMain.handle('cph:compile', async (_event, { filePath, language }: { filePath: string; language: string }) => {
+    ipcMain.handle('cph:compile', async (_event, { filePath, language }: { filePath: string; language?: string }) => {
+        let lang = language;
+        if (!lang && filePath) {
+            const extToLang: Record<string, string> = {
+                '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
+                '.c': 'c', '.py': 'python', '.java': 'java',
+            };
+            const ext = filePath.slice(filePath.lastIndexOf('.')).toLowerCase();
+            lang = extToLang[ext] || 'cpp';
+        }
         const settings = settingsManager.getSettings();
         const executionMode = settings.execution?.executionMode ?? 'auto';
-        return executionService.compileCph(filePath, language, executionMode);
+        return executionService.compileCph(filePath, lang || 'cpp', executionMode);
     });
 
     ipcMain.handle('cph:run-testcase', async (_event, { binaryPath, input, timeLimit, language, code }: any) => {

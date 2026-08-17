@@ -48,8 +48,15 @@ contextBridge.exposeInMainWorld('cph', {
         };
     },
     // compile: pass both filePath and language so ExecutionService can probe locally or fall back
-    compile: (filePath: string, language: string) =>
-        ipcRenderer.invoke('cph:compile', { filePath, language }),
+    compile: (filePath: string, language?: string) => {
+        const extToLang: Record<string, string> = {
+            '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
+            '.c': 'c', '.py': 'python', '.java': 'java',
+        };
+        const ext = filePath.slice(filePath.lastIndexOf('.')).toLowerCase();
+        const lang = language || extToLang[ext] || 'cpp';
+        return ipcRenderer.invoke('cph:compile', { filePath, language: lang });
+    },
     // runTestcase: pass language and code for backend fallback mode
     runTestcase: (binaryPath: string, input: string, timeLimit: number, language?: string, code?: string) =>
         ipcRenderer.invoke('cph:run-testcase', { binaryPath, input, timeLimit, language, code })

@@ -67,11 +67,12 @@ export async function compileCPH(filePath: string): Promise<CompileResult> {
             console.log(`[CPH Compile] stderr:\n${stderr}`);
             if (error) {
                 console.error(`[CPH Compile] Error: ${error.message}`);
-                const completeError = [
-                    stderr.trim(),
-                    stdout.trim(),
-                    error.message.trim()
-                ].filter(Boolean).join('\n\n');
+                const cleanStderr = stderr.trim();
+                const cleanStdout = stdout.trim();
+                let completeError = cleanStderr || cleanStdout;
+                if (!completeError && error) {
+                    completeError = error.message.trim();
+                }
                 
                 resolve({
                     success: false,

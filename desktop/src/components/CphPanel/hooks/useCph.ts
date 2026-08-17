@@ -115,6 +115,15 @@ export function useCph() {
         saveTests(updated);
     };
 
+    const getLanguageFromPath = (filePath: string): string => {
+        const ext = filePath.slice(filePath.lastIndexOf('.')).toLowerCase();
+        const extToLang: Record<string, string> = {
+            '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
+            '.c': 'c', '.py': 'python', '.java': 'java',
+        };
+        return extToLang[ext] || 'cpp';
+    };
+
     const runAllTests = async () => {
         if (!activeFile || tests.length === 0 || running || compiling) return;
 
@@ -125,7 +134,8 @@ export function useCph() {
 
         try {
             console.log("[CPH Frontend] Triggering compile...");
-            const compileRes = await window.cph!.compile(activeFile);
+            const lang = getLanguageFromPath(activeFile);
+            const compileRes = await window.cph!.compile(activeFile, lang);
             console.log("[CPH Frontend] Compile response received:", compileRes);
             setCompiling(false);
 
@@ -137,14 +147,15 @@ export function useCph() {
             }
 
             setRunning(true);
-            const binaryPath = compileRes.binaryPath!;
+            const binaryPath = compileRes.binaryPath || '';
+            const codeToPass = compileRes.code;
 
             for (let i = 0; i < tests.length; i++) {
                 const test = tests[i];
                 console.log(`[CPH Frontend] Running case #${i + 1} (id: ${test.id})`);
                 setTests(prev => prev.map(t => t.id === test.id ? { ...t, status: 'running' } : t));
 
-                const res = await window.cph!.runTestcase(binaryPath, test.input, timeLimit);
+                const res = await window.cph!.runTestcase(binaryPath, test.input, timeLimit, compileRes.language || lang, codeToPass);
                 console.log(`[CPH Frontend] Case #${i + 1} output:`, res);
                 const passed = res.exitCode === 0 && !res.timeout && compareOutputs(res.stdout, test.expectedOutput);
                 
@@ -189,26 +200,28 @@ export function useCph() {
 
         try {
             console.log("[CPH Frontend] Triggering compile...");
-            const compileRes = await window.cph!.compile(activeFile);
+            const lang = getLanguageFromPath(activeFile);
+            const compileRes = await window.cph!.compile(activeFile, lang);
             console.log("[CPH Frontend] Compile response received:", compileRes);
             setCompiling(false);
 
             if (!compileRes.success) {
                 console.error("[CPH Frontend] Compilation failed:", compileRes.error);
                 setCompilationError(compileRes.error || "Compilation failed");
-                setTests(prev => prev.map(t => t.id === testId ? { ...t, status: 'error', errorMsg: 'Compilation Error' } : t));
+                setTests(prev => prev.map(t => ({ ...t, status: 'error', errorMsg: 'Compilation Error' })));
                 return;
             }
 
             setRunning(true);
-            const binaryPath = compileRes.binaryPath!;
+            const binaryPath = compileRes.binaryPath || '';
+            const codeToPass = compileRes.code;
             const test = tests.find(t => t.id === testId);
             if (!test) return;
 
             console.log(`[CPH Frontend] Running case with input:`, test.input);
             setTests(prev => prev.map(t => t.id === testId ? { ...t, status: 'running' } : t));
 
-            const res = await window.cph!.runTestcase(binaryPath, test.input, timeLimit);
+            const res = await window.cph!.runTestcase(binaryPath, test.input, timeLimit, compileRes.language || lang, codeToPass);
             console.log(`[CPH Frontend] Test case output:`, res);
             const passed = res.exitCode === 0 && !res.timeout && compareOutputs(res.stdout, test.expectedOutput);
 

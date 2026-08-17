@@ -8,8 +8,15 @@ declare global {
     interface Window {
         cph?: {
             onProblem: (callback: (data: any) => void) => () => void;
-            compile: (filePath: string) => Promise<{ success: boolean; error?: string; binaryPath?: string }>;
-            runTestcase: (binaryPath: string, input: string, timeLimit: number) => Promise<{
+            compile: (filePath: string, language?: string) => Promise<{
+                success: boolean;
+                error?: string;
+                binaryPath?: string;
+                backendFallback?: boolean;
+                language?: string;
+                code?: string;
+            }>;
+            runTestcase: (binaryPath: string, input: string, timeLimit: number, language?: string, code?: string) => Promise<{
                 stdout: string;
                 stderr: string;
                 exitCode: number | null;
