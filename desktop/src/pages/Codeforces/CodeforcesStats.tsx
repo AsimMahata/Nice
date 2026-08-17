@@ -16,7 +16,6 @@ import {
     Activity,
     Zap,
     TrendingUp,
-    Calendar,
     WifiOff
 } from "lucide-react";
 import "./CodeforcesStats.css";

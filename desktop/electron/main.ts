@@ -16,7 +16,7 @@ import { scanDirectory } from "./Modules/SearchEngine/SearchEngine"
 
 
 let ptyProcess: pty.IPty | null = null;
-const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+const isDev = (process.env.NODE_ENV === 'development' || !app.isPackaged) && process.env.NODE_ENV !== 'production';
 // main window
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -35,7 +35,7 @@ function createWindow() {
         mainWindow.webContents.openDevTools();
     } else {
         // In production, load from built files
-        mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+        mainWindow.loadFile(path.join(__dirname, '../../dist/index.html'));
     }
 
     // Force external links to open in the default browser

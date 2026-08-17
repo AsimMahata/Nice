@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../utils/useAuth";
-import { User as UserIcon, Mail, Github, Linkedin, Code2, Edit2, LogOut, Globe, ExternalLink, AtSign, Fingerprint, Camera, Sparkles } from "lucide-react";
+import { Mail, Github, Linkedin, Code2, Edit2, LogOut, Globe, ExternalLink, AtSign, Fingerprint, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";

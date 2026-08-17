@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { X, Home } from "lucide-react";
+import { X } from "lucide-react";
 
 interface HomeButtonProps {
     onClose?: () => void;
