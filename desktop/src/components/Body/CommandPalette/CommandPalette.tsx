@@ -32,7 +32,11 @@ const CommandPalette = () => {
                 setTimeout(() => {
                     if (inputRef.current) {
                         inputRef.current.focus();
-                        inputRef.current.select();
+                        if (inputRef.current.value === ">") {
+                            inputRef.current.setSelectionRange(1, 1);
+                        } else {
+                            inputRef.current.select();
+                        }
                     }
                 }, 10);
             },
@@ -40,6 +44,12 @@ const CommandPalette = () => {
                 if (inputRef.current) {
                     inputRef.current.blur();
                 }
+            },
+            (val: string) => {
+                if (inputRef.current) {
+                    inputRef.current.value = val;
+                }
+                void commandPaletteManager.processQuery(val).then((newItems) => setItems(newItems));
             }
         );
     }, []);
@@ -57,8 +67,9 @@ const CommandPalette = () => {
                 onChange={handleChange}
                 onFocus={async () => {
                     setCanShow(true);
-                    if (items.length === 0) {
-                        const initItems = await commandPaletteManager.processQuery("");
+                    const val = inputRef.current?.value || "";
+                    if (items.length === 0 || val.startsWith(">")) {
+                        const initItems = await commandPaletteManager.processQuery(val);
                         setItems(initItems);
                     }
                 }}

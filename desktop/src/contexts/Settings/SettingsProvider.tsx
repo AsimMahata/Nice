@@ -1,8 +1,13 @@
 import { ReactNode, useContext, useEffect, useState } from "react";
 import SettingsContext, { SettingsState, DEFAULT_SETTINGS } from "./SettingsContext";
+import { applyAppTheme } from "../../core/Themes/themeManager";
 
 const SettingsProvider = ({ children }: { children: ReactNode }) => {
     const [settings, setSettings] = useState<SettingsState>(DEFAULT_SETTINGS);
+
+    useEffect(() => {
+        applyAppTheme(settings.appearance.theme);
+    }, [settings.appearance.theme]);
 
     useEffect(() => {
         // Load settings from Electron on mount

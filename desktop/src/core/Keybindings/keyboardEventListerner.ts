@@ -11,7 +11,15 @@ export function useKeyboardEventListener() {
         function handleKeyDown(e: KeyboardEvent) {
             const keyLower = e.key ? e.key.toLowerCase() : "";
 
-            // Quick intercept for Ctrl+K or Cmd+K / Ctrl+P or Cmd+P
+            // Intercept Ctrl+Shift+P or Cmd+Shift+P for Command Mode (>)
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && keyLower === "p") {
+                e.preventDefault();
+                e.stopPropagation();
+                commandPaletteManager.openCommandMode();
+                return;
+            }
+
+            // Quick intercept for Ctrl+P / Cmd+P or Ctrl+K / Cmd+K
             if ((e.ctrlKey || e.metaKey) && (keyLower === "k" || keyLower === "p")) {
                 e.preventDefault();
                 e.stopPropagation();

@@ -28,6 +28,14 @@ const CommandProvider = ({ children }: { children: ReactNode }) => {
         });
 
         commandManager.register({
+            id: "commandPalette.openCommandMode",
+            execute: async () => {
+                await commandPaletteManager.openCommandMode();
+                return true;
+            },
+        });
+
+        commandManager.register({
             id: "file.new",
             execute: todo("file.new"),
         });

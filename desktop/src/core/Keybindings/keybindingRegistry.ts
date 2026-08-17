@@ -44,7 +44,7 @@ export const keybindingRegistry: Record<string, string> = {
     // Command Palette
     "Control+k": "commandPalette.open",
     "Control+p": "commandPalette.open",
-    "Control+Shift+p": "commandPalette.open",
+    "Control+Shift+p": "commandPalette.openCommandMode",
 
     // Explorer
     "Control+b": "explorer.toggle",

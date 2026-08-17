@@ -1,5 +1,7 @@
-import { FileCode2, Terminal } from "lucide-react";
+import { FileCode2, Terminal, Palette } from "lucide-react";
 import { useEditorContext } from "../../../contexts/Editor/EditorProvider";
+import { useSettingsContext } from "../../../contexts/Settings/SettingsProvider";
+import { useWorkspaceContext } from "../../../contexts/Workspace/WorkspaceProvider";
 import { FileInfo } from "../../../services/FileSystem/file.options";
 import "./CommandPalette.css";
 import { commandPaletteManager } from "./CommandPaletteManager";
@@ -10,13 +12,26 @@ type Props = {
 };
 
 const CommandPaletteResults = ({ results }: Props) => {
-    const { openFile } = useEditorContext();
+    const { openFile, saveActiveFile } = useEditorContext();
+    const { updateAppearanceSettings } = useSettingsContext();
+    const { setIsTerminalOpen } = useWorkspaceContext();
 
     const handleClick = async (item: paletteItem) => {
         console.log('clicked on item', item);
         if (item.type === "File") {
-            if (!item.payload) return;
-            await openFile(item.payload as FileInfo);
+            if (item.payload) {
+                await openFile(item.payload as FileInfo);
+            }
+        } else if (item.type === "Theme") {
+            if (item.payload) {
+                updateAppearanceSettings({ theme: item.payload as string });
+            }
+        } else if (item.type === "Command") {
+            if (item.payload === "terminal.toggle") {
+                setIsTerminalOpen((prev) => !prev);
+            } else if (item.payload === "file.save") {
+                await saveActiveFile();
+            }
         }
         commandPaletteManager.hideCommadPalette();
     };
@@ -36,6 +51,8 @@ const CommandPaletteResults = ({ results }: Props) => {
                     >
                         {item.type === "File" ? (
                             <FileCode2 size={16} style={{ color: "var(--accent-light)", flexShrink: 0 }} />
+                        ) : item.type === "Theme" ? (
+                            <Palette size={16} style={{ color: "var(--accent-light)", flexShrink: 0 }} />
                         ) : (
                             <Terminal size={16} style={{ color: "var(--status-info)", flexShrink: 0 }} />
                         )}

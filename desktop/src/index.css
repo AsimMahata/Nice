@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-:root {
+html[data-theme="nice-dark"], :root {
   --bg-app: #0d0e12;
   --bg-surface: #14161d;
   --bg-elevated: #1b1e27;
@@ -26,7 +26,177 @@
   --status-warning: #f59e0b;
   --status-error: #f43f5e;
   --status-info: #3b82f6;
+}
 
+html[data-theme="one-dark-pro"] {
+  --bg-app: #1e2227;
+  --bg-surface: #21252b;
+  --bg-elevated: #282c34;
+  --bg-card: #2c313a;
+  --bg-hover: #353b45;
+  --bg-active: #3e4451;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.14);
+  --border-strong: rgba(255, 255, 255, 0.22);
+
+  --accent-primary: #61afef;
+  --accent-primary-hover: #4fa0e0;
+  --accent-glow: rgba(97, 175, 239, 0.25);
+  --accent-light: #7ec7ff;
+
+  --text-primary: #abb2bf;
+  --text-secondary: #9da5b4;
+  --text-muted: #7f848e;
+  --text-dim: #5c6370;
+
+  --status-success: #98c379;
+  --status-warning: #e5c07b;
+  --status-error: #e06c75;
+  --status-info: #61afef;
+}
+
+html[data-theme="dracula"] {
+  --bg-app: #21222c;
+  --bg-surface: #282a36;
+  --bg-elevated: #343746;
+  --bg-card: #44475a;
+  --bg-hover: #4f5367;
+  --bg-active: #6272a4;
+
+  --border-subtle: rgba(255, 255, 255, 0.09);
+  --border-default: rgba(255, 255, 255, 0.16);
+  --border-strong: rgba(255, 255, 255, 0.24);
+
+  --accent-primary: #bd93f9;
+  --accent-primary-hover: #ab7ff0;
+  --accent-glow: rgba(189, 147, 249, 0.25);
+  --accent-light: #ff79c6;
+
+  --text-primary: #f8f8f2;
+  --text-secondary: #e2e2dc;
+  --text-muted: #6272a4;
+  --text-dim: #52618c;
+
+  --status-success: #50fa7b;
+  --status-warning: #f1fa8c;
+  --status-error: #ff5555;
+  --status-info: #8be9fd;
+}
+
+html[data-theme="tokyo-night"] {
+  --bg-app: #16161e;
+  --bg-surface: #1a1b26;
+  --bg-elevated: #24283b;
+  --bg-card: #2f354f;
+  --bg-hover: #3b4261;
+  --bg-active: #414868;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.15);
+  --border-strong: rgba(255, 255, 255, 0.22);
+
+  --accent-primary: #7aa2f7;
+  --accent-primary-hover: #6792e8;
+  --accent-glow: rgba(122, 162, 247, 0.25);
+  --accent-light: #bb9af7;
+
+  --text-primary: #c0caf5;
+  --text-secondary: #a9b1d6;
+  --text-muted: #565f89;
+  --text-dim: #414868;
+
+  --status-success: #9ece6a;
+  --status-warning: #e0af68;
+  --status-error: #f7768e;
+  --status-info: #7dcfff;
+}
+
+html[data-theme="catppuccin"] {
+  --bg-app: #1e1e2e;
+  --bg-surface: #24273a;
+  --bg-elevated: #363a4f;
+  --bg-card: #494d64;
+  --bg-hover: #5b6078;
+  --bg-active: #6e738d;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.15);
+  --border-strong: rgba(255, 255, 255, 0.22);
+
+  --accent-primary: #c6a0f6;
+  --accent-primary-hover: #b48bf0;
+  --accent-glow: rgba(198, 160, 246, 0.25);
+  --accent-light: #f5bde6;
+
+  --text-primary: #cad3f5;
+  --text-secondary: #b8c0e0;
+  --text-muted: #8087a2;
+  --text-dim: #6e738d;
+
+  --status-success: #a6da95;
+  --status-warning: #eed49f;
+  --status-error: #ed8796;
+  --status-info: #8aadf4;
+}
+
+html[data-theme="github-light"] {
+  --bg-app: #f6f8fa;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f3f4f6;
+  --bg-card: #eaecf0;
+  --bg-hover: #e5e7eb;
+  --bg-active: #d1d5db;
+
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-default: rgba(0, 0, 0, 0.15);
+  --border-strong: rgba(0, 0, 0, 0.25);
+
+  --accent-primary: #0969da;
+  --accent-primary-hover: #0550ae;
+  --accent-glow: rgba(9, 105, 218, 0.15);
+  --accent-light: #218bff;
+
+  --text-primary: #1f2328;
+  --text-secondary: #333942;
+  --text-muted: #656d76;
+  --text-dim: #8c959f;
+
+  --status-success: #1a7f37;
+  --status-warning: #9a6700;
+  --status-error: #cf222e;
+  --status-info: #0969da;
+}
+
+html[data-theme="one-light"] {
+  --bg-app: #fafafa;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f0f0f0;
+  --bg-card: #e5e5e6;
+  --bg-hover: #d7d7d8;
+  --bg-active: #c8c8c9;
+
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-default: rgba(0, 0, 0, 0.15);
+  --border-strong: rgba(0, 0, 0, 0.24);
+
+  --accent-primary: #4078f2;
+  --accent-primary-hover: #2d65e0;
+  --accent-glow: rgba(64, 120, 242, 0.15);
+  --accent-light: #528bff;
+
+  --text-primary: #383a42;
+  --text-secondary: #4f525d;
+  --text-muted: #a0a1a7;
+  --text-dim: #c2c2c3;
+
+  --status-success: #50a14f;
+  --status-warning: #c18401;
+  --status-error: #e45649;
+  --status-info: #4078f2;
+}
+
+:root {
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;

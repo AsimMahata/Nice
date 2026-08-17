@@ -71,7 +71,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
         smoothScrolling: true,
     },
     appearance: {
-        theme: "vs-dark",
+        theme: "nice-dark",
         iconTheme: "material"
     },
     files: {

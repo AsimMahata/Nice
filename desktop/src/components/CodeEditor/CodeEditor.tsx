@@ -13,6 +13,7 @@ import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider"
 import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
 import { fileSystem } from "../../services/FileSystem/FileSystem";
 import { commandPaletteManager } from "../Body/CommandPalette/CommandPaletteManager";
+import { registerMonacoThemes } from "../../core/Themes/themeManager";
 
 const DEBUG = true;
 const log = (...args: any[]) => {
@@ -145,13 +146,23 @@ export default function CodeEditor() {
         }
     };
 
+    const handleBeforeMount = (monaco: any) => {
+        registerMonacoThemes(monaco);
+    };
+
     const handleMount = (editor: any, monaco: any) => {
         editorRef.current = editor;
+        (window as any).monaco = monaco;
+        registerMonacoThemes(monaco);
+        monaco.editor.setTheme(settings.appearance.theme || "nice-dark");
 
         const initialCode = editorState.activeFile ? buffersRef.current[editorState.activeFile] ?? "" : "";
         editorRef.current.setValue(initialCode);
 
-        // Bind Ctrl+K and Ctrl+P inside Monaco editor to toggle Command Palette
+        // Bind Ctrl+K, Ctrl+P, and Ctrl+Shift+P inside Monaco editor to toggle Command Palette / Command Mode
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {
+            commandPaletteManager.openCommandMode();
+        });
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyK, () => {
             commandPaletteManager.toggleCommandPalette();
         });
@@ -370,6 +381,7 @@ export default function CodeEditor() {
                 smoothScrolling: settings.editor.smoothScrolling,
             }}
             onChange={(value) => handleOnChange(value)}
+            beforeMount={handleBeforeMount}
             onMount={handleMount}
         />
     );
