@@ -22,7 +22,6 @@
 - **Language Server Protocol (LSP) Integration:** In-editor intellisense powered by real language servers — `clangd` for C/C++, `Pyright` for Python, and `jdtls` for Java — bridged through a local WebSocket server in the Electron main process.
 - **Integrated Terminal:** A full PTY-backed terminal rendered with xterm.js, running inside the app window. Supports resizing, input/output, and graceful cleanup on exit.
 - **File Explorer:** Browse, open, create, and rename files and directories from inside the editor. Select a folder to open it as a workspace.
-- **AI Error Assistance:** Sends compiler and runtime error output to an LLM (Groq's `llama-3.1-8b-instant`) and surfaces a short, plain-text explanation of the likely cause.
 - **Custom Snippets:** Per-language snippet management stored locally and synced to user settings.
 - **User Accounts:** Optional account system with local, Google OAuth, and GitHub OAuth sign-in. User settings (editor preferences, theme, font) are persisted server-side when logged in.
 - **Editor Settings:** Configurable font family, font size, tab size, word wrap, minimap, auto-save, and more, all backed by Monaco editor options.
@@ -85,7 +84,6 @@ The Express backend handles features that require a server: authentication, clou
 | Backend | Node.js, Express 5, TypeScript, Socket.IO |
 | Database | MongoDB (via Mongoose), MongoStore for sessions |
 | Auth | Passport.js — local, Google OAuth 2.0, GitHub OAuth |
-| AI | Groq SDK (`llama-3.1-8b-instant`), Google GenAI |
 | Code execution | `child_process` (`exec` / `spawn`), g++, gcc, Java, Python3 |
 | LSP | clangd, Pyright, jdtls — bridged via WebSocket |
 | Containerization | Docker + Docker Compose |
@@ -97,7 +95,7 @@ nice/
 ├── backend/                      # Express API server
 │   ├── src/
 │   │   ├── config/               # Passport strategies, session config
-│   │   ├── controllers/          # Route handlers (auth, cpp, c, java, python, ai, user, settings)
+│   │   ├── controllers/          # Route handlers (auth, cpp, c, java, python, user, settings)
 │   │   ├── db/                   # MongoDB connection
 │   │   ├── middlewares/          # isLoggedIn guard
 │   │   ├── models/               # Mongoose schemas (User, Settings)
@@ -195,7 +193,6 @@ Create `backend/.env` based on `backend/.env.example`:
 | `GOOGLE_CLIENT_SECRET` | Google OAuth app client secret |
 | `GITHUB_CLIENT_ID` | GitHub OAuth app client ID |
 | `GITHUB_CLIENT_SECRET` | GitHub OAuth app client secret |
-| `GROQ_API_KEY` | Groq API key for AI error assistance |
 | `API_URL` | Public URL of this backend |
 | `CLIENT_URL` | Public URL of the frontend (for OAuth redirects and CORS) |
 | `CPH_PORT` | Port used by the local CPH problem capture server |
