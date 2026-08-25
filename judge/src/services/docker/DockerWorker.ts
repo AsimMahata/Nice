@@ -249,7 +249,7 @@ export class DockerWorker {
                 'sh', '-c', `${runCmd} < "${stdinPath}"`,
             ], undefined, timeoutMs + 2000);
 
-            const isTLE = execRes.timedOut;
+            const isTLE = execRes.timedOut || (execRes.durationMs >= timeoutMs);
             const isNonZero = execRes.exitCode !== 0 && !isTLE;
 
             return {
@@ -259,7 +259,7 @@ export class DockerWorker {
                 exception: isNonZero ? execRes.stderr || 'Runtime Error' : null,
                 error: isTLE ? 'Time Limit Exceeded' : null,
                 compilationTime,
-                executionTime: execRes.durationMs,
+                executionTime: isTLE ? timeoutMs : execRes.durationMs,
             };
 
         } catch (err: any) {

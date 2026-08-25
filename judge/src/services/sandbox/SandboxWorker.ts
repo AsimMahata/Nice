@@ -175,7 +175,7 @@ export class SandboxWorker {
 
                     // 1. Compile with g++
                     const compStart = Date.now();
-                    const compRes = await this.runProcess('g++', ['-O2', '-std=c++17', 'main.cpp', '-o', binName], runDir, undefined, 15000);
+                    const compRes = await this.runProcess('g++', ['-O2', '-std=c++17', 'main.cpp', '-o', binName], runDir, undefined, 25000);
                     const compilationTime = Date.now() - compStart;
 
                     if (compRes.exitCode !== 0 || !fs.existsSync(binPath)) {
@@ -203,7 +203,7 @@ export class SandboxWorker {
 
                     // 1. Compile with gcc
                     const compStart = Date.now();
-                    const compRes = await this.runProcess('gcc', ['-O2', '-std=c11', 'main.c', '-o', binName], runDir, undefined, 15000);
+                    const compRes = await this.runProcess('gcc', ['-O2', '-std=c11', 'main.c', '-o', binName], runDir, undefined, 25000);
                     const compilationTime = Date.now() - compStart;
 
                     if (compRes.exitCode !== 0 || !fs.existsSync(binPath)) {
@@ -240,7 +240,7 @@ export class SandboxWorker {
 
                     // 1. Compile with javac
                     const compStart = Date.now();
-                    const compRes = await this.runProcess('javac', ['Main.java'], runDir, undefined, 15000);
+                    const compRes = await this.runProcess('javac', ['Main.java'], runDir, undefined, 25000);
                     const compilationTime = Date.now() - compStart;
 
                     if (compRes.exitCode !== 0) {
@@ -377,7 +377,7 @@ export class SandboxWorker {
     }
 
     private formatResult(runRes: ProcessExecResult, compilationTime?: number): ExecutionResult {
-        const isTLE = runRes.timedOut;
+        const isTLE = runRes.timedOut || (runRes.durationMs >= judgeConfig.executionTimeoutMs);
         const isNonZero = runRes.exitCode !== 0 && !isTLE;
 
         return {
@@ -387,7 +387,7 @@ export class SandboxWorker {
             exception: isNonZero ? runRes.stderr || 'Runtime Error' : null,
             error: isTLE ? 'Time Limit Exceeded' : null,
             compilationTime,
-            executionTime: runRes.durationMs,
+            executionTime: isTLE ? judgeConfig.executionTimeoutMs : runRes.durationMs,
         };
     }
 }

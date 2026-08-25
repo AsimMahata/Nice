@@ -20,7 +20,7 @@ export class JudgeClient {
         return (process.env.JUDGE_SERVICE_URL || 'http://localhost:5001').replace(/\/$/, '');
     }
 
-    async execute(request: JudgeExecutionRequest, timeoutMs: number = 10000): Promise<JudgeExecutionResult> {
+    async execute(request: JudgeExecutionRequest, timeoutMs: number = 35000): Promise<JudgeExecutionResult> {
         const url = `${this.getJudgeUrl()}/execute`;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
