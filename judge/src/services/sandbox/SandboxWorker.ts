@@ -42,13 +42,25 @@ export class SandboxWorker {
         }
 
         return new Promise((resolve) => {
-            const child = spawn('bwrap', ['--version'], { stdio: 'ignore', windowsHide: true });
+            // Test if bwrap can actually create a user namespace in this environment
+            const child = spawn('bwrap', ['--ro-bind', '/', '/', 'true'], { stdio: 'ignore', windowsHide: true });
+            
+            const timer = setTimeout(() => {
+                try { child.kill('SIGKILL'); } catch {}
+                SandboxWorker.hasBwrapChecked = true;
+                SandboxWorker.isBwrapAvailable = false;
+                resolve(false);
+            }, 2000);
+
             child.on('error', () => {
+                clearTimeout(timer);
                 SandboxWorker.hasBwrapChecked = true;
                 SandboxWorker.isBwrapAvailable = false;
                 resolve(false);
             });
+
             child.on('close', (code) => {
+                clearTimeout(timer);
                 SandboxWorker.hasBwrapChecked = true;
                 SandboxWorker.isBwrapAvailable = code === 0;
                 resolve(code === 0);
@@ -286,7 +298,7 @@ export class SandboxWorker {
         }
     }
 
-    private executeBinary(
+    private async executeBinary(
         binPath: string,
         runDir: string,
         stdin: string | undefined,
@@ -304,7 +316,15 @@ export class SandboxWorker {
                 '--chdir', '/sandbox',
                 './main.out',
             ];
-            return this.runProcess('bwrap', bwrapArgs, runDir, stdin, timeoutMs);
+            const res = await this.runProcess('bwrap', bwrapArgs, runDir, stdin, timeoutMs);
+            
+            // If bwrap is restricted by container seccomp / permissions, fallback immediately to ulimit
+            if (res.stderr.includes('Creating new namespace failed') || res.stderr.includes('Operation not permitted')) {
+                this.log.warn('Bubblewrap namespace creation restricted by host. Falling back to POSIX ulimit isolation.');
+                SandboxWorker.isBwrapAvailable = false;
+                return this.executeBinary(binPath, runDir, stdin, timeoutMs, memoryKb, false, isWindows);
+            }
+            return res;
         }
 
         if (!isWindows) {
@@ -318,7 +338,7 @@ export class SandboxWorker {
         return this.runProcess(binPath, [], runDir, stdin, timeoutMs);
     }
 
-    private executeScript(
+    private async executeScript(
         cmd: string,
         args: string[],
         runDir: string,
@@ -337,7 +357,14 @@ export class SandboxWorker {
                 cmd,
                 ...args,
             ];
-            return this.runProcess('bwrap', bwrapArgs, runDir, stdin, timeoutMs);
+            const res = await this.runProcess('bwrap', bwrapArgs, runDir, stdin, timeoutMs);
+
+            if (res.stderr.includes('Creating new namespace failed') || res.stderr.includes('Operation not permitted')) {
+                this.log.warn('Bubblewrap namespace creation restricted by host. Falling back to POSIX ulimit isolation.');
+                SandboxWorker.isBwrapAvailable = false;
+                return this.executeScript(cmd, args, runDir, stdin, timeoutMs, memoryKb, false, isWindows);
+            }
+            return res;
         }
 
         if (!isWindows) {
