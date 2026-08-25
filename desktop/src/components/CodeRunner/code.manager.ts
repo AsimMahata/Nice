@@ -13,9 +13,9 @@ declare global {
 }
 
 class CodeManager {
-    time = Date.now()
-
-    onBackendResult: ((result: any) => void) | null = null;
+    time = Date.now();
+    activeRunningPath: string | null = null;
+    onBackendResult: ((result: any, filePath: string) => void) | null = null;
 
     constructor() {
         logger.info("CodeManager", "CodeManager constructor initialized");
@@ -26,25 +26,33 @@ class CodeManager {
 
         if (!window.runner) {
             logger.error("CodeManager", "window.runner is not defined");
-            return;
+            throw new Error("Code runner is not initialized");
         }
         if (!cwd) {
             logger.error("CodeManager", "Please open a Directory first to run code");
-            return;
+            throw new Error("Please open a folder first to run code");
         }
+
+        const executingPath = codeFile.path;
+        this.activeRunningPath = executingPath;
 
         try {
             const response = await window.runner.runCode(codeFile, input);
 
             if (response?.usedBackend && response?.result) {
-                logger.info("CodeManager", "Backend fallback result received:", response.result);
-                this.onBackendResult?.(response.result);
+                logger.info("CodeManager", "Backend fallback result received for", executingPath, response.result);
+                this.onBackendResult?.(response.result, executingPath);
             }
+            return response;
         } catch (err) {
-            logger.error("CodeManager", "Error running code:", err);
+            logger.error("CodeManager", "Error running code for", executingPath, err);
             throw err;
+        } finally {
+            if (this.activeRunningPath === executingPath) {
+                this.activeRunningPath = null;
+            }
         }
     }
 }
 
-export const codeManager = new CodeManager()
+export const codeManager = new CodeManager();

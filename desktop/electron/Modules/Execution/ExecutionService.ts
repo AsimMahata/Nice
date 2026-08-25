@@ -14,6 +14,24 @@ export class ExecutionService {
         req: ExecutionRequest,
         mode: 'auto' | 'local' | 'online' = 'auto'
     ): Promise<{ result: ExecutionResult; usedBackend: boolean }> {
+        if (!req.language) {
+            return {
+                result: {
+                    success: false,
+                    compilationSuccess: false,
+                    stdout: '',
+                    stderr: 'ExecutionService: Language not specified or unsupported',
+                    compilationError: '',
+                    exitCode: null,
+                    executionTimeMs: 0,
+                    memoryUsageKb: null,
+                    status: 'Sandbox Error',
+                    source: 'backend',
+                },
+                usedBackend: true,
+            };
+        }
+
         if (mode === 'online') {
             console.log(`[ExecutionService] Execution mode set to online. Executing via backend.`);
             const result = await backendExecutor.execute(req);

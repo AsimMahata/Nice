@@ -124,12 +124,6 @@ export async function runTestcaseCPH(
         if (ext === '.py') {
             cmd = process.platform === 'win32' ? 'python' : 'python3';
             args = ['-u', binaryPath];
-        } else if (ext === '.js') {
-            cmd = 'node';
-            args = [binaryPath];
-        } else if (ext === '.ts') {
-            cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-            args = ['tsx', binaryPath];
         } else if (ext === '.class') {
             const classDir = path.dirname(binaryPath);
             const className = path.basename(binaryPath, '.class');

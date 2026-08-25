@@ -106,11 +106,23 @@ app.whenReady().then(() => {
     });
 
     ipcMain.handle('runner:run', async (_event, codeFile: FileInfo, input?: string) => {
-        const fs = await import('fs');
-        let code: string | undefined;
-        try {
-            code = fs.default.readFileSync(codeFile.path, 'utf8');
-        } catch { code = undefined; }
+        if (!codeFile || !codeFile.path || codeFile.path.startsWith('nice://')) {
+            return {
+                usedBackend: true,
+                result: {
+                    success: false,
+                    compilationSuccess: false,
+                    stdout: '',
+                    stderr: 'Cannot execute: invalid or virtual file path.',
+                    compilationError: '',
+                    exitCode: null,
+                    executionTimeMs: 0,
+                    memoryUsageKb: null,
+                    status: 'Sandbox Error',
+                    source: 'backend',
+                }
+            };
+        }
 
         const extToLang: Record<string, string> = {
             '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
@@ -118,7 +130,31 @@ app.whenReady().then(() => {
             '.py': 'python',
             '.java': 'java',
         };
-        const language = extToLang[codeFile.extension ?? ''] ?? '';
+        const language = extToLang[codeFile.extension?.toLowerCase() ?? ''] ?? '';
+
+        if (!language) {
+            return {
+                usedBackend: true,
+                result: {
+                    success: false,
+                    compilationSuccess: false,
+                    stdout: '',
+                    stderr: `Unsupported file extension "${codeFile.extension || 'none'}". Executable languages: C, C++, Java, Python.`,
+                    compilationError: '',
+                    exitCode: null,
+                    executionTimeMs: 0,
+                    memoryUsageKb: null,
+                    status: 'Sandbox Error',
+                    source: 'backend',
+                }
+            };
+        }
+
+        const fs = await import('fs');
+        let code: string | undefined;
+        try {
+            code = fs.default.readFileSync(codeFile.path, 'utf8');
+        } catch { code = undefined; }
 
         const settings = settingsManager.getSettings();
         const executionMode = settings.execution?.executionMode ?? 'auto';
@@ -141,6 +177,20 @@ app.whenReady().then(() => {
     });
 
     ipcMain.handle('runner:run-backend', async (_event, { filePath, language, code, input }: any) => {
+        if (!filePath || filePath.startsWith('nice://') || !language) {
+            return {
+                success: false,
+                compilationSuccess: false,
+                stdout: '',
+                stderr: 'Cannot execute: invalid or virtual file path.',
+                compilationError: '',
+                exitCode: null,
+                executionTimeMs: 0,
+                memoryUsageKb: null,
+                status: 'Sandbox Error',
+                source: 'backend',
+            };
+        }
         return executionService.runCode({ filePath, language, code, input: input ?? '' }, 'online');
     });
 

@@ -18,6 +18,7 @@ interface CphTestCaseCardProps {
     onUpdate: (id: number | string, fields: Partial<TestCase>) => void;
     onDelete: (id: number | string) => void;
     onRun: (id: number | string) => void;
+    disabled?: boolean;
 }
 
 export const CphTestCaseCard: React.FC<CphTestCaseCardProps> = ({
@@ -27,6 +28,7 @@ export const CphTestCaseCard: React.FC<CphTestCaseCardProps> = ({
     onUpdate,
     onDelete,
     onRun,
+    disabled = false,
 }) => {
     return (
         <div className={`testcase-card ${test.status || 'idle'}`}>
@@ -55,6 +57,7 @@ export const CphTestCaseCard: React.FC<CphTestCaseCardProps> = ({
                         className="card-icon-btn" 
                         title="Run this testcase" 
                         onClick={() => onRun(test.id)}
+                        disabled={disabled || test.status === 'running'}
                     >
                         <Play size={12} />
                     </button>
@@ -62,6 +65,7 @@ export const CphTestCaseCard: React.FC<CphTestCaseCardProps> = ({
                         className="card-icon-btn delete" 
                         title="Delete testcase" 
                         onClick={() => onDelete(test.id)}
+                        disabled={disabled || test.status === 'running'}
                     >
                         <Trash2 size={12} />
                     </button>

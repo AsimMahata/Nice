@@ -5,8 +5,10 @@ import { CodeRunnerParams } from "./codeRunner.options"
 // FileInfo --> extract , Lang, FileName,FileExt, Directory
 
 export function getCodeLanguage(extension: string) {
-    switch (extension) {
+    switch (extension?.toLowerCase()) {
         case ".cpp":
+        case ".cc":
+        case ".cxx":
             return "cpp";
 
         case ".c":

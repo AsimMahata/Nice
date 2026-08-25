@@ -1,9 +1,11 @@
+import { useRef } from "react";
 import { Play, Loader2 } from "lucide-react";
 import { useCodeActionContext } from "../../contexts/CodeAction/CodeActionProvider";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
 import { CodeActionResult, ExecutionStatus } from "../../contexts/CodeAction/CodeActionContext";
 import { codeManager } from "../CodeRunner/code.manager";
+import { getRunnableLanguage } from "../CodeRunner/code.options";
 import "./CodeActionPanel.css";
 
 const statusConfig: Record<ExecutionStatus, { label: string; className: string }> = {
@@ -42,11 +44,11 @@ function CodeBlock({ label, content, placeholder }: { label: string; content: st
     );
 }
 
-function LoadingState() {
+function LoadingState({ message = "Running code via sandbox…" }: { message?: string }) {
     return (
         <div className="ca-loading">
             <div className="ca-spinner" />
-            <span>Running code via sandbox…</span>
+            <span>{message}</span>
         </div>
     );
 }
@@ -119,61 +121,53 @@ function ResultView({ result }: { result: CodeActionResult }) {
 }
 
 const CodeActionPanel = () => {
-    const { codeActionResult, setCodeActionResult, isCodeActionRunning, setIsCodeActionRunning, codeActionInput, setCodeActionInput } = useCodeActionContext();
+    const {
+        codeActionResult,
+        setCodeActionResult,
+        isCodeActionRunning,
+        setIsCodeActionRunning,
+        runningFilePath,
+        setRunningFilePath,
+        codeActionInput,
+        setCodeActionInput,
+    } = useCodeActionContext();
     const { editorState, getDirtyStatus, codeLang, buffersRef, saveActiveFile } = useEditorContext();
     const { cwd } = useWorkspaceContext();
 
+    const activeFile = editorState.activeFile;
+    const openedFile = activeFile ? editorState.openedFiles[activeFile] : null;
+    const runnableLang = getRunnableLanguage(openedFile?.fileInfo, codeLang);
+
+    const openedTabsRef = useRef(editorState.openedTabs);
+    openedTabsRef.current = editorState.openedTabs;
+
+    const isThisFileRunning = Boolean(isCodeActionRunning && runningFilePath === activeFile);
+
     const handleRun = async () => {
-        if (!editorState.activeFile) {
+        // Prevent concurrent requests while an execution is in-flight
+        if (isCodeActionRunning) {
+            console.warn("Execution already in progress. Please wait for it to complete.");
+            return;
+        }
+
+        if (!activeFile) {
             console.warn("Please open a file first to run");
             return;
         }
-        const openedFile = editorState.openedFiles[editorState.activeFile];
-        if (!openedFile) return;
 
-        if (getDirtyStatus()) {
-            await saveActiveFile();
+        if (activeFile.startsWith("nice://")) {
+            console.warn(`Cannot run code: "${openedFile?.fileInfo.name || activeFile}" is a built-in page.`);
+            return;
         }
 
-        setIsCodeActionRunning(true);
-        setCodeActionResult(null);
+        if (!openedFile) return;
 
-        try {
-            const fileInfo = openedFile.fileInfo;
-            const code = buffersRef.current[editorState.activeFile] || "";
-            const extToLang: Record<string, string> = {
-                '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
-                '.c': 'c', '.py': 'python', '.java': 'java',
-            };
-            const lang = codeLang || extToLang[fileInfo.extension?.toLowerCase() ?? ''] || 'cpp';
-
-            if (window.runner?.runCodeBackend) {
-                const response = await window.runner.runCodeBackend({
-                    filePath: fileInfo.path,
-                    language: lang,
-                    code,
-                    input: codeActionInput ?? '',
-                });
-                if (response?.result) {
-                    setCodeActionResult(response.result);
-                } else if (response) {
-                    setCodeActionResult(response);
-                }
-            } else {
-                await codeManager.runCode({
-                    codeFile: fileInfo,
-                    codeLang: lang,
-                    cwd,
-                    input: codeActionInput ?? '',
-                });
-            }
-        } catch (err: any) {
-            console.error("CodeAction execution error:", err);
+        if (!runnableLang) {
             setCodeActionResult({
                 success: false,
                 compilationSuccess: false,
                 stdout: "",
-                stderr: err?.message || String(err),
+                stderr: `Cannot run "${openedFile.fileInfo.name}": Unsupported file extension "${openedFile.fileInfo.extension}". Supported languages: C, C++, Java, Python.`,
                 compilationError: "",
                 exitCode: null,
                 executionTimeMs: 0,
@@ -181,7 +175,62 @@ const CodeActionPanel = () => {
                 status: "Sandbox Error",
                 source: "backend",
             });
+            return;
+        }
+
+        if (getDirtyStatus()) {
+            await saveActiveFile();
+        }
+
+        const currentTargetFile = activeFile;
+        setRunningFilePath(currentTargetFile);
+        setIsCodeActionRunning(true);
+        setCodeActionResult(null);
+
+        try {
+            const fileInfo = openedFile.fileInfo;
+            const code = buffersRef.current[activeFile] || "";
+
+            if (window.runner?.runCodeBackend) {
+                const response = await window.runner.runCodeBackend({
+                    filePath: fileInfo.path,
+                    language: runnableLang,
+                    code,
+                    input: codeActionInput ?? '',
+                });
+                if (openedTabsRef.current.includes(currentTargetFile)) {
+                    if (response?.result) {
+                        setCodeActionResult(response.result);
+                    } else if (response) {
+                        setCodeActionResult(response);
+                    }
+                }
+            } else {
+                await codeManager.runCode({
+                    codeFile: fileInfo,
+                    codeLang: runnableLang,
+                    cwd,
+                    input: codeActionInput ?? '',
+                });
+            }
+        } catch (err: any) {
+            console.error("CodeAction execution error:", err);
+            if (openedTabsRef.current.includes(currentTargetFile)) {
+                setCodeActionResult({
+                    success: false,
+                    compilationSuccess: false,
+                    stdout: "",
+                    stderr: err?.message || String(err),
+                    compilationError: "",
+                    exitCode: null,
+                    executionTimeMs: 0,
+                    memoryUsageKb: null,
+                    status: "Sandbox Error",
+                    source: "backend",
+                });
+            }
         } finally {
+            setRunningFilePath((current) => (current === currentTargetFile ? null : current));
             setIsCodeActionRunning(false);
         }
     };
@@ -205,10 +254,10 @@ const CodeActionPanel = () => {
                 <button
                     className="ca-run-btn"
                     onClick={handleRun}
-                    disabled={isCodeActionRunning || !editorState.activeFile}
-                    title="Run Code with Input (Ctrl+Enter)"
+                    disabled={isCodeActionRunning || !editorState.activeFile || !runnableLang}
+                    title={isCodeActionRunning ? "Execution in progress… Please wait." : "Run Code with Input (Ctrl+Enter)"}
                 >
-                    {isCodeActionRunning ? (
+                    {isThisFileRunning ? (
                         <>
                             <Loader2 size={12} className="ca-spin" />
                             <span>Running…</span>
@@ -237,9 +286,10 @@ const CodeActionPanel = () => {
                 />
             </div>
 
-            {isCodeActionRunning && <LoadingState />}
+            {isThisFileRunning && <LoadingState />}
+            {isCodeActionRunning && !isThisFileRunning && <LoadingState message="Another execution is in progress… Please wait." />}
             {!isCodeActionRunning && !codeActionResult && (
-                <EmptyState onRun={handleRun} disabled={isCodeActionRunning || !editorState.activeFile} />
+                <EmptyState onRun={handleRun} disabled={isCodeActionRunning || !editorState.activeFile || !runnableLang} />
             )}
             {!isCodeActionRunning && codeActionResult && <ResultView result={codeActionResult} />}
         </div>
@@ -247,4 +297,3 @@ const CodeActionPanel = () => {
 };
 
 export default CodeActionPanel;
-

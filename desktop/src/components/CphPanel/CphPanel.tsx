@@ -52,7 +52,11 @@ const CphPanel = () => {
                     {compiling ? "Compiling..." : running ? "Running..." : "Run All"}
                 </button>
                 
-                <button className="btn btn-secondary" onClick={handleAddTestcase}>
+                <button 
+                    className="btn btn-secondary" 
+                    onClick={handleAddTestcase}
+                    disabled={compiling || running}
+                >
                     <Plus size={14} />
                     Add Case
                 </button>
@@ -70,6 +74,7 @@ const CphPanel = () => {
                         onUpdate={handleUpdateTestcase}
                         onDelete={handleDeleteTestcase}
                         onRun={runSingleTest}
+                        disabled={compiling || running}
                     />
                 ))}
 

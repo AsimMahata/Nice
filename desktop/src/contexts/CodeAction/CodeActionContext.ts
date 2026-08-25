@@ -26,6 +26,8 @@ export interface CodeActionContextType {
     setCodeActionResult: React.Dispatch<React.SetStateAction<CodeActionResult | null>>;
     isCodeActionRunning: boolean;
     setIsCodeActionRunning: React.Dispatch<React.SetStateAction<boolean>>;
+    runningFilePath: string | null;
+    setRunningFilePath: React.Dispatch<React.SetStateAction<string | null>>;
     codeActionInput: string;
     setCodeActionInput: React.Dispatch<React.SetStateAction<string>>;
 }

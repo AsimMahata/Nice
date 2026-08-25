@@ -4,6 +4,7 @@ import CodeActionContext, { CodeActionResult } from "./CodeActionContext";
 export const CodeActionProvider = ({ children }: { children: ReactNode }) => {
     const [codeActionResult, setCodeActionResult] = useState<CodeActionResult | null>(null);
     const [isCodeActionRunning, setIsCodeActionRunning] = useState<boolean>(false);
+    const [runningFilePath, setRunningFilePath] = useState<string | null>(null);
     const [codeActionInput, setCodeActionInput] = useState<string>("");
 
     return (
@@ -13,6 +14,8 @@ export const CodeActionProvider = ({ children }: { children: ReactNode }) => {
                 setCodeActionResult,
                 isCodeActionRunning,
                 setIsCodeActionRunning,
+                runningFilePath,
+                setRunningFilePath,
                 codeActionInput,
                 setCodeActionInput,
             }}

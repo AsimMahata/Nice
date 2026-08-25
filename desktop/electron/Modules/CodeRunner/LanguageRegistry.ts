@@ -25,16 +25,6 @@ export const LanguageRegistry: Record<string, string[]> = {
         'javac "$fileName"',
         'java "$fileNameWithoutExt"',
     ],
-
-    javascript: [
-        'cd "$dir"',
-        'node "$fileName"',
-    ],
-
-    typescript: [
-        'cd "$dir"',
-        'npx tsx "$fileName"',
-    ],
 };
 
 export function getStepsToRun(metadata: CodeRunnerParams): string[] {
@@ -44,5 +34,5 @@ export function getStepsToRun(metadata: CodeRunnerParams): string[] {
             `Language '${metadata.codeLang}' is not supported`,
         );
     }
-    return steps
+    return steps;
 }

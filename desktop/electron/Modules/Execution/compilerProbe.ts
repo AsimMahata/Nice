@@ -46,17 +46,6 @@ export async function isCompilerAvailable(language: string): Promise<boolean> {
             available = await which('javac');
             break;
 
-        case 'javascript':
-        case 'js':
-        case 'nodejs':
-            available = await which('node');
-            break;
-
-        case 'typescript':
-        case 'ts':
-            available = await which('npx') || await which('tsc');
-            break;
-
         default:
             available = false;
     }
