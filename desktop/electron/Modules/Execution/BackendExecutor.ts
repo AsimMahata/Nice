@@ -29,12 +29,12 @@ export class BackendExecutor {
         });
 
         try {
-            const response = await this.postJson(`${this.backendUrl}/execute/run`, payload, 4000);
+            // 30s HTTP timeout: allow generous headroom for network transfer + queueing + compilation
+            const response = await this.postJson(`${this.backendUrl}/execute/run`, payload, 30000);
             return this.mapResponse(response);
         } catch (err: any) {
             console.error('[BackendExecutor] Request failed:', err.message);
-            const isTimeout = err.message?.includes('timed out');
-            return this.errorResult(`Backend error: ${err.message}`, isTimeout);
+            return this.errorResult(`Backend error: ${err.message}`);
         }
     }
 
@@ -49,7 +49,7 @@ export class BackendExecutor {
 
         const payload = JSON.stringify({ language, code, input: '' });
         try {
-            const response = await this.postJson(`${this.backendUrl}/execute/run`, payload, 4000);
+            const response = await this.postJson(`${this.backendUrl}/execute/run`, payload, 30000);
             if (!response.compilationSuccess) {
                 return {
                     success: false,
@@ -74,38 +74,40 @@ export class BackendExecutor {
         language: string,
         code: string,
         input: string,
-        timeLimitMs: number = 4000
+        _timeLimitMs: number = 5000
     ): Promise<CphRunResult> {
         const payload = JSON.stringify({ language, code, input });
         try {
-            const response = await this.postJson(`${this.backendUrl}/execute/run`, payload, Math.min(timeLimitMs + 1000, 4500));
+            // 30s HTTP timeout ensures network/compilation latency never causes a false TLE
+            const response = await this.postJson(`${this.backendUrl}/execute/run`, payload, 30000);
+            const isTLE = response.status === 'Time Limit Exceeded' || response.error === 'Time Limit Exceeded';
+
             return {
                 stdout: response.stdout ?? '',
                 stderr: response.stderr ?? '',
                 exitCode: response.exitCode ?? null,
                 time: response.executionTimeMs ?? 0,
-                timeout: response.status === 'Time Limit Exceeded',
+                timeout: isTLE,
                 memoryExceeded: response.status === 'Memory Limit Exceeded',
-                error: response.status !== 'Accepted' ? response.status : undefined,
+                error: response.status !== 'Accepted' ? (response.status || response.error) : undefined,
                 source: 'backend',
                 status: (response.status as ExecutionStatus) ?? 'Runtime Error',
             };
         } catch (err: any) {
-            const isTimeout = err.message?.includes('timed out');
             return {
                 stdout: '',
-                stderr: isTimeout ? 'Time Limit Exceeded: Code did not finish within 4s' : `Backend unreachable: ${err.message}`,
+                stderr: `Backend unreachable: ${err.message}`,
                 exitCode: null,
-                time: isTimeout ? 4000 : 0,
-                timeout: isTimeout,
-                error: isTimeout ? 'Time Limit Exceeded' : `Backend unreachable: ${err.message}`,
+                time: 0,
+                timeout: false,
+                error: `Backend unreachable: ${err.message}`,
                 source: 'backend',
-                status: isTimeout ? 'Time Limit Exceeded' : 'Sandbox Error',
+                status: 'Sandbox Error',
             };
         }
     }
 
-    private postJson(url: string, body: string, timeoutMs: number = 4000): Promise<any> {
+    private postJson(url: string, body: string, timeoutMs: number = 30000): Promise<any> {
         return new Promise((resolve, reject) => {
             const parsed = new URL(url);
             const isHttps = parsed.protocol === 'https:';
@@ -138,7 +140,7 @@ export class BackendExecutor {
             req.on('error', reject);
             req.on('timeout', () => {
                 req.destroy();
-                reject(new Error(`Request timed out after ${Math.round(timeoutMs / 1000)}s`));
+                reject(new Error(`HTTP request timed out after ${Math.round(timeoutMs / 1000)}s`));
             });
             req.write(body);
             req.end();
@@ -161,7 +163,7 @@ export class BackendExecutor {
         };
     }
 
-    private errorResult(message: string, isTimeout: boolean = false): ExecutionResult {
+    private errorResult(message: string): ExecutionResult {
         return {
             success: false,
             compilationSuccess: false,
@@ -169,9 +171,9 @@ export class BackendExecutor {
             stderr: message,
             compilationError: '',
             exitCode: null,
-            executionTimeMs: isTimeout ? 4000 : 0,
+            executionTimeMs: 0,
             memoryUsageKb: null,
-            status: isTimeout ? 'Time Limit Exceeded' : 'Sandbox Error',
+            status: 'Sandbox Error',
             source: 'backend',
         };
     }

@@ -1,5 +1,6 @@
 import { ExecutionProvider, ExecutionRequest, ExecutionResult } from '../types/execution.js';
 import { DockerExecutor, dockerExecutor } from './docker/DockerExecutor.js';
+import { SandboxExecutor, sandboxExecutor } from './sandbox/SandboxExecutor.js';
 import { OnlineJudgeExecutor } from './OnlineJudgeExecutor.js';
 import { logger } from '../utils/logger.js';
 import { judgeConfig } from '../config/judge.config.js';
@@ -8,15 +9,18 @@ const log = logger.createScope('JudgeService');
 
 export class JudgeService {
     private dockerProvider: DockerExecutor;
+    private sandboxProvider: SandboxExecutor;
     private onlineJudgeProvider: ExecutionProvider;
     private explicitProvider?: ExecutionProvider;
     private isInitialized = false;
 
     constructor(
         provider?: ExecutionProvider,
-        dockerExec: DockerExecutor = dockerExecutor
+        dockerExec: DockerExecutor = dockerExecutor,
+        sandboxExec: SandboxExecutor = sandboxExecutor
     ) {
         this.dockerProvider = dockerExec;
+        this.sandboxProvider = sandboxExec;
         this.onlineJudgeProvider = new OnlineJudgeExecutor();
         this.explicitProvider = provider;
     }
@@ -26,7 +30,7 @@ export class JudgeService {
         this.isInitialized = true;
 
         if (judgeConfig.executionProvider === 'docker' || judgeConfig.executionProvider === 'auto') {
-            log.info('Initializing Docker execution environment...');
+            log.info('Checking Docker execution environment availability...');
             await this.dockerProvider.init();
         }
     }
@@ -40,21 +44,25 @@ export class JudgeService {
     }
 
     getHealthStats() {
-        const workerStats = this.dockerProvider.getWorkerManager().getStats();
-        const queueStats = this.dockerProvider.getQueue().getStats();
+        const isDocker = this.dockerProvider.getWorkerManager().getDockerAvailable();
+        const sandboxStats = this.sandboxProvider.getWorkerManager().getStats();
+        const sandboxQueue = this.sandboxProvider.getQueueStats();
+        const dockerStats = isDocker ? this.dockerProvider.getWorkerManager().getStats() : null;
 
         return {
             status: 'ok',
+            primaryExecutionEngine: isDocker ? 'docker_worker_pool' : 'internal_sandbox_pool',
+            dockerAvailable: isDocker,
             workers: {
-                total: workerStats.total,
-                available: workerStats.available,
-                busy: workerStats.busy,
+                total: isDocker && dockerStats ? dockerStats.total : sandboxStats.total,
+                available: isDocker && dockerStats ? dockerStats.available : sandboxStats.available,
+                busy: isDocker && dockerStats ? dockerStats.busy : sandboxStats.busy,
             },
             queue: {
-                size: queueStats.size,
-                maxSize: queueStats.maxSize,
+                size: sandboxQueue.size,
+                maxSize: sandboxQueue.maxSize,
             },
-            dockerAvailable: workerStats.isDockerAvailable,
+            onlineFallbackAvailable: true,
         };
     }
 
@@ -102,31 +110,48 @@ export class JudgeService {
             return this.dockerProvider.execute(normalizedRequest);
         }
 
-        // 'auto' mode: Prioritize warm Docker Worker Pool; fallback to Online Judge if Docker is unavailable
-        const isDockerReady = this.dockerProvider.getWorkerManager().getDockerAvailable();
-
-        if (isDockerReady) {
-            log.info('Execution mode "auto": dispatching to warm Docker Worker Pool.');
-            const result = await this.dockerProvider.execute(normalizedRequest);
-
-            // If the queue was full or job completed, return result directly
-            if (result.error === 'Judge queue full') {
-                return result;
-            }
-
-            // If Docker failed catastrophically with a system-level error, try online fallback
-            const isSystemError = result.error?.includes('Worker execution error') || result.error?.includes('daemon not accessible');
-            if (isSystemError) {
-                log.warn(`Docker execution failed with system error (${result.error}), falling back to Online Judge.`);
-                return this.onlineJudgeProvider.execute(normalizedRequest);
-            }
-
-            return result;
+        if (mode === 'sandbox') {
+            log.info('Execution mode "sandbox" selected: routing to Internal Sandbox Pool.');
+            return this.sandboxProvider.execute(normalizedRequest);
         }
 
-        // If Docker is not available in auto mode, use online judge
-        log.info('Docker pool is not available on this environment, routing to Online Judge (JDoodle).');
-        return this.onlineJudgeProvider.execute(normalizedRequest);
+        // --- 3-TIER EXECUTION PIPELINE (Default 'auto' mode) ---
+
+        // [Tier 1]: Docker Sandbox (if Docker daemon is available and accessible)
+        const isDockerReady = this.dockerProvider.getWorkerManager().getDockerAvailable();
+        if (isDockerReady) {
+            log.info('[Tier 1] Docker sandbox is available. Dispatching to Docker Worker Pool...');
+            const dockerResult = await this.dockerProvider.execute(normalizedRequest);
+
+            // If queue full or completed normally without fatal worker crash, return directly
+            if (dockerResult.error === 'Judge queue full' || !dockerResult.error?.includes('Worker execution error')) {
+                return dockerResult;
+            }
+
+            log.warn(`[Tier 1] Docker execution failed with worker error (${dockerResult.error}), falling back to Tier 2 (Internal Sandbox)...`);
+        }
+
+        // [Tier 2]: Internal Sandbox (Bubblewrap / POSIX ulimit with Worker Pool)
+        log.info(`[Tier 2] Dispatching to Internal Sandbox Worker Pool (${judgeConfig.workers} workers, max queue: ${judgeConfig.maxQueueSize})...`);
+        const sandboxResult = await this.sandboxProvider.execute(normalizedRequest);
+
+        if (sandboxResult.error === 'Judge queue full') {
+            return sandboxResult;
+        }
+
+        // Check if compiler missing on this host environment
+        const isCompilerMissing = Boolean(
+            sandboxResult.error &&
+            (sandboxResult.error.includes('not found') || sandboxResult.error.includes('Unsupported language'))
+        );
+
+        if (isCompilerMissing) {
+            // [Tier 3]: Online Judge API Fallback (JDoodle)
+            log.info(`[Tier 3] Compiler unavailable locally for "${normalizedRequest.language}", falling back to Online Judge (JDoodle)...`);
+            return this.onlineJudgeProvider.execute(normalizedRequest);
+        }
+
+        return sandboxResult;
     }
 }
 

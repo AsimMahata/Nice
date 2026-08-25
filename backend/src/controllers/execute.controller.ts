@@ -49,7 +49,7 @@ function isCompilationFailure(result: JudgeExecutionResult): boolean {
         return true;
     }
 
-    if (result.status === 'failed' && (result.stderr || result.error) && !result.stdout && !result.exception) {
+    if (result.status === 'failed' && (result.stderr || result.error) && !result.stdout && !result.exception && !result.error?.includes('Time Limit Exceeded')) {
         return true;
     }
 
@@ -57,9 +57,13 @@ function isCompilationFailure(result: JudgeExecutionResult): boolean {
 }
 
 function mapJudgeResultToResponse(result: JudgeExecutionResult): ExecutionResponse {
-    const isCompError = isCompilationFailure(result);
-    const hasException = Boolean(result.exception);
-    const hasError = Boolean(result.error && !isCompError);
+    const isTLE = Boolean(
+        result.error?.includes('Time Limit Exceeded') ||
+        result.stderr?.includes('Time Limit Exceeded')
+    );
+    const isCompError = !isTLE && isCompilationFailure(result);
+    const hasException = !isTLE && Boolean(result.exception);
+    const hasError = !isTLE && Boolean(result.error && !isCompError);
 
     let status: ExecutionStatus;
     let success = false;
@@ -70,6 +74,10 @@ function mapJudgeResultToResponse(result: JudgeExecutionResult): ExecutionRespon
         status = 'Compilation Error';
         compilationSuccess = false;
         exitCode = 1;
+    } else if (isTLE) {
+        status = 'Time Limit Exceeded';
+        compilationSuccess = true;
+        exitCode = null;
     } else if (hasException) {
         status = 'Runtime Error';
         compilationSuccess = true;
@@ -85,8 +93,12 @@ function mapJudgeResultToResponse(result: JudgeExecutionResult): ExecutionRespon
         exitCode = 0;
     }
 
-    const compilationError = !compilationSuccess ? (result.stderr || result.error || '') : '';
-    const stderr = isCompError ? (result.stderr || '') : (result.exception || result.stderr || result.error || '');
+    const compilationError = isCompError ? (result.stderr || result.error || '') : '';
+    const stderr = isCompError
+        ? (result.stderr || '')
+        : isTLE
+        ? 'Time Limit Exceeded'
+        : (result.exception || result.stderr || result.error || '');
 
     return {
         success,
@@ -155,4 +167,3 @@ export const runCode = async (req: Request, res: Response): Promise<void> => {
         } satisfies ExecutionResponse);
     }
 };
-

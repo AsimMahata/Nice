@@ -327,7 +327,7 @@ app.whenReady().then(() => {
     });
 
     ipcMain.handle('cph:run-testcase', async (_event, { binaryPath, input, timeLimit, language, code }: any) => {
-        return executionService.runCphTestcase(binaryPath ?? '', input, timeLimit ?? 4000, language, code);
+        return executionService.runCphTestcase(binaryPath ?? '', input, timeLimit ?? 5000, language, code);
     });
 
 

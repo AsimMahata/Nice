@@ -57,15 +57,14 @@ app.get('/', (_req, res) => {
 const isMainModule = process.argv[1] && (process.argv[1].endsWith('server.ts') || process.argv[1].endsWith('server.js'));
 
 if (isMainModule && process.env.NODE_ENV !== 'test') {
-    const server = app.listen(PORT, async () => {
+    const server = app.listen(PORT, () => {
         log.info(`Judge Service started on port ${PORT}`);
         log.info(`Execution Strategy: ${judgeConfig.executionProvider}`);
-        log.info(`Warm Docker Workers: ${judgeConfig.workers} (Memory: ${judgeConfig.workerMemoryMb}MB each, Max Queue: ${judgeConfig.maxQueueSize})`);
+        log.info(`Worker Pool: ${judgeConfig.workers} workers (Memory: ${judgeConfig.workerMemoryMb}MB each, Max Queue: ${judgeConfig.maxQueueSize})`);
         log.info(`Online Judge Fallback: ${judgeConfig.onlineJudgeProvider}`);
 
-        // Initialize Docker worker pool asynchronously
         judgeService.init().catch((err) => {
-            log.warn(`Async worker pool init warning: ${err.message}`);
+            log.warn(`Service init warning: ${err.message}`);
         });
     });
 

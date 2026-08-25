@@ -1,6 +1,7 @@
 import { DockerWorker, WorkerState } from './DockerWorker.js';
 import { judgeConfig } from '../../config/judge.config.js';
 import { logger } from '../../utils/logger.js';
+import { spawn } from 'child_process';
 
 export interface WorkerPoolStats {
     total: number;
@@ -24,9 +25,43 @@ export class WorkerManager {
         }
     }
 
+    private checkDockerDaemon(): Promise<boolean> {
+        return new Promise((resolve) => {
+            const child = spawn('docker', ['info'], {
+                stdio: ['ignore', 'ignore', 'ignore'],
+                windowsHide: true,
+            });
+
+            const timer = setTimeout(() => {
+                child.kill('SIGKILL');
+                resolve(false);
+            }, 5000);
+
+            child.on('error', () => {
+                clearTimeout(timer);
+                resolve(false);
+            });
+
+            child.on('close', (code) => {
+                clearTimeout(timer);
+                resolve(code === 0);
+            });
+        });
+    }
+
     async init(): Promise<boolean> {
         if (this.isInitialized) return this.isDockerAvailable;
-        this.log.info(`Initializing pool of ${judgeConfig.workers} warm Docker workers (Memory: ${judgeConfig.workerMemoryMb}MB each)...`);
+        this.isInitialized = true;
+
+        // Quick check if Docker daemon is running and accessible
+        const daemonRunning = await this.checkDockerDaemon();
+        if (!daemonRunning) {
+            this.isDockerAvailable = false;
+            this.log.info('Docker daemon is not accessible in this environment (e.g. Render / Cloud PaaS). Fallback to Online Judge (JDoodle) is active.');
+            return false;
+        }
+
+        this.log.info(`Docker daemon accessible. Initializing pool of ${judgeConfig.workers} warm Docker workers (Memory: ${judgeConfig.workerMemoryMb}MB each)...`);
 
         try {
             const results = await Promise.all(this.workers.map((w) => w.init()));
@@ -34,18 +69,15 @@ export class WorkerManager {
 
             if (readyCount > 0) {
                 this.isDockerAvailable = true;
-                this.isInitialized = true;
                 this.log.info(`Worker pool initialized: ${readyCount}/${this.workers.length} workers ready.`);
                 return true;
             } else {
                 this.isDockerAvailable = false;
-                this.isInitialized = true;
-                this.log.warn('Docker daemon not accessible or worker image missing. Fallback execution will be used.');
+                this.log.warn('Docker worker containers could not be initialized. Fallback to Online Judge is active.');
                 return false;
             }
         } catch (err: any) {
             this.isDockerAvailable = false;
-            this.isInitialized = true;
             this.log.warn(`Worker initialization failed (${err.message}). Docker pool is disabled.`);
             return false;
         }
@@ -106,6 +138,7 @@ export class WorkerManager {
     }
 
     async destroyAll(): Promise<void> {
+        if (!this.isDockerAvailable) return;
         this.log.info('Shutting down all Docker worker containers...');
         await Promise.all(this.workers.map((w) => w.destroy().catch(() => {})));
         this.isInitialized = false;
