@@ -6,14 +6,17 @@
     <img src="https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB" alt="React" />
     <img src="https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white" alt="Node.js" />
     <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" alt="Docker" />
     <img src="https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white" alt="MongoDB" />
     <img src="https://img.shields.io/badge/License-MIT-2EA043" alt="License" />
   </p>
 </div>
 
-**N**ice **I**s a **C**ode **E**ditor built for competitive programmers. It combines a Monaco-based editor, an integrated terminal, multi-language code execution, and a competitive programming helper — all in a single desktop app.
+**N**ice **I**s a **C**ode **E**ditor built for competitive programmers. It combines a Monaco-based editor, an integrated terminal, multi-language code execution with a dedicated Docker-based Judge Service, and a competitive programming helper — all in a unified desktop application.
 
 > **Status:** Under active development.
+
+---
 
 ## ✨ Features
 
@@ -22,58 +25,49 @@
 - **Language Server Protocol (LSP) Integration:** In-editor intellisense powered by real language servers — `clangd` for C/C++, `Pyright` for Python, and `jdtls` for Java — bridged through a local WebSocket server in the Electron main process.
 - **Integrated Terminal:** A full PTY-backed terminal rendered with xterm.js, running inside the app window. Supports resizing, input/output, and graceful cleanup on exit.
 - **File Explorer:** Browse, open, create, and rename files and directories from inside the editor. Select a folder to open it as a workspace.
+- **AI Error Assistance:** Sends compiler and runtime error output to an LLM (Groq's `llama-3.1-8b-instant`) and surfaces a short, plain-text explanation of the likely cause.
 - **Custom Snippets:** Per-language snippet management stored locally and synced to user settings.
 - **User Accounts:** Optional account system with local, Google OAuth, and GitHub OAuth sign-in. User settings (editor preferences, theme, font) are persisted server-side when logged in.
 - **Editor Settings:** Configurable font family, font size, tab size, word wrap, minimap, auto-save, and more, all backed by Monaco editor options.
 
 ## 🏗️ Architecture
 
-Nice is a three-tier desktop application.
+Nice is built as a decoupled, multi-service architecture:
 
-### Desktop Shell (Electron)
-
-The Electron main process is the privileged layer. It has full access to Node.js and the OS and exposes a set of named IPC channels to the renderer via a `contextBridge` in `preload.ts`. The renderer has no direct Node.js access; every privileged action (file I/O, spawning processes, launching the terminal, running the LSP bridge) goes through an IPC call.
-
-Electron modules are organized by feature under `electron/Modules/`:
-
-| Module | Responsibility |
-|--------|---------------|
-| `FileSystem` | Read/write files, create/delete nodes, open folder dialogs |
-| `Terminal` | PTY lifecycle (create, write, resize, destroy) via `node-pty` |
-| `CodeRunner` | Run source files for quick local execution |
-| `CPH` | Local HTTP server to capture test cases; compile + judge runner |
-| `WebSocket` | LSP bridge — spawns `clangd`, `pyright`, or `jdtls` and proxies LSP messages |
-| `Settings` | Reads/writes `settings.json` in Electron's `userData` directory |
-| `Snippets` | Per-language snippet storage alongside settings |
-| `SearchEngine` | Shallow directory scanner used for the file search feature |
-| `Notification` | Wraps `node-notifier` for native OS notifications |
-
-### Frontend (React + TypeScript)
-
-The React app runs inside the Electron renderer. It communicates with the Electron main process through `window.*` globals exposed by the preload script. For features that require a persistent backend (auth, cloud settings, remote code execution), it connects to the Express API via `axios` and `socket.io-client`.
-
-Key frontend structure:
-
-```
-src/
-├── components/          # Reusable UI components
-│   ├── CodeEditor/      # Monaco editor wrapper with LSP + tab management
-│   ├── Terminal/        # xterm.js terminal panel and PTY wiring
-│   ├── CphPanel/        # CPH test case UI and verdict display
-│   ├── FileEx/          # File explorer tree
-│   ├── CodeRunner/      # Code execution panel and output display
-│   ├── Settings/        # Settings panel UI
-│   └── ...
-├── contexts/            # React contexts (Workspace, Editor, Commands, Auth, Settings, Socket)
-├── pages/               # Route-level components (Home, Auth/Login, Auth/Register, User/Profile)
-├── services/            # Axios service wrappers for the backend API
-├── core/                # Keybindings and other core editor configuration
-└── utils/               # Shared helpers
+```text
+┌────────────────────────────────────────────────────────┐
+│               Desktop App (Electron + React)           │
+│   • Monaco Editor, xterm.js, LSP Bridges, CPH Helper   │
+└───────────────────────────┬────────────────────────────┘
+                            │ HTTP (POST /api/execute/run)
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                   Main Backend API                     │
+│   • Express, MongoDB, Auth (OAuth), Cloud Settings     │
+│   • Thin client to Judge Service (zero execution logic)│
+└───────────────────────────┬────────────────────────────┘
+                            │ HTTP (POST /execute)
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                 Judge Service (/judge)                 │
+│   • Stateless Node.js + TypeScript Service (Port 5001) │
+│   • In-Memory FIFO Queue (Max Queue Size limit)        │
+│   • WorkerManager (Pool of N Warm Docker Containers)   │
+└───────────────────────────┬────────────────────────────┘
+                            │
+            ┌───────────────┴───────────────┐
+            │                               │
+            ▼ (Primary)                     ▼ (Fallback)
+┌───────────────────────┐       ┌───────────────────────┐
+│  Warm Docker Workers  │       │  Online Judge API     │
+│  (nice-judge-runner)  │       │       (JDoodle)       │
+│  • Memory: 100MB      │       └───────────────────────┘
+│  • Network: none      │
+│  • Non-root sandbox   │
+└───────────────────────┘
 ```
 
-### Backend (Node.js + Express)
-
-The Express backend handles features that require a server: authentication, cloud settings persistence, and remote code execution. It is entirely optional for local use — the app is functional without it for file editing, terminal use, and local code running.
+---
 
 ## 💻 Tech Stack
 
@@ -84,6 +78,7 @@ The Express backend handles features that require a server: authentication, clou
 | Backend | Node.js, Express 5, TypeScript, Socket.IO |
 | Database | MongoDB (via Mongoose), MongoStore for sessions |
 | Auth | Passport.js — local, Google OAuth 2.0, GitHub OAuth |
+| AI | Groq SDK (`llama-3.1-8b-instant`), Google GenAI |
 | Code execution | `child_process` (`exec` / `spawn`), g++, gcc, Java, Python3 |
 | LSP | clangd, Pyright, jdtls — bridged via WebSocket |
 | Containerization | Docker + Docker Compose |
@@ -92,10 +87,18 @@ The Express backend handles features that require a server: authentication, clou
 
 ```text
 nice/
-├── backend/                      # Express API server
+├── desktop/                      # Electron + React application
+│   ├── electron/                 # Electron main process & IPC modules
+│   │   ├── Modules/              # FileSystem, Terminal, LSP, CPH, Execution
+│   │   └── main.ts               # App entrypoint
+│   ├── src/                      # React frontend (Monaco, components, contexts)
+│   ├── vite.config.ts
+│   └── package.json
+│
+├── backend/                      # Main Express API server
 │   ├── src/
 │   │   ├── config/               # Passport strategies, session config
-│   │   ├── controllers/          # Route handlers (auth, cpp, c, java, python, user, settings)
+│   │   ├── controllers/          # Route handlers (auth, cpp, c, java, python, ai, user, settings)
 │   │   ├── db/                   # MongoDB connection
 │   │   ├── middlewares/          # isLoggedIn guard
 │   │   ├── models/               # Mongoose schemas (User, Settings)
@@ -106,83 +109,89 @@ nice/
 │   ├── docker-compose.yml
 │   └── package.json
 │
-└── frontend/                     # Electron + React app
-    ├── electron/
-    │   ├── main.ts               # Electron main process, IPC handlers
-    │   ├── preload.ts            # contextBridge — exposes APIs to renderer
-    │   ├── Modules/              # Feature modules (see table above)
-    │   └── types/                # Shared TypeScript types for IPC
+└── judge/                        # Standalone Judge Service
+    ├── runner/                   # Execution worker container definition
+    │   └── Dockerfile            # Dedicated isolated execution image
     ├── src/
-    │   ├── components/           # UI components
-    │   ├── contexts/             # React contexts
-    │   ├── core/                 # Keybindings
-    │   ├── pages/                # Route pages
-    │   ├── services/             # Backend API clients
-    │   └── utils/                # Helpers
-    ├── index.html
-    ├── vite.config.ts
+    │   ├── config/               # judge.config.ts (Workers, Memory, Queue limits)
+    │   ├── services/docker/      # DockerWorker, WorkerManager, DockerExecutor
+    │   ├── services/queue/       # In-memory FIFO ExecutionQueue
+    │   ├── services/             # JDoodleExecutor, OnlineJudgeExecutor, JudgeService
+    │   ├── utils/logger.ts       # Timestamped structured logger (zero emojis)
+    │   └── server.ts             # Express Judge entrypoint (Port 5001)
+    ├── Dockerfile
+    ├── docker-compose.yml
     └── package.json
 ```
+
+---
 
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) v20+
-- [npm](https://www.npmjs.com/)
-- For C/C++ execution and LSP: `g++` / `gcc` on your `PATH`
-- For Java execution and LSP: JDK 17+ on your `PATH`
-- For Python execution and LSP: Python 3 on your `PATH`
-- Language servers must be installed manually to `~/.nice/lsp/`:
-  - C/C++: `clangd` → `~/.nice/lsp/clangd/bin/clangd.exe`
-  - Python: `pyright` → `~/.nice/lsp/pyright/node_modules/.bin/pyright-langserver.cmd`
-  - Java: `jdtls` → `~/.nice/lsp/jdtls/jdtls.cmd`
+- [Node.js](https://nodejs.org/) v20+ and [npm](https://www.npmjs.com/)
+- [Docker](https://www.docker.com/) (for containerized code execution)
+- Language servers in `~/.nice/lsp/` (for in-editor LSP features):
+  - **C/C++**: `clangd`
+  - **Python**: `pyright`
+  - **Java**: `jdtls`
 
-### Running the Desktop App (Development)
+---
 
-```bash
-# Clone the repository
-git clone https://github.com/AsimMahata/nice.git
-cd nice/frontend
+### Quick Start (Development)
 
-# Install dependencies
-npm install
-
-# Start in development mode (launches Vite + Electron)
-npm run electron:dev
-```
-
-This builds the Electron TypeScript, starts Vite on `http://localhost:5173`, and opens the Electron window pointed at the dev server.
-
-### Running the Backend (Optional)
-
-The backend is required only for user accounts, cloud settings, and remote code execution.
+Run all services concurrently using a single command from the project root:
 
 ```bash
-cd nice/backend
-
-# Copy the example env file and fill in values
-cp .env.example .env
-
-# Install dependencies
-npm install
-
-# Start in development mode
-npm run dev
+npx concurrently -n desktop,backend,judge,electron -c red,green,yellow,blue \
+  "npm --prefix ./desktop run dev" \
+  "npm --prefix ./backend run dev" \
+  "npm --prefix ./judge run dev" \
+  "npm --prefix ./desktop run electron:dev"
 ```
 
-Or run with Docker:
+Or start each service in separate terminals:
 
 ```bash
-cd nice/backend
-docker-compose up
+# Terminal 1: Judge Service
+cd judge && npm install && npm run dev
+
+# Terminal 2: Backend API
+cd backend && npm install && npm run dev
+
+# Terminal 3: Desktop App
+cd desktop && npm install && npm run electron:dev
 ```
+
+---
 
 ## ⚙️ Configuration
 
-### Backend Environment Variables
+### 1. Judge Service (`judge/.env`)
 
-Create `backend/.env` based on `backend/.env.example`:
+Configure worker pool and execution parameters in `judge/.env`:
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `5001` | Judge service HTTP port |
+| `EXECUTION_PROVIDER` | `auto` | Execution strategy: `auto`, `docker`, or `online` |
+| `JUDGE_WORKERS` | `2` | Number of warm Docker worker containers to maintain |
+| `JUDGE_WORKER_MEMORY_MB` | `100` | Memory limit per worker container in MB |
+| `JUDGE_WORKER_CPUS` | `1.0` | CPU limit per worker container |
+| `JUDGE_WORKER_PIDS_LIMIT` | `128` | Max process limit per worker |
+| `JUDGE_MAX_QUEUE_SIZE` | `20` | Max queued execution jobs before returning queue full |
+| `JUDGE_EXECUTION_TIMEOUT_MS` | `5000` | Timeout for code execution in ms |
+| `JUDGE_DOCKER_IMAGE` | `nice-judge-runner:latest` | Worker image name |
+| `ONLINE_JUDGE_PROVIDER` | `jdoodle` | Fallback online judge provider |
+| `JDOODLE_CLIENT_ID` | `...` | JDoodle Client ID |
+| `JDOODLE_CLIENT_SECRET` | `...` | JDoodle Client Secret |
+
+---
+
+### 2. Backend API (`backend/.env`)
+
+Configure the backend to connect to the Judge Service:
 
 | Variable | Description |
 |----------|-------------|
@@ -193,6 +202,7 @@ Create `backend/.env` based on `backend/.env.example`:
 | `GOOGLE_CLIENT_SECRET` | Google OAuth app client secret |
 | `GITHUB_CLIENT_ID` | GitHub OAuth app client ID |
 | `GITHUB_CLIENT_SECRET` | GitHub OAuth app client secret |
+| `GROQ_API_KEY` | Groq API key for AI error assistance |
 | `API_URL` | Public URL of this backend |
 | `CLIENT_URL` | Public URL of the frontend (for OAuth redirects and CORS) |
 | `CPH_PORT` | Port used by the local CPH problem capture server |
@@ -222,29 +232,19 @@ Sessions are stored in MongoDB via `connect-mongo` and expire after 30 days.
 ## 🏃 Development Workflow
 
 ```bash
-# Frontend — run Vite dev server only (browser preview)
-cd frontend
-npm run dev
-
-# Frontend — run in Electron with hot reload
-npm run electron:dev
-
-# Frontend — rebuild Electron TypeScript after changes to electron/ files
-npm run electron:build
-
-# Frontend — production build + Electron
-npm run electron:prod
-
-# Backend — development with nodemon
-cd backend
-npm run dev
-
-# Backend — compile TypeScript
-npm run build
-
-# Backend — run compiled output
-npm start
+cd judge
+docker compose up --build -d
 ```
+Listens on port `5001` and manages the warm execution worker pool.
+
+### Deploying the Backend API
+```bash
+cd backend
+docker compose up --build -d
+```
+Listens on port `3000` and proxies execution requests to `JUDGE_SERVICE_URL`.
+
+---
 
 ## 📄 License
 
