@@ -16,7 +16,12 @@ export class LocalExecutor {
         const parsed = path.default.parse(req.filePath);
 
         const ext = parsed.ext;
-        const lang = req.language;
+        const extToLang: Record<string, string> = {
+            '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
+            '.c': 'c', '.py': 'python', '.java': 'java',
+            '.js': 'javascript', '.ts': 'typescript',
+        };
+        const lang = req.language || extToLang[ext.toLowerCase()] || 'cpp';
 
         const metadata = {
             filePath: req.filePath,

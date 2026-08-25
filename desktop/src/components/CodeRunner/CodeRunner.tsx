@@ -14,7 +14,7 @@ type Props = {
 const CodeRunner = ({ openTerminal }: Props) => {
     const { cwd, setRefresh, setCurrentActivity, setSidePanel } = useWorkspaceContext();
     const { codeActionResult, setCodeActionResult, isCodeActionRunning, setIsCodeActionRunning, codeActionInput } = useCodeActionContext();
-    const { editorState, getDirtyStatus, codeLang } = useEditorContext();
+    const { editorState, getDirtyStatus, codeLang, saveActiveFile } = useEditorContext();
     const { settings } = useSettingsContext();
 
     useEffect(() => {
@@ -35,13 +35,23 @@ const CodeRunner = ({ openTerminal }: Props) => {
             return;
         }
         if (getDirtyStatus()) {
-            console.error('save the file before running');
-            return;
+            await saveActiveFile();
         }
         const openedFile = editorState.openedFiles[editorState.activeFile];
+        if (!openedFile) return;
+
+        const extToLang: Record<string, string> = {
+            '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
+            '.c': 'c', '.py': 'python', '.java': 'java',
+            '.js': 'javascript', '.ts': 'typescript',
+        };
+        const resolvedLang = (codeLang && codeLang !== 'PlainText')
+            ? codeLang
+            : (extToLang[openedFile.fileInfo.extension?.toLowerCase() ?? ''] || 'cpp');
+
         const codeRunnerParams: CodeRunnerParams = {
             codeFile: openedFile.fileInfo,
-            codeLang,
+            codeLang: resolvedLang,
             cwd,
             input: codeActionInput,
         };
@@ -56,7 +66,7 @@ const CodeRunner = ({ openTerminal }: Props) => {
                 useBackend = false;
             } else {
                 const hasLocal = typeof window.runner?.probeCompiler === 'function'
-                    ? await window.runner.probeCompiler(codeLang ?? '')
+                    ? await window.runner.probeCompiler(resolvedLang)
                     : true;
                 useBackend = !hasLocal;
             }
@@ -72,7 +82,7 @@ const CodeRunner = ({ openTerminal }: Props) => {
 
             setTimeout(async () => {
                 await codeManager.runCode(codeRunnerParams);
-            }, 30);
+            }, 60);
 
         } catch (err) {
             setIsCodeActionRunning(false);

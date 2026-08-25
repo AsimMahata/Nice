@@ -21,6 +21,16 @@ class PtyManager {
                     ? "powershell"
                     : "bash";
             logger.info('PtyManager', `Spawned terminal shell: ${this.shellType}`);
+
+            if (this.pending.length > 0) {
+                const queuedCommands = [...this.pending];
+                this.pending = [];
+                setTimeout(async () => {
+                    for (const cmd of queuedCommands) {
+                        await this.run(cmd);
+                    }
+                }, 150);
+            }
             return;
         } catch (err) {
             logger.error('PtyManager', 'Error while creating terminal', err);
@@ -54,7 +64,7 @@ class PtyManager {
     }
     async run(command: string) {
         if (!this.getPty()) {
-            this.pending = [...this.pending, command]; //TODO:pending is never getting used
+            this.pending = [...this.pending, command];
             return;
         }
         if (!command) {
@@ -70,3 +80,4 @@ class PtyManager {
 }
 
 export const ptyManager = new PtyManager();
+

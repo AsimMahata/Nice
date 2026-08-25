@@ -47,27 +47,12 @@ export class BackendExecutor {
             return { success: false, error: `Failed to read file: ${err.message}`, backendFallback: true };
         }
 
-        const payload = JSON.stringify({ language, code, input: '' });
-        try {
-            const response = await this.postJson(`${this.backendUrl}/execute/run`, payload, 30000);
-            if (!response.compilationSuccess) {
-                return {
-                    success: false,
-                    error: response.compilationError || response.stderr,
-                    backendFallback: true,
-                    language,
-                    code,
-                };
-            }
-            return {
-                success: true,
-                backendFallback: true,
-                language,
-                code,
-            };
-        } catch (err: any) {
-            return { success: false, error: `Backend error: ${err.message}`, backendFallback: true };
-        }
+        return {
+            success: true,
+            backendFallback: true,
+            language,
+            code,
+        };
     }
 
     async runCphTestcase(
@@ -78,7 +63,7 @@ export class BackendExecutor {
     ): Promise<CphRunResult> {
         const payload = JSON.stringify({ language, code, input });
         try {
-            // 30s HTTP timeout ensures network/compilation latency never causes a false TLE
+           
             const response = await this.postJson(`${this.backendUrl}/execute/run`, payload, 30000);
             const isTLE = response.status === 'Time Limit Exceeded' || response.error === 'Time Limit Exceeded';
 

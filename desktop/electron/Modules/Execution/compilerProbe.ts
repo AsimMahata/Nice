@@ -12,24 +12,33 @@ function which(binary: string): Promise<boolean> {
 }
 
 export async function isCompilerAvailable(language: string): Promise<boolean> {
-    if (cache.has(language)) {
-        return cache.get(language)!;
+    const lang = (language || '').toLowerCase().trim();
+    if (cache.has(lang)) {
+        return cache.get(lang)!;
     }
 
     let available = false;
 
-    switch (language) {
+    switch (lang) {
         case 'cpp':
+        case 'c++':
+        case 'cc':
+        case 'cxx':
             available = await which('g++');
+            if (!available) available = await which('clang++');
             break;
 
         case 'c':
             available = await which('gcc');
+            if (!available) available = await which('clang');
             break;
 
-        case 'python': {
+        case 'python':
+        case 'python3':
+        case 'py': {
             available = await which('python3');
             if (!available) available = await which('python');
+            if (!available) available = await which('py');
             break;
         }
 
@@ -37,12 +46,23 @@ export async function isCompilerAvailable(language: string): Promise<boolean> {
             available = await which('javac');
             break;
 
+        case 'javascript':
+        case 'js':
+        case 'nodejs':
+            available = await which('node');
+            break;
+
+        case 'typescript':
+        case 'ts':
+            available = await which('npx') || await which('tsc');
+            break;
+
         default:
             available = false;
     }
 
-    cache.set(language, available);
-    console.log(`[compilerProbe] ${language}: ${available ? 'available' : 'not found'}`);
+    cache.set(lang, available);
+    console.log(`[compilerProbe] ${lang}: ${available ? 'available' : 'not found'}`);
     return available;
 }
 

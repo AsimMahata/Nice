@@ -1,4 +1,4 @@
-import { exec, spawn } from "child_process";
+import { exec, spawn, execSync } from "child_process";
 import path from "path";
 import fs from "fs";
 
@@ -12,19 +12,44 @@ export interface RunResult {
     stdout: string;
     stderr: string;
     exitCode: number | null;
-    time: number; // in ms
+    time: number;
     timeout: boolean;
     error?: string;
 }
 
-/**
- * Compiles a C++ (or C) file using g++ (or gcc) into a temporary binary file
- * located in the .cph/bin/ directory under the source file's directory.
- */
+const compilerPathCache = new Map<string, string>();
+
+function resolveCompilerDir(compilerName: string): string | null {
+    if (compilerPathCache.has(compilerName)) {
+        return compilerPathCache.get(compilerName) || null;
+    }
+
+    try {
+        const cmd = process.platform === 'win32' ? `where ${compilerName}` : `which ${compilerName}`;
+        const resolvedPaths = execSync(cmd, { timeout: 2000 }).toString().split(/\r?\n/);
+        const resolvedPath = resolvedPaths[0]?.trim();
+        if (resolvedPath && fs.existsSync(resolvedPath)) {
+            const dir = path.dirname(resolvedPath);
+            compilerPathCache.set(compilerName, dir);
+            return dir;
+        }
+    } catch {}
+
+    compilerPathCache.set(compilerName, '');
+    return null;
+}
+
 export async function compileCPH(filePath: string): Promise<CompileResult> {
     const dir = path.dirname(filePath);
-    const ext = path.extname(filePath);
+    const ext = path.extname(filePath).toLowerCase();
     const baseName = path.basename(filePath, ext);
+
+    if (ext === '.py' || ext === '.js' || ext === '.ts') {
+        return {
+            success: true,
+            binaryPath: filePath,
+        };
+    }
     
     const cphBinDir = path.join(dir, '.cph', 'bin');
     if (!fs.existsSync(cphBinDir)) {
@@ -35,36 +60,31 @@ export async function compileCPH(filePath: string): Promise<CompileResult> {
     const binaryPath = path.join(cphBinDir, binaryName);
     
     let compileCmd = '';
+    let compilerName = 'g++';
+
     if (ext === '.cpp' || ext === '.cc' || ext === '.cxx') {
         compileCmd = `g++ "${filePath}" -o "${binaryPath}"`;
+        compilerName = 'g++';
     } else if (ext === '.c') {
         compileCmd = `gcc "${filePath}" -o "${binaryPath}"`;
+        compilerName = 'gcc';
+    } else if (ext === '.java') {
+        compileCmd = `javac -d "${cphBinDir}" "${filePath}"`;
+        compilerName = 'javac';
     } else {
         return { success: false, error: `Unsupported file extension: ${ext}` };
     }
     
-    const { execSync } = require("child_process");
     let env = { ...process.env };
-    try {
-        const compilerName = (ext === '.c') ? 'gcc' : 'g++';
-        const resolvedPaths = execSync(`where ${compilerName}`).toString().split(/\r?\n/);
-        const resolvedPath = resolvedPaths[0]?.trim();
-        if (resolvedPath && fs.existsSync(resolvedPath)) {
-            const compilerDir = path.dirname(resolvedPath);
-
-            env.PATH = `${compilerDir}${path.delimiter}${env.PATH || ''}`;
-            console.log(`[CPH Compile Debug] Prepended compiler dir to PATH: ${compilerDir}`);
-        }
-    } catch (err: any) {
-        console.error(`[CPH Compile Debug] Error resolving compiler path: ${err.message}`);
+    const compilerDir = resolveCompilerDir(compilerName);
+    if (compilerDir) {
+        env.PATH = `${compilerDir}${path.delimiter}${env.PATH || ''}`;
     }
 
     console.log(`[CPH Compile] Running command: ${compileCmd}`);
     
     return new Promise((resolve) => {
         exec(compileCmd, { env }, (error, stdout, stderr) => {
-            console.log(`[CPH Compile] stdout:\n${stdout}`);
-            console.log(`[CPH Compile] stderr:\n${stderr}`);
             if (error) {
                 console.error(`[CPH Compile] Error: ${error.message}`);
                 const cleanStderr = stderr.trim();
@@ -79,30 +99,45 @@ export async function compileCPH(filePath: string): Promise<CompileResult> {
                     error: completeError || "Compilation failed with unknown error"
                 });
             } else {
-                console.log(`[CPH Compile] Compilation successful. Binary: ${binaryPath}`);
+                console.log(`[CPH Compile] Compilation successful. Output: ${binaryPath}`);
                 resolve({
                     success: true,
-                    binaryPath: binaryPath
+                    binaryPath: ext === '.java' ? path.join(cphBinDir, `${baseName}.class`) : binaryPath
                 });
             }
         });
     });
 }
 
-/**
- * Spawns the compiled binary, passes input string to stdin,
- * captures stdout/stderr, and terminates the process if it times out.
- */
 export async function runTestcaseCPH(
     binaryPath: string, 
     input: string, 
     timeLimit: number = 2000
 ): Promise<RunResult> {
-    console.log(`[CPH Run] Executing binary: ${binaryPath} with timeLimit: ${timeLimit}ms`);
-    console.log(`[CPH Run] Input:\n${input}`);
+    console.log(`[CPH Run] Executing: ${binaryPath} with timeLimit: ${timeLimit}ms`);
     return new Promise((resolve) => {
         const start = Date.now();
-        const child = spawn(binaryPath);
+        const ext = path.extname(binaryPath).toLowerCase();
+        let cmd = binaryPath;
+        let args: string[] = [];
+
+        if (ext === '.py') {
+            cmd = process.platform === 'win32' ? 'python' : 'python3';
+            args = ['-u', binaryPath];
+        } else if (ext === '.js') {
+            cmd = 'node';
+            args = [binaryPath];
+        } else if (ext === '.ts') {
+            cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+            args = ['tsx', binaryPath];
+        } else if (ext === '.class') {
+            const classDir = path.dirname(binaryPath);
+            const className = path.basename(binaryPath, '.class');
+            cmd = 'java';
+            args = ['-cp', classDir, className];
+        }
+
+        const child = spawn(cmd, args, { windowsHide: true });
         
         let stdout = '';
         let stderr = '';
@@ -144,8 +179,6 @@ export async function runTestcaseCPH(
             clearTimeout(timer);
             const duration = Date.now() - start;
             console.log(`[CPH Run] Process exited with code ${code} in ${duration}ms`);
-            console.log(`[CPH Run] Stdout: ${stdout}`);
-            console.log(`[CPH Run] Stderr: ${stderr}`);
             resolve({
                 stdout,
                 stderr,

@@ -1,27 +1,39 @@
 import { CodeRunnerParams } from "./codeRunner.options";
 
+const isWin = process.platform === 'win32';
+
 export const LanguageRegistry: Record<string, string[]> = {
     cpp: [
         'cd "$dir"',
         'g++ "$fileName" -o "$fileNameWithoutExt"',
-        '.\\$fileNameWithoutExt',
+        isWin ? '.\\$fileNameWithoutExt' : './$fileNameWithoutExt',
     ],
 
     c: [
         'cd "$dir"',
         'gcc "$fileName" -o "$fileNameWithoutExt"',
-        '.\\$fileNameWithoutExt',
+        isWin ? '.\\$fileNameWithoutExt' : './$fileNameWithoutExt',
     ],
 
     python: [
         'cd "$dir"',
-        'py -u "$fileName"',
+        isWin ? 'python -u "$fileName"' : 'python3 -u "$fileName"',
     ],
 
     java: [
         'cd "$dir"',
         'javac "$fileName"',
         'java "$fileNameWithoutExt"',
+    ],
+
+    javascript: [
+        'cd "$dir"',
+        'node "$fileName"',
+    ],
+
+    typescript: [
+        'cd "$dir"',
+        'npx tsx "$fileName"',
     ],
 };
 

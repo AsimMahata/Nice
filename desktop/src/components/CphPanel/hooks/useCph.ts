@@ -48,7 +48,6 @@ export function useCph() {
                         return;
                     }
                 } catch {
-                    // File does not exist, set default empty state
                     const baseName = activeFileName.substring(0, activeFileName.lastIndexOf('.'));
                     setProblemName(baseName);
                     setTimeLimit(2000);
@@ -162,7 +161,11 @@ export function useCph() {
                 let status: TestCase['status'] = 'passed';
                 let errorMsg = '';
 
-                if (res.timeout) {
+                if (res.status === 'Compilation Error') {
+                    status = 'error';
+                    errorMsg = res.error || res.stderr || 'Compilation Error';
+                    setCompilationError(errorMsg);
+                } else if (res.timeout) {
                     status = 'failed';
                     errorMsg = 'Time Limit Exceeded';
                 } else if (res.exitCode !== 0) {
@@ -228,7 +231,11 @@ export function useCph() {
             let status: TestCase['status'] = 'passed';
             let errorMsg = '';
 
-            if (res.timeout) {
+            if (res.status === 'Compilation Error') {
+                status = 'error';
+                errorMsg = res.error || res.stderr || 'Compilation Error';
+                setCompilationError(errorMsg);
+            } else if (res.timeout) {
                 status = 'failed';
                 errorMsg = 'Time Limit Exceeded';
             } else if (res.exitCode !== 0) {

@@ -6,26 +6,41 @@ import { useEditorContext } from "../contexts/Editor/EditorProvider";
 import { commandPaletteManager } from "../components/Body/CommandPalette/CommandPaletteManager";
 import { paletteItem } from "../components/Body/CommandPalette/palette.types";
 
+export type CphExecutionStatus =
+    | 'Accepted'
+    | 'Compilation Error'
+    | 'Runtime Error'
+    | 'Time Limit Exceeded'
+    | 'Memory Limit Exceeded'
+    | 'Sandbox Error';
+
+export interface CphCompileResult {
+    success: boolean;
+    error?: string;
+    binaryPath?: string;
+    backendFallback?: boolean;
+    language?: string;
+    code?: string;
+}
+
+export interface CphRunResult {
+    stdout: string;
+    stderr: string;
+    exitCode: number | null;
+    time: number;
+    timeout: boolean;
+    memoryExceeded?: boolean;
+    error?: string;
+    source?: 'local' | 'backend';
+    status?: CphExecutionStatus;
+}
+
 declare global {
     interface Window {
         cph?: {
             onProblem: (callback: (data: any) => void) => () => void;
-            compile: (filePath: string, language?: string) => Promise<{
-                success: boolean;
-                error?: string;
-                binaryPath?: string;
-                backendFallback?: boolean;
-                language?: string;
-                code?: string;
-            }>;
-            runTestcase: (binaryPath: string, input: string, timeLimit: number, language?: string, code?: string) => Promise<{
-                stdout: string;
-                stderr: string;
-                exitCode: number | null;
-                time: number;
-                timeout: boolean;
-                error?: string;
-            }>;
+            compile: (filePath: string, language?: string) => Promise<CphCompileResult>;
+            runTestcase: (binaryPath: string, input: string, timeLimit: number, language?: string, code?: string) => Promise<CphRunResult>;
         };
     }
 }
