@@ -105,7 +105,7 @@ app.whenReady().then(() => {
         return logger.readLogs(backupIndex);
     });
 
-    ipcMain.handle('runner:run', async (_event, codeFile: FileInfo) => {
+    ipcMain.handle('runner:run', async (_event, codeFile: FileInfo, input?: string) => {
         const fs = await import('fs');
         let code: string | undefined;
         try {
@@ -127,7 +127,7 @@ app.whenReady().then(() => {
             language,
             filePath: codeFile.path,
             code,
-            input: '',
+            input: input ?? '',
         }, executionMode);
 
         if (usedBackend) {
@@ -141,7 +141,7 @@ app.whenReady().then(() => {
     });
 
     ipcMain.handle('runner:run-backend', async (_event, { filePath, language, code, input }: any) => {
-        return executionService.runCode({ filePath, language, code, input: input ?? '' });
+        return executionService.runCode({ filePath, language, code, input: input ?? '' }, 'online');
     });
 
     // // terminal create

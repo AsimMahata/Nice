@@ -1,5 +1,9 @@
+import { Play, Loader2 } from "lucide-react";
+import { useCodeActionContext } from "../../contexts/CodeAction/CodeActionProvider";
+import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
-import { CodeActionResult, ExecutionStatus } from "../../contexts/Workspace/WorkspaceContext";
+import { CodeActionResult, ExecutionStatus } from "../../contexts/CodeAction/CodeActionContext";
+import { codeManager } from "../CodeRunner/code.manager";
 import "./CodeActionPanel.css";
 
 const statusConfig: Record<ExecutionStatus, { label: string; className: string }> = {
@@ -42,20 +46,29 @@ function LoadingState() {
     return (
         <div className="ca-loading">
             <div className="ca-spinner" />
-            <span>Running via backend sandbox…</span>
+            <span>Running code via sandbox…</span>
         </div>
     );
 }
 
-function EmptyState() {
+function EmptyState({ onRun, disabled }: { onRun?: () => void; disabled?: boolean }) {
     return (
         <div className="ca-empty">
             <div className="ca-empty-icon">▶</div>
             <p>Run your code to see results here.</p>
             <p className="ca-empty-sub">
-                This panel opens automatically when the local compiler is not available
-                and backend execution is used.
+                Enter your test input above and click <strong>Run Code</strong> or press <kbd className="ca-kbd">Ctrl+Enter</kbd>.
             </p>
+            {onRun && (
+                <button
+                    className="ca-empty-run-btn"
+                    onClick={onRun}
+                    disabled={disabled}
+                >
+                    <Play size={13} fill="currentColor" />
+                    <span>Run Now</span>
+                </button>
+            )}
         </div>
     );
 }
@@ -106,20 +119,132 @@ function ResultView({ result }: { result: CodeActionResult }) {
 }
 
 const CodeActionPanel = () => {
-    const { codeActionResult, isCodeActionRunning } = useWorkspaceContext();
+    const { codeActionResult, setCodeActionResult, isCodeActionRunning, setIsCodeActionRunning, codeActionInput, setCodeActionInput } = useCodeActionContext();
+    const { editorState, getDirtyStatus, codeLang, buffersRef, saveActiveFile } = useEditorContext();
+    const { cwd } = useWorkspaceContext();
+
+    const handleRun = async () => {
+        if (!editorState.activeFile) {
+            console.warn("Please open a file first to run");
+            return;
+        }
+        const openedFile = editorState.openedFiles[editorState.activeFile];
+        if (!openedFile) return;
+
+        if (getDirtyStatus()) {
+            await saveActiveFile();
+        }
+
+        setIsCodeActionRunning(true);
+        setCodeActionResult(null);
+
+        try {
+            const fileInfo = openedFile.fileInfo;
+            const code = buffersRef.current[editorState.activeFile] || "";
+            const extToLang: Record<string, string> = {
+                '.cpp': 'cpp', '.cc': 'cpp', '.cxx': 'cpp',
+                '.c': 'c', '.py': 'python', '.java': 'java',
+            };
+            const lang = codeLang || extToLang[fileInfo.extension?.toLowerCase() ?? ''] || 'cpp';
+
+            if (window.runner?.runCodeBackend) {
+                const response = await window.runner.runCodeBackend({
+                    filePath: fileInfo.path,
+                    language: lang,
+                    code,
+                    input: codeActionInput ?? '',
+                });
+                if (response?.result) {
+                    setCodeActionResult(response.result);
+                } else if (response) {
+                    setCodeActionResult(response);
+                }
+            } else {
+                await codeManager.runCode({
+                    codeFile: fileInfo,
+                    codeLang: lang,
+                    cwd,
+                    input: codeActionInput ?? '',
+                });
+            }
+        } catch (err: any) {
+            console.error("CodeAction execution error:", err);
+            setCodeActionResult({
+                success: false,
+                compilationSuccess: false,
+                stdout: "",
+                stderr: err?.message || String(err),
+                compilationError: "",
+                exitCode: null,
+                executionTimeMs: 0,
+                memoryUsageKb: null,
+                status: "Sandbox Error",
+                source: "backend",
+            });
+        } finally {
+            setIsCodeActionRunning(false);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault();
+            if (!isCodeActionRunning) {
+                handleRun();
+            }
+        }
+    };
 
     return (
         <div className="ca-panel" id="code-action-panel">
             <div className="ca-panel-title">
-                <span className="ca-title-icon">▶</span>
-                Code Action
+                <div className="ca-title-left">
+                    <span className="ca-title-icon">▶</span>
+                    <span>Code Action</span>
+                </div>
+                <button
+                    className="ca-run-btn"
+                    onClick={handleRun}
+                    disabled={isCodeActionRunning || !editorState.activeFile}
+                    title="Run Code with Input (Ctrl+Enter)"
+                >
+                    {isCodeActionRunning ? (
+                        <>
+                            <Loader2 size={12} className="ca-spin" />
+                            <span>Running…</span>
+                        </>
+                    ) : (
+                        <>
+                            <Play size={12} fill="currentColor" />
+                            <span>Run</span>
+                        </>
+                    )}
+                </button>
+            </div>
+
+            <div className="ca-section ca-input-section">
+                <div className="ca-input-header">
+                    <span className="ca-section-label">Input</span>
+                    <span className="ca-input-hint">Ctrl+Enter to run</span>
+                </div>
+                <textarea
+                    className="ca-input-textarea"
+                    placeholder="Enter input for stdin here..."
+                    value={codeActionInput}
+                    onChange={(e) => setCodeActionInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    rows={3}
+                />
             </div>
 
             {isCodeActionRunning && <LoadingState />}
-            {!isCodeActionRunning && !codeActionResult && <EmptyState />}
+            {!isCodeActionRunning && !codeActionResult && (
+                <EmptyState onRun={handleRun} disabled={isCodeActionRunning || !editorState.activeFile} />
+            )}
             {!isCodeActionRunning && codeActionResult && <ResultView result={codeActionResult} />}
         </div>
     );
 };
 
 export default CodeActionPanel;
+

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Play, Loader2 } from "lucide-react";
 import { useEditorContext } from "../../contexts/Editor/EditorProvider";
 import { useWorkspaceContext } from "../../contexts/Workspace/WorkspaceProvider";
+import { useCodeActionContext } from "../../contexts/CodeAction/CodeActionProvider";
 import { useSettingsContext } from "../../contexts/Settings/SettingsProvider";
 import { codeManager } from "./code.manager";
 import { CodeRunnerParams } from "./code.options";
@@ -11,7 +12,8 @@ type Props = {
 };
 
 const CodeRunner = ({ openTerminal }: Props) => {
-    const { cwd, setRefresh, setCurrentActivity, setSidePanel, setCodeActionResult, setIsCodeActionRunning, isCodeActionRunning } = useWorkspaceContext();
+    const { cwd, setRefresh, setCurrentActivity, setSidePanel } = useWorkspaceContext();
+    const { codeActionResult, setCodeActionResult, isCodeActionRunning, setIsCodeActionRunning, codeActionInput } = useCodeActionContext();
     const { editorState, getDirtyStatus, codeLang } = useEditorContext();
     const { settings } = useSettingsContext();
 
@@ -40,7 +42,8 @@ const CodeRunner = ({ openTerminal }: Props) => {
         const codeRunnerParams: CodeRunnerParams = {
             codeFile: openedFile.fileInfo,
             codeLang,
-            cwd
+            cwd,
+            input: codeActionInput,
         };
         console.log('------------codeManager time', codeRunnerParams, codeManager.time);
         try {

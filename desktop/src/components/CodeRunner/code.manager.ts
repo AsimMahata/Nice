@@ -5,7 +5,7 @@ import { logger } from "../../services/Logger/Logger";
 declare global {
     interface Window {
         runner?: {
-            runCode: (codeFile: FileInfo) => Promise<{ usedBackend: boolean; result: any | null }>;
+            runCode: (codeFile: FileInfo, input?: string) => Promise<{ usedBackend: boolean; result: any | null }>;
             probeCompiler: (language: string) => Promise<boolean>;
             runCodeBackend: (params: { filePath: string; language: string; code: string; input: string }) => Promise<any>;
         };
@@ -21,8 +21,8 @@ class CodeManager {
         logger.info("CodeManager", "CodeManager constructor initialized");
     }
 
-    async runCode({ codeFile, codeLang, cwd }: CodeRunnerParams) {
-        logger.info("CodeManager", "Run code invoked for", codeFile, codeLang, cwd);
+    async runCode({ codeFile, codeLang, cwd, input }: CodeRunnerParams) {
+        logger.info("CodeManager", "Run code invoked for", codeFile, codeLang, cwd, input);
 
         if (!window.runner) {
             logger.error("CodeManager", "window.runner is not defined");
@@ -34,7 +34,7 @@ class CodeManager {
         }
 
         try {
-            const response = await window.runner.runCode(codeFile);
+            const response = await window.runner.runCode(codeFile, input);
 
             if (response?.usedBackend && response?.result) {
                 logger.info("CodeManager", "Backend fallback result received:", response.result);

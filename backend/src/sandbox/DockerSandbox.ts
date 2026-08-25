@@ -22,8 +22,9 @@ export class DockerSandbox implements ISandboxExecutor {
     async execute(req: SandboxRequest): Promise<SandboxResult> {
         const start = Date.now();
 
+        const normalizedInput = (req.input ?? '').replace(/\r\n/g, '\n');
         const codeB64 = Buffer.from(req.code).toString('base64');
-        const inputB64 = Buffer.from(req.input).toString('base64');
+        const inputB64 = Buffer.from(normalizedInput).toString('base64');
         const timeLimitSec = Math.ceil(req.timeLimitMs / 1000);
         const memoryMb = req.memoryLimitMb;
 
@@ -137,8 +138,8 @@ export class DockerSandbox implements ISandboxExecutor {
 set -euo pipefail
 cd /sandbox
 
-echo "$CODE_B64" | base64 -d > code_raw
-echo "$INPUT_B64" | base64 -d > input.txt
+[ -n "$CODE_B64" ] && echo "$CODE_B64" | base64 -d > code_raw || touch code_raw
+[ -n "$INPUT_B64" ] && echo "$INPUT_B64" | base64 -d > input.txt || touch input.txt
 
 COMPILE_SUCCESS=true
 COMPILE_OUTPUT=""

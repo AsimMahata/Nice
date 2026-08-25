@@ -81,10 +81,10 @@ contextBridge.exposeInMainWorld('cph', {
 // CodeRunner services
 contextBridge.exposeInMainWorld('runner', {
     // Primary run: opens terminal if local, returns { usedBackend, result } if backend
-    runCode: (codeFile: FileInfo): Promise<{ usedBackend: boolean; result: any | null }> => {
+    runCode: (codeFile: FileInfo, input?: string): Promise<{ usedBackend: boolean; result: any | null }> => {
         console.log('invoke runner:run =================================')
-        console.log('----------called run code for ', codeFile);
-        return ipcRenderer.invoke('runner:run', codeFile)
+        console.log('----------called run code for ', codeFile, input);
+        return ipcRenderer.invoke('runner:run', codeFile, input)
     },
     // Check if local compiler is available
     probeCompiler: (language: string): Promise<boolean> => {

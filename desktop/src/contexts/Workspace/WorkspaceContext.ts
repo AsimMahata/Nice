@@ -1,26 +1,7 @@
 import React, { createContext } from "react";
 import { FileInfo } from "../../services/FileSystem/file.options";
 
-export type ExecutionStatus =
-    | 'Accepted'
-    | 'Compilation Error'
-    | 'Runtime Error'
-    | 'Time Limit Exceeded'
-    | 'Memory Limit Exceeded'
-    | 'Sandbox Error';
-
-export interface CodeActionResult {
-    success: boolean;
-    compilationSuccess: boolean;
-    stdout: string;
-    stderr: string;
-    compilationError: string;
-    exitCode: number | null;
-    executionTimeMs: number;
-    memoryUsageKb: number | null;
-    status: ExecutionStatus;
-    source: 'local' | 'backend';
-}
+export type { ExecutionStatus, CodeActionResult } from "../CodeAction/CodeActionContext";
 
 interface WorkspaceContextType {
     cwd: string | null,
@@ -38,12 +19,9 @@ interface WorkspaceContextType {
     currentActivity: string | null,
     setCurrentActivity: React.Dispatch<React.SetStateAction<string | null>>,
     toggleRefresh: () => void,
-    codeActionResult: CodeActionResult | null,
-    setCodeActionResult: React.Dispatch<React.SetStateAction<CodeActionResult | null>>,
-    isCodeActionRunning: boolean,
-    setIsCodeActionRunning: React.Dispatch<React.SetStateAction<boolean>>,
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined)
 
 export default WorkspaceContext
+

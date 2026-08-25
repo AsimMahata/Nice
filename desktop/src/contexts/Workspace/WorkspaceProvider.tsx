@@ -43,8 +43,6 @@ const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
     const [isTerminalOpen, setIsTerminalOpen] = useState<boolean>(false);
     const [sidePanel, setSidePanel] = useState<boolean>(false);
     const [currentActivity, setCurrentActivity] = useState<string | null>("FileEx");
-    const [codeActionResult, setCodeActionResult] = useState<CodeActionResult | null>(null);
-    const [isCodeActionRunning, setIsCodeActionRunning] = useState<boolean>(false);
 
     function toggleRefresh() {
         setRefresh(p => !p);
@@ -67,10 +65,6 @@ const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
             currentActivity,
             setCurrentActivity,
             toggleRefresh,
-            codeActionResult,
-            setCodeActionResult,
-            isCodeActionRunning,
-            setIsCodeActionRunning,
         }}>
             {children}
         </WorkspaceContext.Provider>

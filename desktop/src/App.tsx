@@ -10,6 +10,7 @@ import CodeforcesStats from './pages/Codeforces/CodeforcesStats';
 import WorkspaceProvider from './contexts/Workspace/WorkspaceProvider';
 import EditorProvider from './contexts/Editor/EditorProvider';
 import CommandProvider from './contexts/Commands/CommandProvider';
+import CodeActionProvider from './contexts/CodeAction/CodeActionProvider';
 import { logger } from './services/Logger/Logger';
 
 function App() {
@@ -18,13 +19,15 @@ function App() {
         <WorkspaceProvider>
             <EditorProvider>
                 <CommandProvider>
-                    <Routes>
-                        <Route path='/' element={< Home />} />
-                        <Route path='/user/:id' element={<Profile />} />
-                        <Route path='/login' element={<Login />} />
-                        <Route path='/register' element={<Register />} />
-                        <Route path='/codeforces' element={<CodeforcesStats />} />
-                    </Routes>
+                    <CodeActionProvider>
+                        <Routes>
+                            <Route path='/' element={< Home />} />
+                            <Route path='/user/:id' element={<Profile />} />
+                            <Route path='/login' element={<Login />} />
+                            <Route path='/register' element={<Register />} />
+                            <Route path='/codeforces' element={<CodeforcesStats />} />
+                        </Routes>
+                    </CodeActionProvider>
                 </CommandProvider>
             </EditorProvider>
         </WorkspaceProvider>
