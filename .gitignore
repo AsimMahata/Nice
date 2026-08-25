@@ -1,18 +1,42 @@
-# node
+# Dependencies
 node_modules/
+**/node_modules/
+
+# Build outputs
 dist/
-.env
-
-# frontend
-frontend/node_modules/
-frontend/dist/
-
-# backend
-backend/node_modules/
-backend/dist/
-backend/temp/
-# misc
-.DS_Store
-
-.vscode
+**/dist/
 release/
+**/release/
+desktop/electron/dist/
+
+# Backend temp & caches
+backend/temp/
+.cache/
+
+# Environment files
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

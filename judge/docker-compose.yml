@@ -1,10 +1,11 @@
 services:
-  api:
+  judge:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: nice-judge
     ports:
-      - "3000:3000"
+      - "5001:5001"
     volumes:
       - .:/app
       - /app/node_modules

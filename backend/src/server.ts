@@ -6,33 +6,18 @@ import session from "express-session";
 import sessionConfig from "./config/session.js";
 import "./config/passport.js";
 import passport from "passport";
-import cppRoutes from "./routes/cpp.routes.js";
-import pythonRoutes from "./routes/python.routes.js";
 import aiRoutes from "./routes/ai.routes.js";
-import javaRoutes from "./routes/java.routes.js";
-import cRoutes from "./routes/c.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import settingsRoutes from "./routes/settings.routes.js";
 import executeRoutes from "./routes/execute.routes.js";
 import connectDatabase from "./db/database.connection.js";
-import { createSandboxExecutor } from "./sandbox/SandboxFactory.js";
 import bodyParser from "body-parser";
 
 const app: Express = express();
 const httpServer = createServer(app);
 
 connectDatabase();
-
-createSandboxExecutor().then((executor) => {
-    if (executor) {
-        console.log(`[Server] Sandbox ready: ${executor.name}`);
-    } else {
-        console.warn('[Server] WARNING: No sandbox available. /api/execute/run will return Sandbox Error.');
-    }
-}).catch((err) => {
-    console.error('[Server] Sandbox initialization error:', err);
-});
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
@@ -53,11 +38,7 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/python", pythonRoutes);
-app.use("/api/cpp", cppRoutes);
 app.use("/api/ai", aiRoutes);
-app.use("/api/java", javaRoutes);
-app.use("/api/c", cRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/execute", executeRoutes);
