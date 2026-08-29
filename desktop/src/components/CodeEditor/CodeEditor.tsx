@@ -30,6 +30,8 @@ export default function CodeEditor() {
     const editorRef = useRef<any>(null);
     const snippetsRef = useRef<any>({});
     const disposables = useRef<any[]>([]);
+    const isUnmounted = useRef(false);
+    const currentFileRef = useRef<string | null>(editorState.activeFile);
 
     // Fetch snippets on codeLang change
     useEffect(() => {
@@ -82,6 +84,7 @@ export default function CodeEditor() {
     // Cleanup on unmount
     useEffect(() => {
         return () => {
+            isUnmounted.current = true;
             disposables.current.forEach(d => d.dispose());
             if (wsRef.current) wsRef.current.close();
         };
@@ -92,6 +95,7 @@ export default function CodeEditor() {
 
         const code = editorState.activeFile ? buffersRef.current[editorState.activeFile] ?? "" : "";
         editorRef.current.setValue(code);
+        currentFileRef.current = editorState.activeFile;
     }, [editorState.activeFile]);
     const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -103,14 +107,17 @@ export default function CodeEditor() {
 
     const handleOnChange = (value: string | undefined) => {
         if (value === undefined) return;
+        if (isUnmounted.current) return;
 
-        const path = editorState.activeFile;
+        const path = currentFileRef.current;
 
         if (!path) return;
 
+        if (buffersRef.current[path] === value) return;
+
         buffersRef.current[path] = value ?? "";
 
-        if (!editorState.openedFiles[path].isDirty) {
+        if (!editorState.openedFiles[path]?.isDirty) {
             setEditorState(prev => ({
                 ...prev,
                 openedFiles: {
@@ -158,6 +165,7 @@ export default function CodeEditor() {
 
         const initialCode = editorState.activeFile ? buffersRef.current[editorState.activeFile] ?? "" : "";
         editorRef.current.setValue(initialCode);
+        currentFileRef.current = editorState.activeFile;
 
         // Bind Ctrl+K, Ctrl+P, and Ctrl+Shift+P inside Monaco editor to toggle Command Palette / Command Mode
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyP, () => {

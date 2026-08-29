@@ -55,7 +55,8 @@ const ControlPanel = (props: Props) => {
             type: "comile time error",
         };
 
-        const url: string = `${import.meta.env.VITE_API_URL}/ai/help`;
+        const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const url: string = `${apiBaseUrl}/ai/help`;
 
         await axios
             .post(url, errObj)
@@ -83,7 +84,8 @@ const ControlPanel = (props: Props) => {
         props.setOutput("No Output"); //  before running set output to default
         props.setAiResponse(""); //  ai response to empty
 
-        const url: string = `${import.meta.env.VITE_API_URL}/${payload.lang}/run`;
+        const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const url: string = `${apiBaseUrl}/${payload.lang}/run`;
         console.log("EditorControls", "runCode", url);
         props.setRunning(true); // WARN: every props is getting used in the format props.VAR needs to be { separated }
 

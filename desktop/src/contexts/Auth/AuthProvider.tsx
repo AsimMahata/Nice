@@ -26,7 +26,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const checkAuth = async () => {
         try {
-            const url = `${import.meta.env.VITE_API_URL}/user/current-user`;
+            const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+            const url = `${apiBaseUrl}/user/current-user`;
             const response = await fetch(url, {
                 credentials: "include",
             });

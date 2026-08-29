@@ -18,6 +18,10 @@
 
 ---
 
+<p align="center">
+  <img src="screenshots/homepage.png" alt="Nice Homepage">
+</p>
+
 ## ✨ Features
 
 - **Intelligent Multi-Language Code Execution:** Run C, C++, Java, Python, and JavaScript/TypeScript with instant local compiler detection or seamless backend sandbox fallback.
@@ -30,6 +34,38 @@
 - **Custom Snippets:** Per-language snippet management stored locally and synced to user settings.
 - **User Accounts & Cloud Sync:** Local, Google OAuth, and GitHub OAuth sign-in with cross-device preferences sync.
 - **Configurable Settings:** Custom font family, font size, tab size, word wrap, minimap, auto-save, theme, and execution strategy (`auto`, `local`, `online`).
+
+---
+
+## 📸 Screenshots
+
+<details>
+<summary>Auth</summary>
+
+![Auth](screenshots/auth.png)
+
+</details>
+
+<details>
+<summary>Editor</summary>
+
+![Editor](screenshots/editor.png)
+
+</details>
+
+<details>
+<summary>Settings</summary>
+
+![Settings](screenshots/settings.png)
+
+</details>
+
+<details>
+<summary>User</summary>
+
+![User](screenshots/user.png)
+
+</details>
 
 ---
 

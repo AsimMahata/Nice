@@ -24,7 +24,7 @@ const Login: React.FC = () => {
         formState: { errors, isSubmitting },
     } = useForm<LoginInputs>();
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL;
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
     // Handle closing the login view and returning to workspace
     const handleClose = () => {

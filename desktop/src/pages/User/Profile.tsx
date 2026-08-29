@@ -40,7 +40,8 @@ export default function Profile() {
 
     const handleLogout = async () => {
         try {
-            await axios.post(`${import.meta.env.VITE_API_URL}/auth/logout`, {}, { withCredentials: true });
+            const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+            await axios.post(`${apiBaseUrl}/auth/logout`, {}, { withCredentials: true });
             await refreshAuth();
             setEditorState((prev) => {
                 const newOpenTabs = prev.openedTabs.filter((tab: string) => tab !== "nice://profile");
@@ -59,7 +60,8 @@ export default function Profile() {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            await axios.patch(`${import.meta.env.VITE_API_URL}/user/update`, formData, { withCredentials: true });
+            const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+            await axios.patch(`${apiBaseUrl}/user/update`, formData, { withCredentials: true });
             await refreshAuth();
             setIsEditing(false);
         } catch (error) {

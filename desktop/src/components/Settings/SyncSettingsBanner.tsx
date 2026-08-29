@@ -31,7 +31,8 @@ export const SyncSettingsBanner = ({ sectionName, onSave, onImport }: SyncSettin
                 else if (sectionName.toLowerCase() === "appearance") payload = { appearance: settings.appearance };
                 else if (sectionName.toLowerCase() === "files") payload = { files: settings.files };
 
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
+                const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+                const response = await fetch(`${apiBaseUrl}/settings`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",
@@ -63,7 +64,8 @@ export const SyncSettingsBanner = ({ sectionName, onSave, onImport }: SyncSettin
             if (onImport) {
                 await onImport();
             } else {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
+                const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+                const response = await fetch(`${apiBaseUrl}/settings`, {
                     credentials: "include"
                 });
                 const result = await response.json();

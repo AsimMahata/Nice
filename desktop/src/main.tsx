@@ -6,11 +6,11 @@ import App from "./App.tsx";
 import { AuthProvider } from "./contexts/Auth/AuthProvider.tsx";
 import SettingsProvider from "./contexts/Settings/SettingsProvider.tsx";
 
-if (import.meta.env.DEV) {
-    const script = document.createElement("script");
-    script.src = "https://unpkg.com/react-scan/dist/auto.global.js";
-    document.head.appendChild(script);
-}
+// if (import.meta.env.DEV) {
+//     const script = document.createElement("script");
+//     script.src = "https://unpkg.com/react-scan/dist/auto.global.js";
+//     document.head.appendChild(script);
+// }
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>

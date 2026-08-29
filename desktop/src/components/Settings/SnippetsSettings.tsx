@@ -61,7 +61,8 @@ const SnippetsSettings = () => {
             }
         };
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
+        const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const response = await fetch(`${apiBaseUrl}/settings`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             credentials: "include",
@@ -77,7 +78,8 @@ const SnippetsSettings = () => {
     };
 
     const handleCloudImport = async () => {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/settings`, {
+        const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+        const response = await fetch(`${apiBaseUrl}/settings`, {
             credentials: "include"
         });
 
